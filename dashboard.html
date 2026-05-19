@@ -540,7 +540,7 @@ body {
           </div>
         </div>
         <div class="fin-row">
-          <span class="lbl">Total Expenses</span>
+          <span class="lbl">Total Spent</span>
           <span class="val" style="color:var(--red)" id="fin-expenses-val">—</span>
         </div>
         <div class="fin-row">
@@ -1122,7 +1122,7 @@ async function loadMonthData(month) {
   const data = await fetchSheetRange(month, 'A1:N120');
   const result = {
     income:       parseCurrency(findLabelValue(data, 'Monthly Income')),
-    expenses:     parseCurrency(findLabelValue(data, 'Total Expenses')),
+    expenses:     parseCurrency(data[69]?.[7]),  // H70 = Grand Total spent
     available:    parseCurrency(findLabelValue(data, 'Available Savings')),
     funLeft:      parseCurrency(findLabelValue(data, 'Fun Budget Remaining')),
     targetSav:    parseCurrency(findLabelValue(data, 'Target Total Savings')),
@@ -1206,7 +1206,7 @@ async function loadFinanceView(month) {
       </div>
       <div class="fin-card">
         <div class="fin-card-val" style="color:var(--red)">${fmtDollar(d.expenses)}</div>
-        <div class="fin-card-lbl">Total Expenses</div>
+        <div class="fin-card-lbl">Total Spent</div>
       </div>
       <div class="fin-card">
         <div class="fin-card-val" style="color:var(--cyan)">${fmtDollar(d.available)}</div>
