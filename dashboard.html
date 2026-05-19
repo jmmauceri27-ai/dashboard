@@ -76,7 +76,7 @@ body {
 
 /* ── LAYOUT ── */
 .dashboard {
-  display: grid; grid-template-columns: 236px 1fr 268px;
+  display: grid; grid-template-columns: 236px 1fr 340px;
   gap: 10px; padding: 10px;
   max-width: 1440px; margin: 0 auto;
 }
@@ -319,12 +319,15 @@ body {
 .food-result-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .food-result-macros { font-size: 10px; color: var(--text-muted); }
 .food-serving-label { font-size: 10px; color: var(--text-dim); margin: 6px 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.food-form-grid { display: grid; grid-template-columns: 1fr 46px 46px repeat(4,1fr); gap: 5px; }
-.food-form-grid .fi { min-width: 0; width: 100%; box-sizing: border-box; }
-.food-form-name  { grid-column: 1; }
-.food-form-amt   { grid-column: 2; padding-left: 5px; padding-right: 5px; }
-.food-form-unit  { grid-column: 3; padding-left: 4px; padding-right: 4px; cursor: pointer; }
-.food-form-macro { }
+.food-form-grid { display: flex; flex-direction: column; gap: 6px; }
+.food-form-row  { display: flex; gap: 6px; align-items: flex-end; }
+.food-form-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.food-form-field label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); }
+.food-form-field .fi  { min-width: 0; width: 100%; box-sizing: border-box; }
+.food-form-name  { flex: 1; }
+.food-form-amt   { width: 64px; flex-shrink: 0; }
+.food-form-unit  { width: 68px; flex-shrink: 0; }
+.food-form-macro { flex: 1; }
 select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 5px center; padding-right: 16px; }
 
 /* ── GRATITUDE ── */
@@ -872,22 +875,47 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
         </div>
         <div class="food-dropdown" id="food-dropdown" style="display:none"></div>
         <div style="display:none" id="food-manual-row">
-          <div class="food-serving-label"><span id="food-selected-name" style="color:var(--text)"></span></div>
+          <div class="food-serving-label" style="margin-bottom:6px"><span id="food-selected-name" style="color:var(--text)"></span></div>
           <div class="food-form-grid">
-            <input class="fi food-form-name" id="meal-name" placeholder="Label…" />
-            <input class="fi food-form-amt" id="meal-serving" placeholder="Amt" type="number" min="0.1" step="0.1" value="100" oninput="updateMacrosFromServing()" />
-            <select class="fi food-form-unit" id="meal-unit" onchange="updateMacrosFromServing()">
-              <option value="g">g</option>
-              <option value="oz">oz</option>
-              <option value="lb">lb</option>
-              <option value="cup">cup</option>
-              <option value="tbsp">tbsp</option>
-              <option value="tsp">tsp</option>
-            </select>
-            <input class="fi food-form-macro" id="meal-kcal" placeholder="kcal" type="number" min="0" />
-            <input class="fi food-form-macro" id="meal-protein" placeholder="P" type="number" min="0" />
-            <input class="fi food-form-macro" id="meal-carbs" placeholder="C" type="number" min="0" />
-            <input class="fi food-form-macro" id="meal-fat" placeholder="F" type="number" min="0" />
+            <div class="food-form-row">
+              <div class="food-form-field food-form-name">
+                <label>Meal Label</label>
+                <input class="fi" id="meal-name" placeholder="e.g. Grilled Chicken" />
+              </div>
+              <div class="food-form-field food-form-amt">
+                <label>Amount</label>
+                <input class="fi" id="meal-serving" type="number" min="0.1" step="0.1" value="100" oninput="updateMacrosFromServing()" />
+              </div>
+              <div class="food-form-field food-form-unit">
+                <label>Unit</label>
+                <select class="fi" id="meal-unit" onchange="updateMacrosFromServing()" style="cursor:pointer">
+                  <option value="g">g</option>
+                  <option value="oz">oz</option>
+                  <option value="lb">lb</option>
+                  <option value="cup">cup</option>
+                  <option value="tbsp">tbsp</option>
+                  <option value="tsp">tsp</option>
+                </select>
+              </div>
+            </div>
+            <div class="food-form-row">
+              <div class="food-form-field food-form-macro">
+                <label>Calories</label>
+                <input class="fi" id="meal-kcal" type="number" min="0" placeholder="0" />
+              </div>
+              <div class="food-form-field food-form-macro">
+                <label>Protein (g)</label>
+                <input class="fi" id="meal-protein" type="number" min="0" placeholder="0" />
+              </div>
+              <div class="food-form-field food-form-macro">
+                <label>Carbs (g)</label>
+                <input class="fi" id="meal-carbs" type="number" min="0" placeholder="0" />
+              </div>
+              <div class="food-form-field food-form-macro">
+                <label>Fat (g)</label>
+                <input class="fi" id="meal-fat" type="number" min="0" placeholder="0" />
+              </div>
+            </div>
           </div>
         </div>
         <button class="btn btn-blue" style="width:100%;margin-top:7px" onclick="addMeal()">Log Meal</button>
