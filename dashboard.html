@@ -1875,22 +1875,20 @@ function deleteMeal(idx) {
   renderNutrition();
 }
 
-// ── USDA FOOD SEARCH ──────────────────────────────────────────────
-const USDA_KEY = 'DEMO_KEY';
+// ── FOOD SEARCH (Open Food Facts — no key, no rate limit) ────────
 let _foodResults = [];
 let _selectedPer100 = null;
 let _foodSearchTimer = null;
 
-function getNutrient(food, id) {
-  const n = (food.foodNutrients || []).find(x => x.nutrientId === id || (x.nutrient && x.nutrient.id === id));
-  return n ? (n.value ?? n.amount ?? 0) : 0;
+function offNutr(food, key) {
+  return parseFloat((food.nutriments || {})[key]) || 0;
 }
 
 function debounceFoodSearch() {
   clearTimeout(_foodSearchTimer);
   const q = document.getElementById('food-search-input').value.trim();
   if (!q) { hideFoodDropdown(); return; }
-  _foodSearchTimer = setTimeout(() => searchAndShowFood(q), 400);
+  _foodSearchTimer = setTimeout(() => searchAndShowFood(q), 500);
 }
 
 async function searchAndShowFood(query) {
@@ -1898,31 +1896,22 @@ async function searchAndShowFood(query) {
   const dd = document.getElementById('food-dropdown');
   spinner.style.display = 'inline';
   try {
-    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=10&api_key=${USDA_KEY}`;
-    const res = await fetch(url);
-    if (res.status === 429 || res.status === 403) {
-      _foodResults = [];
-      dd.innerHTML = `<div class="food-result-item" style="color:var(--yellow)">API rate limit reached — try again in a minute, or enter macros manually below.</div>`;
-      dd.style.display = 'block';
-      return;
-    }
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10&fields=product_name,nutriments,brands`;
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
     const json = await res.json();
-    if (json.error) {
-      _foodResults = [];
-      dd.innerHTML = `<div class="food-result-item" style="color:var(--red)">Error: ${esc(json.error.message || 'API error')}</div>`;
-      dd.style.display = 'block';
-      return;
-    }
-    _foodResults = (json.foods || []).slice(0, 10);
+    _foodResults = (json.products || [])
+      .filter(p => p.product_name && offNutr(p,'energy-kcal_100g') > 0)
+      .slice(0, 10);
     if (!_foodResults.length) {
-      dd.innerHTML = `<div class="food-result-item" style="color:var(--text-muted)">No results for "${esc(query)}"</div>`;
+      dd.innerHTML = `<div class="food-result-item" style="color:var(--text-muted)">No results for "${esc(query)}" — try a simpler term or enter macros manually.</div>`;
       dd.style.display = 'block';
       return;
     }
     showFoodDropdown();
   } catch(e) {
     _foodResults = [];
-    dd.innerHTML = `<div class="food-result-item" style="color:var(--red)">Network error — check connection.</div>`;
+    dd.innerHTML = `<div class="food-result-item" style="color:var(--red)">Network error — check connection or enter macros manually.</div>`;
     dd.style.display = 'block';
   } finally {
     spinner.style.display = 'none';
@@ -1931,14 +1920,14 @@ async function searchAndShowFood(query) {
 
 function showFoodDropdown() {
   const dd = document.getElementById('food-dropdown');
-  if (!_foodResults.length) { dd.style.display = 'none'; return; }
   dd.innerHTML = _foodResults.map((f, i) => {
-    const kcal = Math.round(getNutrient(f, 1008));
-    const prot = Math.round(getNutrient(f, 1003));
-    const carb = Math.round(getNutrient(f, 1005));
-    const fat  = Math.round(getNutrient(f, 1004));
+    const kcal = Math.round(offNutr(f, 'energy-kcal_100g'));
+    const prot = Math.round(offNutr(f, 'proteins_100g'));
+    const carb = Math.round(offNutr(f, 'carbohydrates_100g'));
+    const fat  = Math.round(offNutr(f, 'fat_100g'));
+    const brand = f.brands ? ` · ${esc(f.brands.split(',')[0].trim())}` : '';
     return `<div class="food-result-item" onclick="selectFood(${i})">
-      <div class="food-result-name">${esc(f.description)}</div>
+      <div class="food-result-name">${esc(f.product_name)}${brand}</div>
       <div class="food-result-macros">per 100g · ${kcal} kcal · ${prot}g P · ${carb}g C · ${fat}g F</div>
     </div>`;
   }).join('');
@@ -1951,12 +1940,12 @@ function hideFoodDropdown() {
 
 let _ddCursor = -1;
 function foodSearchKeydown(e) {
-  const dd = document.getElementById('food-dropdown');
+  const dd    = document.getElementById('food-dropdown');
   const items = dd.querySelectorAll('.food-result-item');
-  if (e.key === 'ArrowDown') { _ddCursor = Math.min(_ddCursor + 1, items.length - 1); highlightDDItem(items); e.preventDefault(); }
-  else if (e.key === 'ArrowUp') { _ddCursor = Math.max(_ddCursor - 1, 0); highlightDDItem(items); e.preventDefault(); }
+  if (e.key === 'ArrowDown')                    { _ddCursor = Math.min(_ddCursor + 1, items.length - 1); highlightDDItem(items); e.preventDefault(); }
+  else if (e.key === 'ArrowUp')                 { _ddCursor = Math.max(_ddCursor - 1, 0); highlightDDItem(items); e.preventDefault(); }
   else if (e.key === 'Enter' && _ddCursor >= 0) { selectFood(_ddCursor); e.preventDefault(); }
-  else if (e.key === 'Escape') { hideFoodDropdown(); }
+  else if (e.key === 'Escape')                  { hideFoodDropdown(); }
 }
 function highlightDDItem(items) {
   items.forEach((el, i) => el.classList.toggle('active', i === _ddCursor));
@@ -1966,15 +1955,15 @@ function selectFood(idx) {
   const food = _foodResults[idx];
   if (!food) return;
   _selectedPer100 = {
-    kcal: getNutrient(food, 1008),
-    protein: getNutrient(food, 1003),
-    carbs: getNutrient(food, 1005),
-    fat: getNutrient(food, 1004),
+    kcal:    offNutr(food, 'energy-kcal_100g'),
+    protein: offNutr(food, 'proteins_100g'),
+    carbs:   offNutr(food, 'carbohydrates_100g'),
+    fat:     offNutr(food, 'fat_100g'),
   };
-  document.getElementById('food-selected-name').textContent = food.description;
-  document.getElementById('meal-name').value = food.description;
+  document.getElementById('food-selected-name').textContent = food.product_name;
+  document.getElementById('meal-name').value  = food.product_name;
   document.getElementById('meal-serving').value = 100;
-  document.getElementById('meal-unit').value = 'g';
+  document.getElementById('meal-unit').value    = 'g';
   updateMacrosFromServing();
   hideFoodDropdown();
   document.getElementById('food-search-input').value = '';
