@@ -1180,7 +1180,10 @@ async function loadFinanceView(month) {
   document.getElementById('fin-view-content').style.display  = 'none';
   try {
     const d      = await loadMonthData(month);
-    const savPct = d.targetSav > 0 ? Math.min(100, Math.round(d.actualSav / d.targetSav * 100)) : 0;
+    const savRaw = d.targetSav > 0 ? Math.round(d.actualSav / d.targetSav * 100) : 0;
+    const savPct = savRaw; // allow >100
+    const savBarW = Math.min(100, savRaw); // bar caps at full width
+    const savColor = savRaw >= 100 ? 'var(--green)' : savRaw >= 75 ? 'var(--yellow)' : 'var(--red)';
     const funSpent = d.income - d.expenses - d.available;
 
     // Net Worth (separate sheet)
@@ -1229,9 +1232,9 @@ async function loadFinanceView(month) {
     document.getElementById('fin-view-savings').innerHTML = `
       <div class="prog-meta" style="margin-top:4px">
         <span class="prog-label">Savings — <strong style="color:var(--text)">${fmtDollar(d.actualSav)}</strong> of ${fmtDollar(d.targetSav)} target</span>
-        <span class="prog-pct" style="color:${savPct >= 100 ? 'var(--green)' : 'var(--text)'}">${savPct}%</span>
+        <span class="prog-pct" style="color:${savColor}">${savPct}%</span>
       </div>
-      <div class="prog-bar" style="height:6px"><div class="prog-fill fill-green" style="width:${savPct}%"></div></div>`;
+      <div class="prog-bar" style="height:6px"><div class="prog-fill" style="width:${savBarW}%;background:${savColor};transition:width 0.4s ease"></div></div>`;
 
     // Group transactions by category
     const catMap = {};
