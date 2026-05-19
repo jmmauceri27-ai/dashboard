@@ -1110,12 +1110,14 @@ async function loadMonthData(month) {
   if (finCache[month]) return finCache[month];
   const data = await fetchSheetRange(month, 'A1:N120');
   const result = {
-    totalSavings: parseCurrency(data[6]?.[12]),  // M7 = Total savings for the month
-    expenses:     parseCurrency(data[69]?.[7]),  // H70 = Grand Total spent
-    available:    parseCurrency(findLabelValue(data, 'Available Savings')),
-    funLeft:      parseCurrency(findLabelValue(data, 'Fun Budget Remaining')),
-    targetSav:    parseCurrency(findLabelValue(data, 'Target Total Savings')),
-    actualSav:    parseCurrency(findLabelValue(data, 'Actual Savings')),
+    totalSavings:  parseCurrency(data[6]?.[12]),  // M7  = Total savings for the month
+    expenses:      parseCurrency(data[69]?.[7]),  // H70 = Grand Total spent
+    income:        parseCurrency(data[1]?.[11]),  // L2  = Monthly Income
+    fixedExpenses: parseCurrency(data[5]?.[1]),   // B6  = Fixed Expenses Total
+    targetSav:     parseCurrency(data[6]?.[10]),  // K7  = Target Total Savings
+    available:     parseCurrency(findLabelValue(data, 'Available Savings')),
+    funLeft:       parseCurrency(findLabelValue(data, 'Fun Budget Remaining')),
+    actualSav:     parseCurrency(findLabelValue(data, 'Actual Savings')),
     transactions: findTransactions(data),
     categories:   findCategories(data),
   };
@@ -1181,23 +1183,46 @@ async function loadFinanceView(month) {
     const savPct = d.targetSav > 0 ? Math.min(100, Math.round(d.actualSav / d.targetSav * 100)) : 0;
     const funSpent = d.income - d.expenses - d.available;
 
+    // Net Worth (separate sheet)
+    let netWorth = 0;
+    try {
+      const nwData = await fetchSheetRange('Net Worth', 'G1:G2');
+      netWorth = parseCurrency(nwData[1]?.[0]);  // G2
+    } catch(e) { /* non-fatal */ }
+
     // Cards
     document.getElementById('fin-view-cards').innerHTML = `
       <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.totalSavings)}</div>
-        <div class="fin-card-lbl">Total Savings</div>
+        <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.income)}</div>
+        <div class="fin-card-lbl">Monthly Income</div>
       </div>
       <div class="fin-card">
         <div class="fin-card-val" style="color:var(--red)">${fmtDollar(d.expenses)}</div>
         <div class="fin-card-lbl">Total Spent</div>
       </div>
       <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--cyan)">${fmtDollar(d.available)}</div>
-        <div class="fin-card-lbl">Available Savings</div>
+        <div class="fin-card-val" style="color:var(--orange)">${fmtDollar(d.fixedExpenses)}</div>
+        <div class="fin-card-lbl">Fixed Expenses</div>
       </div>
       <div class="fin-card">
         <div class="fin-card-val" style="color:var(--yellow)">${fmtDollar(d.funLeft)}</div>
         <div class="fin-card-lbl">Fun Budget Left</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.totalSavings)}</div>
+        <div class="fin-card-lbl">Total Savings</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-val" style="color:var(--blue)">${fmtDollar(d.targetSav)}</div>
+        <div class="fin-card-lbl">Target Savings</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-val" style="color:var(--cyan)">${fmtDollar(d.available)}</div>
+        <div class="fin-card-lbl">Available Savings</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-val" style="color:var(--pink)">${fmtDollar(netWorth)}</div>
+        <div class="fin-card-lbl">Net Worth</div>
       </div>`;
 
     // Savings progress
