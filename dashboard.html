@@ -54,6 +54,13 @@ body {
   min-height: 100vh;
   letter-spacing: 0.01em;
 }
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: url('https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1920&q=80') center/cover fixed no-repeat;
+  opacity: 0.07;
+}
+body > * { position: relative; z-index: 1; }
 
 /* ── NAV ── */
 .nav {
