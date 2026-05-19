@@ -1939,13 +1939,19 @@ async function searchAndShowFood(query) {
   const spinner = document.getElementById('food-search-spinner');
   const dd = document.getElementById('food-dropdown');
   spinner.style.display = 'inline';
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+
   try {
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10&fields=product_name,nutriments,brands`;
-    const res  = await fetch(url);
+    // Use the v2 REST endpoint — more reliable than the CGI one
+    const url = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(query)}&fields=product_name,nutriments,brands&page_size=20&json=true`;
+    const res  = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
     if (!res.ok) throw new Error(res.status);
     const json = await res.json();
     _foodResults = (json.products || [])
-      .filter(p => p.product_name && offNutr(p,'energy-kcal_100g') > 0)
+      .filter(p => p.product_name && offNutr(p, 'energy-kcal_100g') > 0)
       .slice(0, 10);
     if (!_foodResults.length) {
       dd.innerHTML = `<div class="food-result-item" style="color:var(--text-muted)">No results for "${esc(query)}" — try a simpler term or enter macros manually.</div>`;
@@ -1954,8 +1960,12 @@ async function searchAndShowFood(query) {
     }
     showFoodDropdown();
   } catch(e) {
+    clearTimeout(timer);
     _foodResults = [];
-    dd.innerHTML = `<div class="food-result-item" style="color:var(--red)">Network error — check connection or enter macros manually.</div>`;
+    const msg = e.name === 'AbortError'
+      ? 'Search timed out — enter macros manually below.'
+      : 'Search unavailable — enter macros manually below.';
+    dd.innerHTML = `<div class="food-result-item" style="color:var(--text-muted)">${msg}</div>`;
     dd.style.display = 'block';
   } finally {
     spinner.style.display = 'none';
