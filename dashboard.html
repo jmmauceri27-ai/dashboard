@@ -350,6 +350,36 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .grat-footer   { display: flex; align-items: center; justify-content: space-between; }
 .grat-count    { font-size: 10px; color: var(--text-dim); }
 
+/* ── HEALTH VIEW ── */
+.health-view { display: none; max-width: 900px; margin: 0 auto; padding: 12px; height: calc(100vh - 50px); flex-direction: column; gap: 12px; overflow-y: auto; }
+.health-view.active { display: flex; }
+.health-header { font-size: 9px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 7px; }
+.health-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+.health-card-title { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+.health-stat-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.health-stat { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.health-stat-val { font-size: 22px; font-weight: 700; line-height: 1; }
+.health-stat-lbl { font-size: 10px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.6px; }
+.cal-history-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day-cell { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 5px 4px; text-align: center; }
+.cal-day-cell.today { border-color: var(--blue); }
+.cal-day-date { font-size: 9px; color: var(--text-dim); margin-bottom: 2px; }
+.cal-day-kcal { font-size: 11px; font-weight: 600; }
+.cal-day-kcal.over  { color: var(--red); }
+.cal-day-kcal.under { color: var(--green); }
+.cal-day-kcal.empty { color: var(--text-dim); }
+.weight-log-row { display: flex; gap: 7px; margin-bottom: 12px; }
+.weight-log-row .fi { flex: 1; min-width: 0; }
+.weight-history { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
+.weight-entry { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; font-size: 12px; }
+.weight-entry-date { color: var(--text-muted); flex: 1; }
+.weight-entry-val  { font-weight: 700; font-size: 14px; }
+.weight-entry-unit { color: var(--text-dim); font-size: 11px; }
+.weight-delta { font-size: 11px; margin-left: 4px; }
+.weight-delta.up   { color: var(--red); }
+.weight-delta.down { color: var(--green); }
+.weight-chart { width: 100%; height: 100px; margin-bottom: 14px; }
+
 /* ── CALENDAR VIEW ── */
 .calendar-view { display: none; max-width: 1400px; margin: 0 auto; padding: 12px; height: calc(100vh - 50px); flex-direction: column; gap: 10px; }
 .calendar-view.active { display: flex; }
@@ -908,6 +938,51 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
   <div class="cal-iframe-wrap">
     <iframe id="cal-iframe" src="" allowfullscreen></iframe>
   </div>
+</div>
+
+<!-- ── HEALTH VIEW ── -->
+<div class="health-view" id="health-view">
+
+  <!-- Calorie Tracker -->
+  <div class="health-card">
+    <div class="health-card-title"><span class="dot dot-green"></span>Daily Calories</div>
+    <div class="health-stat-row">
+      <div class="health-stat">
+        <div class="health-stat-val" id="h-kcal-today">0</div>
+        <div class="health-stat-lbl">Today (kcal)</div>
+      </div>
+      <div class="health-stat">
+        <div class="health-stat-val" id="h-kcal-goal">2000</div>
+        <div class="health-stat-lbl">Daily Goal <span style="font-size:10px;color:var(--blue);cursor:pointer" onclick="editKcalGoal()">(edit)</span></div>
+      </div>
+      <div class="health-stat">
+        <div class="health-stat-val" id="h-kcal-remaining">2000</div>
+        <div class="health-stat-lbl">Remaining</div>
+      </div>
+      <div class="health-stat">
+        <div class="health-stat-val" id="h-kcal-avg">—</div>
+        <div class="health-stat-lbl">7-Day Avg</div>
+      </div>
+    </div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--text-dim);margin-bottom:7px">Last 14 Days</div>
+    <div class="cal-history-grid" id="h-cal-grid"></div>
+  </div>
+
+  <!-- Weight Log -->
+  <div class="health-card">
+    <div class="health-card-title"><span class="dot dot-blue"></span>Weight Log</div>
+    <canvas class="weight-chart" id="weight-chart"></canvas>
+    <div class="weight-log-row">
+      <input class="fi" id="weight-input" type="number" min="0" step="0.1" placeholder="Enter weight…" onkeydown="if(event.key==='Enter')logWeight()" />
+      <select class="fi" id="weight-unit" style="width:70px;cursor:pointer">
+        <option value="lbs">lbs</option>
+        <option value="kg">kg</option>
+      </select>
+      <button class="btn btn-blue" onclick="logWeight()">Log</button>
+    </div>
+    <div class="weight-history" id="weight-history"></div>
+  </div>
+
 </div>
 
 <!-- ── FINANCE VIEW ── -->
@@ -1753,6 +1828,7 @@ function addMeal() {
     fat:     parseInt(document.getElementById('meal-fat').value)     || 0,
   });
   save('meridian_meals', mealsData);
+  save('meridian_meals_' + TODAY, mealsData);
   ['meal-name','meal-kcal','meal-protein','meal-carbs','meal-fat'].forEach(id => document.getElementById(id).value = '');
   const srv = document.getElementById('meal-serving');
   if (srv) srv.value = 100;
@@ -1767,6 +1843,7 @@ function addMeal() {
 function deleteMeal(idx) {
   mealsData.meals.splice(idx, 1);
   save('meridian_meals', mealsData);
+  save('meridian_meals_' + TODAY, mealsData);
   renderNutrition();
 }
 
@@ -2057,6 +2134,179 @@ function setCalMode(mode) {
 }
 
 // ── NAV TABS ──────────────────────────────────────────────────────
+// ── HEALTH VIEW ──────────────────────────────────────────────────
+let weightData = load('meridian_weight', []);
+let kcalGoal   = load('meridian_kcal_goal', 2000);
+
+function getTodayKcal() {
+  return (mealsData.meals || []).reduce((s, m) => s + (m.kcal || 0), 0);
+}
+
+function getKcalForDate(dateStr) {
+  const stored = load('meridian_meals_' + dateStr, null);
+  if (stored) return (stored.meals || []).reduce((s, m) => s + (m.kcal || 0), 0);
+  if (dateStr === TODAY) return getTodayKcal();
+  return null;
+}
+
+function editKcalGoal() {
+  const val = prompt('Daily calorie goal:', kcalGoal);
+  if (val === null) return;
+  const n = parseInt(val);
+  if (!isNaN(n) && n > 0) { kcalGoal = n; save('meridian_kcal_goal', kcalGoal); renderHealthView(); }
+}
+
+function logWeight() {
+  const val  = parseFloat(document.getElementById('weight-input').value);
+  const unit = document.getElementById('weight-unit').value;
+  if (!val || val <= 0) return;
+  weightData.unshift({ date: TODAY, value: val, unit });
+  save('meridian_weight', weightData);
+  document.getElementById('weight-input').value = '';
+  renderHealthView();
+}
+
+function deleteWeight(idx) {
+  weightData.splice(idx, 1);
+  save('meridian_weight', weightData);
+  renderHealthView();
+}
+
+function renderHealthView() {
+  const todayKcal = getTodayKcal();
+  const remaining = kcalGoal - todayKcal;
+
+  document.getElementById('h-kcal-today').textContent     = todayKcal;
+  document.getElementById('h-kcal-goal').textContent      = kcalGoal;
+  document.getElementById('h-kcal-remaining').textContent = remaining;
+  document.getElementById('h-kcal-remaining').style.color = remaining < 0 ? 'var(--red)' : remaining < kcalGoal * 0.1 ? 'var(--yellow)' : '';
+
+  // 7-day avg
+  const last7 = [];
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = getKcalForDate(d.toISOString().split('T')[0]);
+    if (k !== null) last7.push(k);
+  }
+  document.getElementById('h-kcal-avg').textContent = last7.length ? Math.round(last7.reduce((a,b)=>a+b,0)/last7.length) : '—';
+
+  // 14-day calorie grid
+  const grid = document.getElementById('h-cal-grid');
+  const cells = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    const kcal = getKcalForDate(ds);
+    const label = d.toLocaleDateString('en-US', { month:'numeric', day:'numeric' });
+    const isToday = ds === TODAY;
+    let cls = 'empty', display = '—';
+    if (kcal !== null && kcal > 0) {
+      display = kcal;
+      cls = kcal > kcalGoal ? 'over' : 'under';
+    }
+    cells.push(`<div class="cal-day-cell${isToday?' today':''}">
+      <div class="cal-day-date">${label}</div>
+      <div class="cal-day-kcal ${cls}">${display}</div>
+    </div>`);
+  }
+  grid.innerHTML = cells.join('');
+
+  // Weight chart
+  renderWeightChart();
+
+  // Weight history list
+  const hist = document.getElementById('weight-history');
+  if (!weightData.length) { hist.innerHTML = `<div class="empty-state">No entries yet.</div>`; return; }
+  hist.innerHTML = weightData.map((e, i) => {
+    const prev  = weightData[i + 1];
+    let delta = '';
+    if (prev && prev.unit === e.unit) {
+      const diff = e.value - prev.value;
+      const sign = diff > 0 ? '+' : '';
+      delta = `<span class="weight-delta ${diff > 0 ? 'up' : 'down'}">${sign}${diff.toFixed(1)}</span>`;
+    }
+    return `<div class="weight-entry">
+      <span class="weight-entry-date">${e.date}</span>
+      <span class="weight-entry-val">${e.value}</span>
+      <span class="weight-entry-unit">${e.unit}</span>
+      ${delta}
+      <button class="del-btn" onclick="deleteWeight(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderWeightChart() {
+  const canvas = document.getElementById('weight-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const pts = [...weightData].reverse().slice(-30);
+  if (pts.length < 2) {
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Log at least 2 entries to see chart', W / 2, H / 2);
+    return;
+  }
+
+  const vals = pts.map(p => p.value);
+  const min  = Math.min(...vals) * 0.995;
+  const max  = Math.max(...vals) * 1.005;
+  const pad  = { t: 8, b: 20, l: 36, r: 10 };
+  const cw   = W - pad.l - pad.r;
+  const ch   = H - pad.t - pad.b;
+  const xOf  = i => pad.l + (i / (pts.length - 1)) * cw;
+  const yOf  = v => pad.t + ch - ((v - min) / (max - min)) * ch;
+
+  // grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (ch / 4) * i;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    const v = max - ((max - min) / 4) * i;
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(1), pad.l - 4, y + 3);
+  }
+
+  // gradient fill
+  const grad = ctx.createLinearGradient(0, pad.t, 0, H - pad.b);
+  grad.addColorStop(0, 'rgba(59,130,246,0.35)');
+  grad.addColorStop(1, 'rgba(59,130,246,0)');
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(vals[0]));
+  pts.forEach((p, i) => ctx.lineTo(xOf(i), yOf(p.value)));
+  ctx.lineTo(xOf(pts.length - 1), H - pad.b);
+  ctx.lineTo(xOf(0), H - pad.b);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // line
+  ctx.beginPath();
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(xOf(i), yOf(p.value)) : ctx.lineTo(xOf(i), yOf(p.value)));
+  ctx.stroke();
+
+  // dots
+  pts.forEach((p, i) => {
+    ctx.beginPath();
+    ctx.arc(xOf(i), yOf(p.value), 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#3b82f6';
+    ctx.fill();
+  });
+}
+
 document.querySelectorAll('.nav-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -2067,11 +2317,13 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     const journalView  = document.getElementById('journal-view');
     const financeView  = document.getElementById('finance-view');
     const calendarView = document.getElementById('calendar-view');
+    const healthView   = document.getElementById('health-view');
 
     dashboard.style.display = 'none';
     journalView.classList.remove('active');
     financeView.classList.remove('active');
     calendarView.classList.remove('active');
+    healthView.classList.remove('active');
 
     if (label === 'Journal') {
       journalView.classList.add('active');
@@ -2086,6 +2338,9 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     } else if (label === 'Calendar') {
       calendarView.classList.add('active');
       setCalMode(calMode);
+    } else if (label === 'Health') {
+      healthView.classList.add('active');
+      renderHealthView();
     } else {
       dashboard.style.display = 'grid';
     }
