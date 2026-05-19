@@ -332,6 +332,33 @@ body {
 .grat-footer   { display: flex; align-items: center; justify-content: space-between; }
 .grat-count    { font-size: 10px; color: var(--text-dim); }
 
+/* ── CALENDAR VIEW ── */
+.calendar-view { display: none; max-width: 1400px; margin: 0 auto; padding: 12px; height: calc(100vh - 50px); flex-direction: column; gap: 10px; }
+.calendar-view.active { display: flex; }
+.calendar-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; flex-shrink: 0;
+}
+.cal-toolbar-left { display: flex; align-items: center; gap: 7px; }
+.cal-mode-btns { display: flex; gap: 4px; }
+.cal-mode-btn {
+  padding: 5px 14px; border-radius: 5px; font-size: 12px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--border2);
+  background: transparent; color: var(--text-muted); font-family: inherit;
+  transition: all 0.15s;
+}
+.cal-mode-btn:hover  { color: var(--text); background: var(--surface2); }
+.cal-mode-btn.active { background: var(--blue-bg); color: var(--blue); border-color: rgba(77,138,255,0.3); }
+.cal-iframe-wrap {
+  flex: 1; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--border); position: relative; min-height: 0;
+}
+.cal-iframe-wrap iframe {
+  width: 100%; height: 100%; border: none; display: block;
+  filter: invert(0.9) hue-rotate(180deg) saturate(0.7) brightness(1.05);
+}
+
 /* ── FINANCE VIEW ── */
 .finance-view { display: none; max-width: 1200px; margin: 0 auto; padding: 12px; height: calc(100vh - 50px); }
 .finance-view.active { display: grid; grid-template-columns: 190px 1fr; gap: 10px; }
@@ -450,6 +477,7 @@ body {
     <button class="nav-tab">Brain</button>
     <button class="nav-tab">Finance</button>
     <button class="nav-tab">Journal</button>
+    <button class="nav-tab">Calendar</button>
     <button class="nav-tab">Health</button>
   </nav>
   <div class="nav-right">
@@ -773,6 +801,24 @@ body {
   </div><!-- /col right -->
 
 </div><!-- /dashboard -->
+
+<!-- ── CALENDAR VIEW ── -->
+<div class="calendar-view" id="calendar-view">
+  <div class="calendar-toolbar">
+    <div class="cal-toolbar-left">
+      <span class="dot dot-blue"></span>
+      <span style="font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--text-muted)">Calendar</span>
+    </div>
+    <div class="cal-mode-btns">
+      <button class="cal-mode-btn active" onclick="setCalMode('MONTH')">Month</button>
+      <button class="cal-mode-btn" onclick="setCalMode('WEEK')">Week</button>
+      <button class="cal-mode-btn" onclick="setCalMode('AGENDA')">Agenda</button>
+    </div>
+  </div>
+  <div class="cal-iframe-wrap">
+    <iframe id="cal-iframe" src="" allowfullscreen></iframe>
+  </div>
+</div>
 
 <!-- ── FINANCE VIEW ── -->
 <div class="finance-view" id="finance-view">
@@ -1723,19 +1769,36 @@ document.getElementById('journal-textarea').addEventListener('input', () => {
 openTodayEntry();
 
 // ── NAV TABS ──────────────────────────────────────────────────────
+// ── CALENDAR ──────────────────────────────────────────────────────
+const CAL_SRC  = 'jmmauceri27%40gmail.com';
+const CAL_TZ   = 'America%2FNew_York';
+const CAL_BASE = `https://calendar.google.com/calendar/embed?src=${CAL_SRC}&ctz=${CAL_TZ}&showTitle=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0`;
+let calMode = 'MONTH';
+
+function setCalMode(mode) {
+  calMode = mode;
+  document.querySelectorAll('.cal-mode-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().toUpperCase() === mode);
+  });
+  document.getElementById('cal-iframe').src = `${CAL_BASE}&mode=${mode}`;
+}
+
+// ── NAV TABS ──────────────────────────────────────────────────────
 document.querySelectorAll('.nav-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
 
-    const label       = tab.textContent.trim();
-    const dashboard   = document.querySelector('.dashboard');
-    const journalView = document.getElementById('journal-view');
-    const financeView = document.getElementById('finance-view');
+    const label        = tab.textContent.trim();
+    const dashboard    = document.querySelector('.dashboard');
+    const journalView  = document.getElementById('journal-view');
+    const financeView  = document.getElementById('finance-view');
+    const calendarView = document.getElementById('calendar-view');
 
     dashboard.style.display = 'none';
     journalView.classList.remove('active');
     financeView.classList.remove('active');
+    calendarView.classList.remove('active');
 
     if (label === 'Journal') {
       journalView.classList.add('active');
@@ -1747,6 +1810,9 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
       finActiveMonth = finActiveMonth || month;
       renderFinMonthList();
       loadFinanceView(finActiveMonth);
+    } else if (label === 'Calendar') {
+      calendarView.classList.add('active');
+      setCalMode(calMode);
     } else {
       dashboard.style.display = 'grid';
     }
