@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian — Personal OS</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #090b12;
+  --surface:    #0f1119;
+  --surface2:   #141720;
+  --surface3:   #1a1e2e;
+  --border:     #1e2438;
+  --border2:    #252b40;
+  --text:       #dde2f0;
+  --text-muted: #6b7494;
+  --text-dim:   #3a4060;
+  --green:      #00d97e;
+  --green2:     #1aff94;
+  --green-bg:   rgba(0,217,126,0.1);
+  --blue:       #4d8aff;
+  --blue-bg:    rgba(77,138,255,0.1);
+  --cyan:       #00c8ff;
+  --orange:     #ff9340;
+  --orange-bg:  rgba(255,147,64,0.1);
+  --yellow:     #ffd166;
+  --yellow-bg:  rgba(255,209,102,0.1);
+  --red:        #ff4757;
+  --red-bg:     rgba(255,71,87,0.1);
+  --purple:     #8b5cf6;
+  --purple-bg:  rgba(139,92,246,0.1);
+  --pink:       #f472b6;
+  --pink-bg:    rgba(244,114,182,0.1);
+  --teal:       #2dd4bf;
+  --teal-bg:    rgba(45,212,191,0.1);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 50px;
+  background: #0a0c14;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-brand { display: flex; flex-direction: column; }
+.nav-brand .name { font-size: 14px; font-weight: 700; letter-spacing: 0.3px; }
+.nav-brand .sub  { font-size: 9px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 1px; }
+.nav-tabs { display: flex; gap: 2px; }
+.nav-tab {
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.nav-tab:hover  { color: var(--text); background: var(--surface2); }
+.nav-tab.active { color: var(--text); background: var(--surface3); }
+.nav-right { display: flex; align-items: center; gap: 14px; }
+.clock .time { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.clock .date { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; text-align: right; margin-top: 1px; }
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+}
+
+/* ── LAYOUT ── */
+.dashboard {
+  display: grid;
+  grid-template-columns: 236px 1fr 268px;
+  gap: 10px;
+  padding: 10px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+.col { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 14px;
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 11px;
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-green  { background: var(--green);  box-shadow: 0 0 6px var(--green); }
+.dot-blue   { background: var(--blue);   box-shadow: 0 0 6px var(--blue); }
+.dot-orange { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+.dot-yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+.dot-red    { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+.dot-purple { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
+.dot-pink   { background: var(--pink);   box-shadow: 0 0 6px var(--pink); }
+.dot-teal   { background: var(--teal);   box-shadow: 0 0 6px var(--teal); }
+
+/* ── BADGES ── */
+.badge {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid rgba(0,217,126,0.2); }
+.badge-blue   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid rgba(77,138,255,0.2); }
+.badge-orange { background: var(--orange-bg); color: var(--orange); border: 1px solid rgba(255,147,64,0.2); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(255,209,102,0.2); }
+.badge-red    { background: var(--red-bg);    color: var(--red);    border: 1px solid rgba(255,71,87,0.2); }
+.badge-purple { background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(139,92,246,0.2); }
+.badge-pink   { background: var(--pink-bg);   color: var(--pink);   border: 1px solid rgba(244,114,182,0.2); }
+.badge-teal   { background: var(--teal-bg);   color: var(--teal);   border: 1px solid rgba(45,212,191,0.2); }
+.badge-gray   { background: var(--surface3);  color: var(--text-muted); border: 1px solid var(--border2); }
+
+/* ── OPERATOR ── */
+.op-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.op-row:last-child { border-bottom: none; padding-bottom: 0; }
+.op-label { color: var(--text-muted); font-size: 12px; }
+.op-value { font-size: 12px; font-weight: 600; }
+.score-wrap { display: flex; align-items: center; gap: 7px; }
+.score-bar {
+  width: 54px; height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+  border-radius: 2px;
+}
+
+/* ── FINANCE ── */
+.fin-balance { font-size: 26px; font-weight: 700; line-height: 1; }
+.fin-delta   { font-size: 11px; color: var(--green); margin: 3px 0 10px; }
+.mini-chart  { display: flex; align-items: flex-end; gap: 3px; height: 30px; margin-bottom: 10px; }
+.mini-bar    { flex: 1; background: var(--green); border-radius: 2px 2px 0 0; opacity: 0.55; min-height: 3px; }
+.mini-bar.hi { opacity: 1; background: var(--green2); }
+.fin-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.fin-row:last-child { border-bottom: none; padding-bottom: 0; }
+.fin-row .lbl { color: var(--text-muted); font-size: 12px; }
+.fin-row .val { font-size: 12px; font-weight: 600; }
+
+/* ── BLOCKERS ── */
+.blocker {
+  padding: 8px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  margin-bottom: 7px;
+}
+.blocker:last-child { margin-bottom: 0; }
+.blocker-title { font-size: 12px; color: var(--text); line-height: 1.45; margin-bottom: 5px; }
+.blocker-meta  { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.blocker-meta .age { font-size: 10px; color: var(--text-dim); margin-left: 2px; }
+
+/* ── SESSION STATS ── */
+.session-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin-bottom: 13px;
+}
+.stat-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 9px 7px;
+}
+.stat-val  { font-size: 19px; font-weight: 700; line-height: 1; }
+.stat-val span { font-size: 12px; font-weight: 500; }
+.stat-lbl  { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px; margin-top: 4px; }
+
+/* ── PROGRESS ── */
+.prog-item { margin-bottom: 9px; }
+.prog-item:last-of-type { margin-bottom: 0; }
+.prog-meta  { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.prog-label { font-size: 11px; color: var(--text-muted); }
+.prog-pct   { font-size: 11px; font-weight: 600; }
+.prog-bar   { height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+.prog-fill  { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+.fill-blue   { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+.fill-green  { background: linear-gradient(90deg, var(--green), var(--green2)); }
+.fill-orange { background: linear-gradient(90deg, var(--orange), var(--yellow)); }
+
+/* ── ACTIVITY ── */
+.act-section { margin-top: 12px; }
+.act-heading {
+  font-size: 9px; text-transform: uppercase;
+  letter-spacing: 1.3px; color: var(--text-dim);
+  margin-bottom: 7px;
+}
+.act-item {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 4px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.act-item:last-child { border-bottom: none; }
+.act-time { color: var(--text-dim); font-size: 11px; width: 36px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.act-text { color: var(--text-muted); line-height: 1.45; }
+.act-text strong { color: var(--text); font-weight: 600; }
+.ai-tag {
+  display: inline-block;
+  color: var(--blue); font-size: 10px;
+  background: var(--blue-bg);
+  padding: 1px 5px; border-radius: 3px; margin-left: 4px;
+}
+
+/* ── HABITS ── */
+.habit-day-labels {
+  display: flex; justify-content: flex-end;
+  gap: 3px; margin-bottom: 3px; padding-right: 1px;
+}
+.habit-day-lbl {
+  width: 12px; text-align: center;
+  font-size: 9px; color: var(--text-dim); text-transform: uppercase;
+}
+.habit-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid var(--border);
+}
+.habit-row:last-child { border-bottom: none; }
+.habit-icon   { font-size: 14px; width: 18px; text-align: center; }
+.habit-name   { flex: 1; font-size: 12px; color: var(--text); }
+.habit-streak { font-size: 11px; color: var(--text-muted); width: 26px; text-align: right; flex-shrink: 0; }
+.habit-dots   { display: flex; gap: 3px; }
+.habit-dot {
+  width: 12px; height: 12px; border-radius: 3px;
+  cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+}
+.habit-dot.done   { background: var(--green); }
+.habit-dot.missed { background: var(--red); opacity: 0.5; }
+.habit-dot.empty  { background: var(--border2); }
+.habit-dot.today  { outline: 1px solid var(--text-muted); outline-offset: 1px; }
+.habit-dot.done:hover  { background: var(--green2); transform: scale(1.1); }
+.habit-dot.empty:hover { background: var(--surface3); transform: scale(1.1); }
+
+/* ── PRIORITIES ── */
+.priority-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+}
+.priority-item:last-child { border-bottom: none; }
+.p-checkbox {
+  width: 15px; height: 15px; border: 1px solid var(--border2);
+  border-radius: 4px; flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px; transition: all 0.15s;
+}
+.p-checkbox.checked { background: var(--green-bg); border-color: var(--green); }
+.p-checkbox.checked::after { content: '✓'; font-size: 10px; color: var(--green); }
+.p-content { flex: 1; min-width: 0; }
+.p-title {
+  font-size: 12px; color: var(--text);
+  line-height: 1.4; margin-bottom: 4px;
+  word-break: break-word;
+}
+.p-title.done { text-decoration: line-through; color: var(--text-muted); }
+.p-meta { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.p-time { font-size: 10px; color: var(--text-dim); }
+.p-del {
+  margin-left: auto; font-size: 13px;
+  color: var(--text-dim); cursor: pointer;
+  opacity: 0; transition: all 0.15s;
+  background: none; border: none; font-family: inherit; padding: 0 2px;
+  flex-shrink: 0;
+}
+.priority-item:hover .p-del { opacity: 1; }
+.p-del:hover { color: var(--red) !important; opacity: 1 !important; }
+
+.add-row {
+  display: flex; gap: 6px;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.add-input {
+  flex: 1; background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: 5px;
+  padding: 6px 10px; font-size: 12px;
+  color: var(--text); font-family: inherit;
+  outline: none; transition: border-color 0.15s;
+}
+.add-input:focus { border-color: var(--blue); }
+.add-input::placeholder { color: var(--text-dim); }
+.tag-select {
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text-muted); border-radius: 5px;
+  padding: 0 8px; font-size: 11px; font-family: inherit;
+  outline: none; cursor: pointer;
+}
+.btn {
+  padding: 6px 12px; border-radius: 5px;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; border: none;
+  font-family: inherit; transition: all 0.15s; white-space: nowrap;
+}
+.btn-blue  { background: var(--blue-bg);  color: var(--blue);  border: 1px solid rgba(77,138,255,0.3); }
+.btn-green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,217,126,0.3); }
+.btn-blue:hover  { background: rgba(77,138,255,0.2); }
+.btn-green:hover { background: rgba(0,217,126,0.2); }
+
+/* ── NUTRITION ── */
+.nut-chart { display: flex; justify-content: center; align-items: center; margin: 6px 0 12px; position: relative; }
+.donut-label { position: absolute; text-align: center; }
+.donut-kcal  { font-size: 22px; font-weight: 700; }
+.donut-sub   { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
+.macro-strip { display: flex; gap: 14px; justify-content: center; margin-bottom: 11px; }
+.macro-item  { text-align: center; }
+.macro-val  { font-size: 15px; font-weight: 700; }
+.macro-unit { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.macro-bar-row { margin-bottom: 7px; }
+.macro-bar-row:last-child { margin-bottom: 0; }
+.macro-bar-lbl {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--text-muted); margin-bottom: 3px;
+}
+.macro-bar-lbl .pct { font-weight: 600; color: var(--text); }
+.meals-heading {
+  font-size: 9px; text-transform: uppercase;
+  letter-spacing: 1.3px; color: var(--text-dim);
+  margin: 12px 0 7px;
+}
+.meal-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px;
+}
+.meal-item:last-child { border-bottom: none; }
+.meal-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.meal-name { flex: 1; color: var(--text); }
+.meal-kcal { color: var(--text-muted); font-size: 11px; }
+.ai-box {
+  margin-top: 10px; padding: 8px 10px;
+  background: var(--blue-bg);
+  border: 1px solid rgba(77,138,255,0.15);
+  border-radius: 7px; font-size: 11px;
+  color: var(--text-muted); line-height: 1.55;
+}
+.ai-box-lbl {
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--blue); margin-bottom: 3px;
+}
+
+/* ── GRATITUDE ── */
+.grat-streak {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; margin-bottom: 10px;
+  background: var(--pink-bg);
+  border: 1px solid rgba(244,114,182,0.15);
+  border-radius: 7px;
+}
+.grat-streak-num { font-size: 26px; font-weight: 700; color: var(--pink); line-height: 1; }
+.grat-streak-lbl { font-size: 12px; color: var(--text); }
+.grat-streak-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.grat-prompt {
+  font-size: 11px; color: var(--text-muted);
+  font-style: italic; margin-bottom: 9px; line-height: 1.5;
+}
+.grat-empty { font-size: 12px; color: var(--text-dim); font-style: italic; padding: 6px 0 8px; }
+.grat-entry {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+}
+.grat-entry:last-child { border-bottom: none; }
+.grat-bullet { color: var(--pink); font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+.grat-text   { flex: 1; font-size: 12px; color: var(--text); line-height: 1.5; word-break: break-word; }
+.grat-del {
+  opacity: 0; cursor: pointer; font-size: 13px;
+  background: none; border: none; color: var(--text-dim);
+  font-family: inherit; padding: 0 2px; transition: all 0.15s; flex-shrink: 0;
+}
+.grat-entry:hover .grat-del { opacity: 1; }
+.grat-del:hover { color: var(--red) !important; opacity: 1 !important; }
+.grat-add-col {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.grat-textarea {
+  width: 100%; resize: none; min-height: 54px;
+  line-height: 1.55;
+}
+.grat-footer {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.grat-count { font-size: 10px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<header class="nav">
+  <div class="nav-brand">
+    <span class="name">Meridian</span>
+    <span class="sub">Personal OS</span>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active">Home</button>
+    <button class="nav-tab">CRM</button>
+    <button class="nav-tab">Brain</button>
+    <button class="nav-tab">Finance</button>
+    <button class="nav-tab">Journal</button>
+    <button class="nav-tab">Health</button>
+  </nav>
+  <div class="nav-right">
+    <div class="clock">
+      <div class="time" id="clock-time">--:--:--</div>
+      <div class="date" id="clock-date">--- -- --- ----</div>
+    </div>
+    <div class="avatar">JM</div>
+  </div>
+</header>
+
+<!-- ════ GRID ════ -->
+<div class="dashboard">
+
+  <!-- ══ LEFT ══ -->
+  <div class="col">
+
+    <!-- OPERATOR -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot dot-green"></span>Operator</div>
+        <span class="badge badge-green">LIVE</span>
+      </div>
+      <div class="op-row">
+        <span class="op-label">Mode</span>
+        <span class="badge badge-blue">Deep Work</span>
+      </div>
+      <div class="op-row">
+        <span class="op-label">Focus score</span>
+        <div class="score-wrap">
+          <span class="op-value">87</span>
+          <div class="score-bar"><div class="score-fill" style="width:87%"></div></div>
+        </div>
+      </div>
+      <div class="op-row">
+        <span class="op-label">Session</span>
+        <span class="op-value" id="session-time">0h 0m</span>
+      </div>
+      <div class="op-row">
+        <span class="op-label">Context</span>
+        <span class="badge badge-orange">Product Sprint</span>
+      </div>
+      <div class="op-row">
+        <span class="op-label">Next break</span>
+        <span class="op-value" id="next-break">25 min</span>
+      </div>
+      <div class="op-row">
+        <span class="op-label">AI calls today</span>
+        <span class="op-value">43</span>
+      </div>
+      <div class="op-row">
+        <span class="op-label">Interruptions</span>
+        <span class="op-value">2</span>
+      </div>
+    </div>
+
+    <!-- FINANCE PULSE -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot dot-yellow"></span>Finance Pulse</div>
+        <span class="badge badge-yellow">MAY</span>
+      </div>
+      <div class="fin-balance">$6,842</div>
+      <div class="fin-delta">+$348 this week</div>
+      <div class="mini-chart">
+        <div class="mini-bar" style="height:38%"></div>
+        <div class="mini-bar" style="height:52%"></div>
+        <div class="mini-bar" style="height:44%"></div>
+        <div class="mini-bar" style="height:63%"></div>
+        <div class="mini-bar" style="height:48%"></div>
+        <div class="mini-bar" style="height:70%"></div>
+        <div class="mini-bar" style="height:58%"></div>
+        <div class="mini-bar hi" style="height:82%"></div>
+      </div>
+      <div class="fin-row">
+        <span class="lbl">MRR</span>
+        <span class="val" style="color:var(--green)">$2,400</span>
+      </div>
+      <div class="fin-row">
+        <span class="lbl">Spent (MTD)</span>
+        <span class="val">$1,156</span>
+      </div>
+      <div class="fin-row">
+        <span class="lbl">Pending</span>
+        <span class="val" style="color:var(--yellow)">$320</span>
+      </div>
+      <div class="fin-row">
+        <span class="lbl">Burn rate</span>
+        <span class="badge badge-green">Low</span>
+      </div>
+    </div>
+
+    <!-- KEY BLOCKERS -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot dot-red"></span>Key Blockers</div>
+        <span class="badge badge-red">3 OPEN</span>
+      </div>
+      <div class="blocker">
+        <div class="blocker-title">Auth API returning 403 on mobile — OAuth scope mismatch</div>
+        <div class="blocker-meta">
+          <span class="badge badge-gray">Eng</span>
+          <span class="badge badge-red">High</span>
+          <span class="age">14h open</span>
+        </div>
+      </div>
+      <div class="blocker">
+        <div class="blocker-title">Investor deck missing Q2 cohort chart — waiting on data</div>
+        <div class="blocker-meta">
+          <span class="badge badge-gray">Biz</span>
+          <span class="badge badge-yellow">Med</span>
+          <span class="age">2d open</span>
+        </div>
+      </div>
+      <div class="blocker">
+        <div class="blocker-title">Design handoff for onboarding v2 not received from Figma</div>
+        <div class="blocker-meta">
+          <span class="badge badge-gray">Design</span>
+          <span class="badge badge-blue">Low</span>
+          <span class="age">5h open</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /col left -->
+
+  <!-- ══ MIDDLE ══ -->
+  <div class="col">
+
+    <!-- SESSION -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot dot-green"></span>Session</div>
+        <span class="badge badge-blue">TODAY</span>
+      </div>
+      <div class="session-stats">
+        <div class="stat-card">
+          <div class="stat-val" id="deep-focus-val">0h <span>0m</span></div>
+          <div class="stat-lbl">Deep Focus</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="tasks-done-val">0</div>
+          <div class="stat-lbl">Tasks Done</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">87<span>%</span></div>
+          <div class="stat-lbl">Energy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="pomodoro-val">0</div>
+          <div class="stat-lbl">Pomodoros</div>
+        </div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-meta">
+          <span class="prog-label">Daily goal — 6h deep work</span>
+          <span class="prog-pct" id="daily-pct">0%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill fill-blue" id="daily-bar" style="width:0%"></div></div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-meta">
+          <span class="prog-label">Weekly tasks — <span id="tasks-ratio">0 of 0</span></span>
+          <span class="prog-pct" id="weekly-pct">0%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill fill-green" id="weekly-bar" style="width:0%"></div></div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-meta">
+          <span class="prog-label">Monthly revenue target</span>
+          <span class="prog-pct">61%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill fill-orange" style="width:61%"></div></div>
+      </div>
+      <div class="act-section">
+        <div class="act-heading">Recent Activity</div>
+        <div class="act-item">
+          <span class="act-time">09:43</span>
+          <span class="act-text">Merged <strong>feat/onboarding-v2</strong> — 14 files changed</span>
+        </div>
+        <div class="act-item">
+          <span class="act-time">09:12</span>
+          <span class="act-text">Drafted investor update email<span class="ai-tag">AI-assisted</span></span>
+        </div>
+        <div class="act-item">
+          <span class="act-time">11:00</span>
+          <span class="act-text">Closed <strong>#47</strong> Auth bug — awaiting QA sign-off</span>
+        </div>
+        <div class="act-item">
+          <span class="act-time">11:49</span>
+          <span class="act-text">Reviewed <strong>3 PRs</strong> · standup notes generated</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HABIT TRACKER -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot dot-blue"></span>Habit Tracker</div>
+        <span class="badge badge-blue" id="week-badge">WEEK --</span>
+      </div>
+      <div id="habits-container"></div>
+    </div>
+
+    <!-- PRIORITIES -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot dot-orange"></span>Priorities</div>
+        <span class="badge badge-orange" id="pri-badge">0 / 0 DONE</span>
+      </div>
+      <div id="priorities-container"></div>
+      <div class="add-row">
+        <input class="add-input" id="new-task" placeholder="Add a priority…" />
+        <select class="tag-select" id="new-tag">
+          <option value="PERSONAL">Personal</option>
+          <option value="ENG">Eng</option>
+          <option value="BIZ">Biz</option>
+          <option value="URGENT">Urgent</option>
+          <option value="HEALTH">Health</option>
+        </select>
+        <button class="btn btn-blue" onclick="addTask()">Add</button>
+      </div>
+    </div>
+
+  </div><!-- /col mid -->
+
+  <!-- ══ RIGHT ══ -->
+  <div class="col">
+
+    <!-- NUTRITION -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot dot-orange"></span>Nutrition</div>
+        <span class="badge badge-orange">TODAY</span>
+      </div>
+      <div class="nut-chart">
+        <svg width="116" height="116" viewBox="0 0 116 116">
+          <circle cx="58" cy="58" r="46" fill="none" stroke="#1e2438" stroke-width="11"/>
+          <!-- Protein 74% -->
+          <circle cx="58" cy="58" r="46" fill="none" stroke="#ff4757" stroke-width="11"
+            stroke-dasharray="213.9 289.0" stroke-dashoffset="72.2" stroke-linecap="round"
+            transform="rotate(-90 58 58)"/>
+          <!-- Carbs 81% -->
+          <circle cx="58" cy="58" r="46" fill="none" stroke="#ffd166" stroke-width="11"
+            stroke-dasharray="234.1 289.0" stroke-dashoffset="72.2" stroke-linecap="round"
+            transform="rotate(144 58 58)" opacity="0.65"/>
+          <!-- Fat 65% -->
+          <circle cx="58" cy="58" r="46" fill="none" stroke="#4d8aff" stroke-width="11"
+            stroke-dasharray="187.9 289.0" stroke-dashoffset="72.2" stroke-linecap="round"
+            transform="rotate(220 58 58)" opacity="0.55"/>
+        </svg>
+        <div class="donut-label">
+          <div class="donut-kcal">1640</div>
+          <div class="donut-sub">kcal</div>
+        </div>
+      </div>
+      <div class="macro-strip">
+        <div class="macro-item">
+          <div class="macro-val" style="color:var(--red)">112g</div>
+          <div class="macro-unit">Protein</div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-val" style="color:var(--yellow)">198g</div>
+          <div class="macro-unit">Carbs</div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-val" style="color:var(--blue)">54g</div>
+          <div class="macro-unit">Fat</div>
+        </div>
+      </div>
+      <div>
+        <div class="macro-bar-row">
+          <div class="macro-bar-lbl"><span>Protein</span><span class="pct">74%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:74%;background:var(--red)"></div></div>
+        </div>
+        <div class="macro-bar-row">
+          <div class="macro-bar-lbl"><span>Carbs</span><span class="pct">81%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:81%;background:var(--yellow)"></div></div>
+        </div>
+        <div class="macro-bar-row">
+          <div class="macro-bar-lbl"><span>Fat</span><span class="pct">65%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:65%;background:var(--blue)"></div></div>
+        </div>
+      </div>
+      <div class="meals-heading">Meals Logged</div>
+      <div class="meal-item">
+        <div class="meal-dot" style="background:var(--green)"></div>
+        <div class="meal-name">Avocado eggs + toast</div>
+        <div class="meal-kcal">400 kcal</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-dot" style="background:var(--blue)"></div>
+        <div class="meal-name">Chicken rice bowl</div>
+        <div class="meal-kcal">620 kcal</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-dot" style="background:var(--yellow)"></div>
+        <div class="meal-name">Banana + protein shake</div>
+        <div class="meal-kcal">330 kcal</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-dot" style="background:var(--orange)"></div>
+        <div class="meal-name">Americano + almonds</div>
+        <div class="meal-kcal">290 kcal</div>
+      </div>
+      <div class="ai-box">
+        <div class="ai-box-lbl">AI Suggestion</div>
+        You're 26g short on protein. Consider a high-protein snack before dinner.
+      </div>
+    </div>
+
+    <!-- GRATITUDE -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot dot-pink"></span>Gratitude</div>
+        <span class="badge badge-pink" id="grat-badge">TODAY</span>
+      </div>
+
+      <div class="grat-streak">
+        <div class="grat-streak-num" id="grat-streak-num">0</div>
+        <div>
+          <div class="grat-streak-lbl">day streak</div>
+          <div class="grat-streak-sub">consecutive days logged</div>
+        </div>
+      </div>
+
+      <div class="grat-prompt" id="grat-prompt">What are you grateful for today?</div>
+
+      <div id="grat-list"></div>
+
+      <div class="grat-add-col">
+        <textarea class="add-input grat-textarea" id="grat-input" placeholder="I am grateful for…"></textarea>
+        <div class="grat-footer">
+          <span class="grat-count" id="grat-count">0 entries today</span>
+          <button class="btn btn-green" onclick="addGratitude()">Add Entry</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /col right -->
+
+</div><!-- /dashboard -->
+
+<script>
+// ── UTILS ──────────────────────────────────────────────────────────
+
+const TODAY = new Date().toISOString().split('T')[0];
+
+function load(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
+}
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── CLOCK ──────────────────────────────────────────────────────────
+
+function updateClock() {
+  const now = new Date();
+  const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock-time').textContent = `${hh}:${mm}:${ss}`;
+  document.getElementById('clock-date').textContent =
+    `${DAYS[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── WEEK NUMBER ────────────────────────────────────────────────────
+
+function weekNum(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+}
+document.getElementById('week-badge').textContent = `WEEK ${weekNum(new Date())}`;
+
+// ── SESSION TIMER ──────────────────────────────────────────────────
+
+const SESSION_KEY = 'meridian_session';
+let sessionData = load(SESSION_KEY, { date: null, startTs: null });
+if (sessionData.date !== TODAY) {
+  sessionData = { date: TODAY, startTs: Date.now() };
+  save(SESSION_KEY, sessionData);
+}
+const sessionStart = sessionData.startTs;
+
+function updateSession() {
+  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+  const h = Math.floor(elapsed / 3600);
+  const m = Math.floor((elapsed % 3600) / 60);
+  document.getElementById('session-time').textContent = `${h}h ${m}m`;
+  document.getElementById('deep-focus-val').innerHTML = `${h}h <span>${m}m</span>`;
+
+  const pct = Math.min(100, Math.round(elapsed / 216)); // 6h = 21600s
+  document.getElementById('daily-pct').textContent = pct + '%';
+  document.getElementById('daily-bar').style.width = pct + '%';
+
+  const pomos = Math.floor(elapsed / 1500);
+  document.getElementById('pomodoro-val').textContent = pomos;
+
+  const breakIn = 25 - Math.floor((elapsed % 1500) / 60);
+  document.getElementById('next-break').textContent = `${breakIn} min`;
+}
+setInterval(updateSession, 1000);
+updateSession();
+
+// ── HABITS ─────────────────────────────────────────────────────────
+
+const DEFAULT_HABITS = [
+  { id: 'meditation', icon: '🧘', name: 'Meditation',      streak: 14 },
+  { id: 'run',        icon: '🏃', name: 'Run / Walk 5k',   streak: 6  },
+  { id: 'read',       icon: '📖', name: 'Read 30 min',     streak: 21 },
+  { id: 'water',      icon: '💧', name: '2L Water',         streak: 3  },
+  { id: 'journal',    icon: '📓', name: 'Journal',          streak: 9  },
+  { id: 'guitar',     icon: '🎸', name: 'Guitar practice', streak: 2  },
+];
+
+let habits   = load('meridian_habits', DEFAULT_HABITS);
+let habitLog = load('meridian_habit_log', {});
+
+function getWeekDates() {
+  const now = new Date();
+  const dow = (now.getDay() + 6) % 7; // Mon=0 … Sun=6
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now);
+    d.setDate(now.getDate() - dow + i);
+    return d.toISOString().split('T')[0];
+  });
+}
+
+function renderHabits() {
+  const weekDates = getWeekDates();
+  const labels = ['M','T','W','T','F','S','S'];
+  let html = `<div class="habit-day-labels"><div style="flex:1"></div><div style="width:26px"></div>`;
+  labels.forEach(l => html += `<div class="habit-day-lbl">${l}</div>`);
+  html += `</div>`;
+
+  habits.forEach(h => {
+    html += `<div class="habit-row">
+      <span class="habit-icon">${h.icon}</span>
+      <span class="habit-name">${esc(h.name)}</span>
+      <span class="habit-streak">${h.streak}d</span>
+      <div class="habit-dots">`;
+    weekDates.forEach(date => {
+      const done = (habitLog[date] || {})[h.id];
+      let cls = 'empty';
+      if (done === true)             cls = 'done';
+      else if (done === false && date < TODAY) cls = 'missed';
+      if (date === TODAY)            cls += ' today';
+      html += `<div class="habit-dot ${cls}" onclick="toggleHabit('${h.id}','${date}')"></div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  document.getElementById('habits-container').innerHTML = html;
+}
+
+function toggleHabit(id, date) {
+  if (!habitLog[date]) habitLog[date] = {};
+  habitLog[date][id] = !habitLog[date][id];
+  save('meridian_habit_log', habitLog);
+  renderHabits();
+}
+
+renderHabits();
+
+// ── PRIORITIES ─────────────────────────────────────────────────────
+
+const DEFAULT_TASKS = [
+  { id:1, text:'Ship dashboard auth flow to staging',        tag:'ENG',      done:true,  time:'done 09:38' },
+  { id:2, text:'Review Q2 OKRs with advisor — call notes',  tag:'BIZ',      done:true,  time:'done 10:55' },
+  { id:3, text:'Fix OAuth scope — mobile 403 blocker',       tag:'URGENT',   done:false, time:'in progress' },
+  { id:4, text:'Prepare pitch deck Q2 cohort slide',         tag:'BIZ',      done:false, time:'due today' },
+  { id:5, text:'Write weekly reflection — journal prompt',   tag:'PERSONAL', done:false, time:'evening' },
+  { id:6, text:'Integrate Mixpanel product feedback sync',   tag:'ENG',      done:true,  time:'done 08:30' },
+];
+
+let tasks   = load('meridian_tasks', DEFAULT_TASKS);
+let nextTid = Math.max(0, ...tasks.map(t => t.id)) + 1;
+
+const TAG_CLASS = {
+  ENG:'badge-blue', BIZ:'badge-yellow', URGENT:'badge-red',
+  PERSONAL:'badge-purple', HEALTH:'badge-teal', DESIGN:'badge-orange',
+  PEOPLE:'badge-green',
+};
+
+function renderTasks() {
+  const done  = tasks.filter(t => t.done).length;
+  const total = tasks.length;
+  document.getElementById('pri-badge').textContent = `${done} / ${total} DONE`;
+  document.getElementById('tasks-done-val').textContent = done;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('tasks-ratio').textContent = `${done} of ${total}`;
+  document.getElementById('weekly-pct').textContent = pct + '%';
+  document.getElementById('weekly-bar').style.width = pct + '%';
+
+  document.getElementById('priorities-container').innerHTML = tasks.map(t => `
+    <div class="priority-item">
+      <div class="p-checkbox ${t.done ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
+      <div class="p-content">
+        <div class="p-title ${t.done ? 'done' : ''}">${esc(t.text)}</div>
+        <div class="p-meta">
+          <span class="badge ${TAG_CLASS[t.tag] || 'badge-gray'}">${esc(t.tag)}</span>
+          ${t.time ? `<span class="p-time">${esc(t.time)}</span>` : ''}
+          <button class="p-del" onclick="deleteTask(${t.id})">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleTask(id) {
+  const now = new Date();
+  const hh  = String(now.getHours()).padStart(2,'0');
+  const mm  = String(now.getMinutes()).padStart(2,'0');
+  tasks = tasks.map(t => t.id === id
+    ? { ...t, done: !t.done, time: !t.done ? `done ${hh}:${mm}` : t.time }
+    : t);
+  save('meridian_tasks', tasks);
+  renderTasks();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  save('meridian_tasks', tasks);
+  renderTasks();
+}
+
+function addTask() {
+  const input = document.getElementById('new-task');
+  const text  = input.value.trim();
+  if (!text) return;
+  const tag = document.getElementById('new-tag').value;
+  tasks.push({ id: nextTid++, text, tag, done: false, time: 'added now' });
+  save('meridian_tasks', tasks);
+  input.value = '';
+  renderTasks();
+}
+
+document.getElementById('new-task').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
+
+renderTasks();
+
+// ── GRATITUDE ──────────────────────────────────────────────────────
+
+let gratData = load('meridian_gratitude', {});
+
+const PROMPTS = [
+  'What made you smile today?',
+  'Who are you thankful for right now?',
+  'What simple pleasure are you grateful for?',
+  'What challenge helped you grow today?',
+  'What opportunity are you grateful to have?',
+  'What beauty did you notice today?',
+  'What are you looking forward to?',
+];
+
+function gratStreak() {
+  let streak = 0;
+  const d = new Date();
+  while (streak < 365) {
+    const key = d.toISOString().split('T')[0];
+    if (gratData[key] && gratData[key].length > 0) { streak++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  return streak;
+}
+
+function renderGratitude() {
+  const entries = gratData[TODAY] || [];
+  const streak  = gratStreak();
+  document.getElementById('grat-streak-num').textContent = streak;
+  document.getElementById('grat-prompt').textContent = PROMPTS[new Date().getDay() % PROMPTS.length];
+  document.getElementById('grat-count').textContent =
+    entries.length === 1 ? '1 entry today' : `${entries.length} entries today`;
+
+  const list = document.getElementById('grat-list');
+  if (entries.length === 0) {
+    list.innerHTML = `<div class="grat-empty">No entries yet today — start with one thing.</div>`;
+  } else {
+    list.innerHTML = entries.map((entry, i) => `
+      <div class="grat-entry">
+        <span class="grat-bullet">✦</span>
+        <span class="grat-text">${esc(entry)}</span>
+        <button class="grat-del" onclick="deleteGratitude(${i})">✕</button>
+      </div>`).join('');
+  }
+}
+
+function addGratitude() {
+  const input = document.getElementById('grat-input');
+  const text  = input.value.trim();
+  if (!text) return;
+  if (!gratData[TODAY]) gratData[TODAY] = [];
+  gratData[TODAY].push(text);
+  save('meridian_gratitude', gratData);
+  input.value = '';
+  renderGratitude();
+}
+
+function deleteGratitude(idx) {
+  if (!gratData[TODAY]) return;
+  gratData[TODAY].splice(idx, 1);
+  save('meridian_gratitude', gratData);
+  renderGratitude();
+}
+
+document.getElementById('grat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addGratitude(); }
+});
+
+renderGratitude();
+
+// ── NAV TABS ───────────────────────────────────────────────────────
+
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
