@@ -43,36 +43,22 @@ body {
   font-family: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
   font-size: 13px;
   min-height: 100vh;
-  overflow-x: hidden;
 }
 
 /* ── NAV ── */
 .nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  height: 50px;
-  background: #0a0c14;
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 50px;
+  background: #0a0c14; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
 }
-.nav-brand { display: flex; flex-direction: column; }
-.nav-brand .name { font-size: 14px; font-weight: 700; letter-spacing: 0.3px; }
+.nav-brand .name { font-size: 14px; font-weight: 700; }
 .nav-brand .sub  { font-size: 9px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 1px; }
 .nav-tabs { display: flex; gap: 2px; }
 .nav-tab {
-  padding: 5px 14px;
-  border-radius: 6px;
-  font-size: 12px;
-  color: var(--text-muted);
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  font-family: inherit;
-  transition: all 0.15s;
+  padding: 5px 14px; border-radius: 6px; font-size: 12px;
+  color: var(--text-muted); cursor: pointer;
+  background: transparent; border: none; font-family: inherit; transition: all 0.15s;
 }
 .nav-tab:hover  { color: var(--text); background: var(--surface2); }
 .nav-tab.active { color: var(--text); background: var(--surface3); }
@@ -84,65 +70,45 @@ body {
   background: linear-gradient(135deg, var(--blue), var(--purple));
   display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700; color: #fff;
+  cursor: pointer;
 }
+.avatar-initials { font-size: 11px; font-weight: 700; }
 
 /* ── LAYOUT ── */
 .dashboard {
-  display: grid;
-  grid-template-columns: 236px 1fr 268px;
-  gap: 10px;
-  padding: 10px;
-  max-width: 1440px;
-  margin: 0 auto;
+  display: grid; grid-template-columns: 236px 1fr 268px;
+  gap: 10px; padding: 10px;
+  max-width: 1440px; margin: 0 auto;
 }
 .col { display: flex; flex-direction: column; gap: 10px; }
 
 /* ── PANEL ── */
 .panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 13px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 13px 14px;
 }
 .panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 11px;
 }
 .panel-title {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  display: flex; align-items: center; gap: 7px;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 1.8px; text-transform: uppercase; color: var(--text-muted);
 }
-.dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
+.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .dot-green  { background: var(--green);  box-shadow: 0 0 6px var(--green); }
 .dot-blue   { background: var(--blue);   box-shadow: 0 0 6px var(--blue); }
 .dot-orange { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
 .dot-yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
 .dot-red    { background: var(--red);    box-shadow: 0 0 6px var(--red); }
-.dot-purple { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
 .dot-pink   { background: var(--pink);   box-shadow: 0 0 6px var(--pink); }
-.dot-teal   { background: var(--teal);   box-shadow: 0 0 6px var(--teal); }
 
 /* ── BADGES ── */
 .badge {
-  padding: 2px 7px;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  white-space: nowrap;
+  padding: 2px 7px; border-radius: 4px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.6px;
+  text-transform: uppercase; white-space: nowrap;
 }
 .badge-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid rgba(0,217,126,0.2); }
 .badge-blue   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid rgba(77,138,255,0.2); }
@@ -154,76 +120,44 @@ body {
 .badge-teal   { background: var(--teal-bg);   color: var(--teal);   border: 1px solid rgba(45,212,191,0.2); }
 .badge-gray   { background: var(--surface3);  color: var(--text-muted); border: 1px solid var(--border2); }
 
-/* ── OPERATOR ── */
-.op-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
+/* ── SHARED INPUTS / BUTTONS ── */
+.add-row { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.fi {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 5px; padding: 6px 10px;
+  font-size: 12px; color: var(--text); font-family: inherit;
+  outline: none; transition: border-color 0.15s;
 }
-.op-row:last-child { border-bottom: none; padding-bottom: 0; }
-.op-label { color: var(--text-muted); font-size: 12px; }
-.op-value { font-size: 12px; font-weight: 600; }
-.score-wrap { display: flex; align-items: center; gap: 7px; }
-.score-bar {
-  width: 54px; height: 4px;
-  background: var(--border2);
-  border-radius: 2px;
-  overflow: hidden;
+.fi:focus { border-color: var(--blue); }
+.fi::placeholder { color: var(--text-dim); }
+.fi-grow { flex: 1; }
+.fi-sm { width: 80px; }
+.sel {
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text-muted); border-radius: 5px;
+  padding: 0 8px; font-size: 11px; font-family: inherit;
+  outline: none; cursor: pointer;
 }
-.score-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--green), var(--cyan));
-  border-radius: 2px;
+.btn {
+  padding: 6px 12px; border-radius: 5px;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; border: none; font-family: inherit;
+  transition: all 0.15s; white-space: nowrap;
 }
-
-/* ── FINANCE ── */
-.fin-balance { font-size: 26px; font-weight: 700; line-height: 1; }
-.fin-delta   { font-size: 11px; color: var(--green); margin: 3px 0 10px; }
-.mini-chart  { display: flex; align-items: flex-end; gap: 3px; height: 30px; margin-bottom: 10px; }
-.mini-bar    { flex: 1; background: var(--green); border-radius: 2px 2px 0 0; opacity: 0.55; min-height: 3px; }
-.mini-bar.hi { opacity: 1; background: var(--green2); }
-.fin-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 0;
-  border-bottom: 1px solid var(--border);
+.btn-blue  { background: var(--blue-bg);  color: var(--blue);  border: 1px solid rgba(77,138,255,0.3); }
+.btn-green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,217,126,0.3); }
+.btn-blue:hover  { background: rgba(77,138,255,0.2); }
+.btn-green:hover { background: rgba(0,217,126,0.2); }
+.del-btn {
+  opacity: 0; cursor: pointer; font-size: 13px;
+  background: none; border: none; color: var(--text-dim);
+  font-family: inherit; padding: 0 2px; transition: all 0.15s; flex-shrink: 0;
 }
-.fin-row:last-child { border-bottom: none; padding-bottom: 0; }
-.fin-row .lbl { color: var(--text-muted); font-size: 12px; }
-.fin-row .val { font-size: 12px; font-weight: 600; }
-
-/* ── BLOCKERS ── */
-.blocker {
-  padding: 8px 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  margin-bottom: 7px;
+.del-btn:hover { color: var(--red) !important; opacity: 1 !important; }
+.empty-state {
+  font-size: 11px; color: var(--text-dim);
+  font-style: italic; padding: 6px 0 4px; text-align: center;
 }
-.blocker:last-child { margin-bottom: 0; }
-.blocker-title { font-size: 12px; color: var(--text); line-height: 1.45; margin-bottom: 5px; }
-.blocker-meta  { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-.blocker-meta .age { font-size: 10px; color: var(--text-dim); margin-left: 2px; }
-
-/* ── SESSION STATS ── */
-.session-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 7px;
-  margin-bottom: 13px;
-}
-.stat-card {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 9px 7px;
-}
-.stat-val  { font-size: 19px; font-weight: 700; line-height: 1; }
-.stat-val span { font-size: 12px; font-weight: 500; }
-.stat-lbl  { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px; margin-top: 4px; }
 
 /* ── PROGRESS ── */
 .prog-item { margin-bottom: 9px; }
@@ -237,43 +171,85 @@ body {
 .fill-green  { background: linear-gradient(90deg, var(--green), var(--green2)); }
 .fill-orange { background: linear-gradient(90deg, var(--orange), var(--yellow)); }
 
-/* ── ACTIVITY ── */
-.act-section { margin-top: 12px; }
-.act-heading {
-  font-size: 9px; text-transform: uppercase;
-  letter-spacing: 1.3px; color: var(--text-dim);
-  margin-bottom: 7px;
+/* ── OPERATOR ── */
+.op-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid var(--border);
 }
-.act-item {
-  display: flex; gap: 9px; align-items: flex-start;
-  padding: 4px 0; border-bottom: 1px solid var(--border);
-  font-size: 12px;
+.op-row:last-child { border-bottom: none; padding-bottom: 0; }
+.op-label { color: var(--text-muted); font-size: 12px; }
+.op-value { font-size: 12px; font-weight: 600; }
+.score-wrap { display: flex; align-items: center; gap: 7px; }
+.score-bar  { width: 54px; height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+.score-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--cyan)); border-radius: 2px; }
+.op-inline-input {
+  background: var(--surface2); border: 1px solid var(--blue);
+  border-radius: 4px; padding: 2px 7px;
+  font-size: 12px; color: var(--text); font-family: inherit;
+  outline: none; width: 130px;
 }
-.act-item:last-child { border-bottom: none; }
-.act-time { color: var(--text-dim); font-size: 11px; width: 36px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.act-text { color: var(--text-muted); line-height: 1.45; }
-.act-text strong { color: var(--text); font-weight: 600; }
-.ai-tag {
-  display: inline-block;
-  color: var(--blue); font-size: 10px;
-  background: var(--blue-bg);
-  padding: 1px 5px; border-radius: 3px; margin-left: 4px;
+.op-select {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 4px; padding: 2px 6px;
+  font-size: 11px; color: var(--text); font-family: inherit;
+  outline: none; cursor: pointer;
+}
+.counter-btn {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: 14px; padding: 0 4px; font-family: inherit;
+  transition: color 0.15s;
+}
+.counter-btn:hover { color: var(--text); }
+.counter-val { font-size: 12px; font-weight: 600; min-width: 24px; text-align: center; }
+
+/* ── FINANCE ── */
+.fin-balance { font-size: 26px; font-weight: 700; line-height: 1; }
+.fin-delta   { font-size: 11px; color: var(--text-muted); margin: 3px 0 10px; }
+.fin-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; border-bottom: 1px solid var(--border);
+}
+.fin-row:last-child { border-bottom: none; padding-bottom: 0; }
+.fin-row .lbl { color: var(--text-muted); font-size: 12px; }
+.fin-row .val { font-size: 12px; font-weight: 600; cursor: pointer; }
+.fin-row .val:hover { color: var(--blue); }
+.fin-edit {
+  background: var(--surface2); border: 1px solid var(--blue);
+  border-radius: 4px; padding: 2px 6px;
+  font-size: 12px; color: var(--text); font-family: inherit;
+  outline: none; width: 100px; text-align: right;
 }
 
+/* ── BLOCKERS ── */
+.blocker {
+  padding: 8px 10px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 7px; margin-bottom: 7px;
+}
+.blocker:last-child { margin-bottom: 0; }
+.blocker-top { display: flex; align-items: flex-start; gap: 6px; }
+.blocker-title { flex: 1; font-size: 12px; color: var(--text); line-height: 1.45; margin-bottom: 5px; }
+.blocker-meta  { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.blocker-meta .age { font-size: 10px; color: var(--text-dim); margin-left: 2px; }
+
+/* ── SESSION STATS ── */
+.session-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 7px; margin-bottom: 13px;
+}
+.stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 9px 7px; }
+.stat-val { font-size: 19px; font-weight: 700; line-height: 1; }
+.stat-val span { font-size: 12px; font-weight: 500; }
+.stat-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px; margin-top: 4px; }
+
 /* ── HABITS ── */
-.habit-day-labels {
-  display: flex; justify-content: flex-end;
-  gap: 3px; margin-bottom: 3px; padding-right: 1px;
-}
-.habit-day-lbl {
-  width: 12px; text-align: center;
-  font-size: 9px; color: var(--text-dim); text-transform: uppercase;
-}
+.habit-day-labels { display: flex; justify-content: flex-end; gap: 3px; margin-bottom: 3px; }
+.habit-day-lbl { width: 12px; text-align: center; font-size: 9px; color: var(--text-dim); text-transform: uppercase; }
 .habit-row {
   display: flex; align-items: center; gap: 8px;
   padding: 6px 0; border-bottom: 1px solid var(--border);
 }
 .habit-row:last-child { border-bottom: none; }
+.habit-row:hover .del-btn { opacity: 1; }
 .habit-icon   { font-size: 14px; width: 18px; text-align: center; }
 .habit-name   { flex: 1; font-size: 12px; color: var(--text); }
 .habit-streak { font-size: 11px; color: var(--text-muted); width: 26px; text-align: right; flex-shrink: 0; }
@@ -290,11 +266,9 @@ body {
 .habit-dot.empty:hover { background: var(--surface3); transform: scale(1.1); }
 
 /* ── PRIORITIES ── */
-.priority-item {
-  display: flex; align-items: flex-start; gap: 9px;
-  padding: 7px 0; border-bottom: 1px solid var(--border);
-}
+.priority-item { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; border-bottom: 1px solid var(--border); }
 .priority-item:last-child { border-bottom: none; }
+.priority-item:hover .del-btn { opacity: 1; }
 .p-checkbox {
   width: 15px; height: 15px; border: 1px solid var(--border2);
   border-radius: 4px; flex-shrink: 0; cursor: pointer;
@@ -304,54 +278,10 @@ body {
 .p-checkbox.checked { background: var(--green-bg); border-color: var(--green); }
 .p-checkbox.checked::after { content: '✓'; font-size: 10px; color: var(--green); }
 .p-content { flex: 1; min-width: 0; }
-.p-title {
-  font-size: 12px; color: var(--text);
-  line-height: 1.4; margin-bottom: 4px;
-  word-break: break-word;
-}
+.p-title { font-size: 12px; color: var(--text); line-height: 1.4; margin-bottom: 4px; word-break: break-word; }
 .p-title.done { text-decoration: line-through; color: var(--text-muted); }
-.p-meta { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-.p-time { font-size: 10px; color: var(--text-dim); }
-.p-del {
-  margin-left: auto; font-size: 13px;
-  color: var(--text-dim); cursor: pointer;
-  opacity: 0; transition: all 0.15s;
-  background: none; border: none; font-family: inherit; padding: 0 2px;
-  flex-shrink: 0;
-}
-.priority-item:hover .p-del { opacity: 1; }
-.p-del:hover { color: var(--red) !important; opacity: 1 !important; }
-
-.add-row {
-  display: flex; gap: 6px;
-  margin-top: 10px; padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-.add-input {
-  flex: 1; background: var(--surface2);
-  border: 1px solid var(--border2); border-radius: 5px;
-  padding: 6px 10px; font-size: 12px;
-  color: var(--text); font-family: inherit;
-  outline: none; transition: border-color 0.15s;
-}
-.add-input:focus { border-color: var(--blue); }
-.add-input::placeholder { color: var(--text-dim); }
-.tag-select {
-  background: var(--surface2); border: 1px solid var(--border2);
-  color: var(--text-muted); border-radius: 5px;
-  padding: 0 8px; font-size: 11px; font-family: inherit;
-  outline: none; cursor: pointer;
-}
-.btn {
-  padding: 6px 12px; border-radius: 5px;
-  font-size: 11px; font-weight: 600;
-  cursor: pointer; border: none;
-  font-family: inherit; transition: all 0.15s; white-space: nowrap;
-}
-.btn-blue  { background: var(--blue-bg);  color: var(--blue);  border: 1px solid rgba(77,138,255,0.3); }
-.btn-green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,217,126,0.3); }
-.btn-blue:hover  { background: rgba(77,138,255,0.2); }
-.btn-green:hover { background: rgba(0,217,126,0.2); }
+.p-meta  { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.p-time  { font-size: 10px; color: var(--text-dim); }
 
 /* ── NUTRITION ── */
 .nut-chart { display: flex; justify-content: center; align-items: center; margin: 6px 0 12px; position: relative; }
@@ -360,92 +290,73 @@ body {
 .donut-sub   { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
 .macro-strip { display: flex; gap: 14px; justify-content: center; margin-bottom: 11px; }
 .macro-item  { text-align: center; }
-.macro-val  { font-size: 15px; font-weight: 700; }
-.macro-unit { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.macro-val   { font-size: 15px; font-weight: 700; }
+.macro-unit  { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 .macro-bar-row { margin-bottom: 7px; }
 .macro-bar-row:last-child { margin-bottom: 0; }
-.macro-bar-lbl {
-  display: flex; justify-content: space-between;
-  font-size: 11px; color: var(--text-muted); margin-bottom: 3px;
-}
+.macro-bar-lbl { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
 .macro-bar-lbl .pct { font-weight: 600; color: var(--text); }
-.meals-heading {
-  font-size: 9px; text-transform: uppercase;
-  letter-spacing: 1.3px; color: var(--text-dim);
-  margin: 12px 0 7px;
-}
 .meal-item {
   display: flex; align-items: center; gap: 8px;
   padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px;
 }
 .meal-item:last-child { border-bottom: none; }
+.meal-item:hover .del-btn { opacity: 1; }
 .meal-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .meal-name { flex: 1; color: var(--text); }
 .meal-kcal { color: var(--text-muted); font-size: 11px; }
-.ai-box {
-  margin-top: 10px; padding: 8px 10px;
-  background: var(--blue-bg);
-  border: 1px solid rgba(77,138,255,0.15);
-  border-radius: 7px; font-size: 11px;
-  color: var(--text-muted); line-height: 1.55;
-}
-.ai-box-lbl {
-  font-size: 9px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 1px;
-  color: var(--blue); margin-bottom: 3px;
-}
+.meals-heading { font-size: 9px; text-transform: uppercase; letter-spacing: 1.3px; color: var(--text-dim); margin: 12px 0 7px; }
+.meal-add-grid { display: grid; grid-template-columns: 1fr 60px 44px 44px 44px; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.meal-add-grid .fi { min-width: 0; }
 
 /* ── GRATITUDE ── */
 .grat-streak {
   display: flex; align-items: center; gap: 10px;
   padding: 8px 10px; margin-bottom: 10px;
-  background: var(--pink-bg);
-  border: 1px solid rgba(244,114,182,0.15);
-  border-radius: 7px;
+  background: var(--pink-bg); border: 1px solid rgba(244,114,182,0.15); border-radius: 7px;
 }
 .grat-streak-num { font-size: 26px; font-weight: 700; color: var(--pink); line-height: 1; }
 .grat-streak-lbl { font-size: 12px; color: var(--text); }
 .grat-streak-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
-.grat-prompt {
-  font-size: 11px; color: var(--text-muted);
-  font-style: italic; margin-bottom: 9px; line-height: 1.5;
-}
-.grat-empty { font-size: 12px; color: var(--text-dim); font-style: italic; padding: 6px 0 8px; }
+.grat-prompt { font-size: 11px; color: var(--text-muted); font-style: italic; margin-bottom: 9px; line-height: 1.5; }
 .grat-entry {
   display: flex; align-items: flex-start; gap: 8px;
   padding: 7px 0; border-bottom: 1px solid var(--border);
 }
 .grat-entry:last-child { border-bottom: none; }
+.grat-entry:hover .del-btn { opacity: 1; }
 .grat-bullet { color: var(--pink); font-size: 12px; flex-shrink: 0; margin-top: 1px; }
 .grat-text   { flex: 1; font-size: 12px; color: var(--text); line-height: 1.5; word-break: break-word; }
-.grat-del {
-  opacity: 0; cursor: pointer; font-size: 13px;
-  background: none; border: none; color: var(--text-dim);
-  font-family: inherit; padding: 0 2px; transition: all 0.15s; flex-shrink: 0;
+.grat-add-col { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.grat-textarea { width: 100%; resize: none; min-height: 54px; line-height: 1.55; }
+.grat-footer   { display: flex; align-items: center; justify-content: space-between; }
+.grat-count    { font-size: 10px; color: var(--text-dim); }
+
+/* ── MODAL (name edit) ── */
+.modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 200;
+  align-items: center; justify-content: center;
 }
-.grat-entry:hover .grat-del { opacity: 1; }
-.grat-del:hover { color: var(--red) !important; opacity: 1 !important; }
-.grat-add-col {
-  display: flex; flex-direction: column; gap: 6px;
-  margin-top: 10px; padding-top: 10px;
-  border-top: 1px solid var(--border);
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 20px; width: 280px;
 }
-.grat-textarea {
-  width: 100%; resize: none; min-height: 54px;
-  line-height: 1.55;
-}
-.grat-footer {
-  display: flex; align-items: center; justify-content: space-between;
-}
-.grat-count { font-size: 10px; color: var(--text-dim); }
+.modal h3 { font-size: 13px; margin-bottom: 12px; color: var(--text); }
+.modal-row { margin-bottom: 8px; }
+.modal-row label { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.modal-btns { display: flex; gap: 6px; justify-content: flex-end; margin-top: 14px; }
+.btn-cancel { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border2); }
+.btn-cancel:hover { color: var(--text); }
 </style>
 </head>
 <body>
 
-<!-- ════ NAV ════ -->
+<!-- ── NAV ── -->
 <header class="nav">
   <div class="nav-brand">
-    <span class="name">Meridian</span>
+    <span class="name" id="brand-name">Meridian</span>
     <span class="sub">Personal OS</span>
   </div>
   <nav class="nav-tabs">
@@ -459,13 +370,15 @@ body {
   <div class="nav-right">
     <div class="clock">
       <div class="time" id="clock-time">--:--:--</div>
-      <div class="date" id="clock-date">--- -- --- ----</div>
+      <div class="date" id="clock-date">---</div>
     </div>
-    <div class="avatar">JM</div>
+    <div class="avatar" onclick="openProfileModal()" title="Edit profile">
+      <span class="avatar-initials" id="avatar-initials">?</span>
+    </div>
   </div>
 </header>
 
-<!-- ════ GRID ════ -->
+<!-- ── GRID ── -->
 <div class="dashboard">
 
   <!-- ══ LEFT ══ -->
@@ -479,13 +392,19 @@ body {
       </div>
       <div class="op-row">
         <span class="op-label">Mode</span>
-        <span class="badge badge-blue">Deep Work</span>
+        <select class="op-select" id="op-mode" onchange="saveOp()">
+          <option value="Deep Work">Deep Work</option>
+          <option value="Shallow Work">Shallow Work</option>
+          <option value="Admin">Admin</option>
+          <option value="Meeting">Meeting</option>
+          <option value="Break">Break</option>
+        </select>
       </div>
       <div class="op-row">
         <span class="op-label">Focus score</span>
         <div class="score-wrap">
-          <span class="op-value">87</span>
-          <div class="score-bar"><div class="score-fill" style="width:87%"></div></div>
+          <span class="op-value" id="focus-score-val">—</span>
+          <div class="score-bar"><div class="score-fill" id="focus-score-bar" style="width:0%"></div></div>
         </div>
       </div>
       <div class="op-row">
@@ -494,19 +413,23 @@ body {
       </div>
       <div class="op-row">
         <span class="op-label">Context</span>
-        <span class="badge badge-orange">Product Sprint</span>
+        <input class="op-inline-input" id="op-context" placeholder="e.g. Sprint Week 3" onblur="saveOp()" onkeydown="if(event.key==='Enter')this.blur()" />
       </div>
       <div class="op-row">
         <span class="op-label">Next break</span>
         <span class="op-value" id="next-break">25 min</span>
       </div>
       <div class="op-row">
-        <span class="op-label">AI calls today</span>
-        <span class="op-value">43</span>
+        <span class="op-label">Pomodoros</span>
+        <span class="op-value" id="op-pomo">0</span>
       </div>
       <div class="op-row">
         <span class="op-label">Interruptions</span>
-        <span class="op-value">2</span>
+        <div style="display:flex;align-items:center;gap:0">
+          <button class="counter-btn" onclick="changeCounter('interruptions',-1)">−</button>
+          <span class="counter-val" id="interruptions-val">0</span>
+          <button class="counter-btn" onclick="changeCounter('interruptions',1)">+</button>
+        </div>
       </div>
     </div>
 
@@ -514,35 +437,45 @@ body {
     <div class="panel">
       <div class="panel-header">
         <div class="panel-title"><span class="dot dot-yellow"></span>Finance Pulse</div>
-        <span class="badge badge-yellow">MAY</span>
+        <span class="badge badge-yellow" id="fin-month-badge">—</span>
       </div>
-      <div class="fin-balance">$6,842</div>
-      <div class="fin-delta">+$348 this week</div>
-      <div class="mini-chart">
-        <div class="mini-bar" style="height:38%"></div>
-        <div class="mini-bar" style="height:52%"></div>
-        <div class="mini-bar" style="height:44%"></div>
-        <div class="mini-bar" style="height:63%"></div>
-        <div class="mini-bar" style="height:48%"></div>
-        <div class="mini-bar" style="height:70%"></div>
-        <div class="mini-bar" style="height:58%"></div>
-        <div class="mini-bar hi" style="height:82%"></div>
+      <div id="fin-balance-display" onclick="editFinField('balance')" title="Click to edit" style="cursor:pointer">
+        <div class="fin-balance" id="fin-balance-val">—</div>
+        <div class="fin-delta" id="fin-delta-val">Savings balance</div>
+      </div>
+      <div id="fin-balance-edit" style="display:none;margin-bottom:8px">
+        <input class="fi fi-grow" id="fin-balance-input" placeholder="e.g. 6842" onblur="saveFinField('balance')" onkeydown="if(event.key==='Enter')saveFinField('balance')" />
+        <input class="fi fi-grow" style="margin-top:5px" id="fin-delta-input" placeholder="delta label, e.g. +$348 this week" onblur="saveFinField('balance')" onkeydown="if(event.key==='Enter')saveFinField('balance')" />
       </div>
       <div class="fin-row">
         <span class="lbl">MRR</span>
-        <span class="val" style="color:var(--green)">$2,400</span>
+        <span class="val" id="fin-mrr" onclick="editFinField('mrr')" title="Click to edit">—</span>
+      </div>
+      <div class="fin-row" id="fin-mrr-edit-row" style="display:none">
+        <input class="fi fi-grow" id="fin-mrr-input" placeholder="e.g. 2400" onblur="saveFinField('mrr')" onkeydown="if(event.key==='Enter')saveFinField('mrr')" />
       </div>
       <div class="fin-row">
         <span class="lbl">Spent (MTD)</span>
-        <span class="val">$1,156</span>
+        <span class="val" id="fin-spent" onclick="editFinField('spent')" title="Click to edit">—</span>
+      </div>
+      <div class="fin-row" id="fin-spent-edit-row" style="display:none">
+        <input class="fi fi-grow" id="fin-spent-input" placeholder="e.g. 1156" onblur="saveFinField('spent')" onkeydown="if(event.key==='Enter')saveFinField('spent')" />
       </div>
       <div class="fin-row">
         <span class="lbl">Pending</span>
-        <span class="val" style="color:var(--yellow)">$320</span>
+        <span class="val" id="fin-pending" onclick="editFinField('pending')" title="Click to edit">—</span>
+      </div>
+      <div class="fin-row" id="fin-pending-edit-row" style="display:none">
+        <input class="fi fi-grow" id="fin-pending-input" placeholder="e.g. 320" onblur="saveFinField('pending')" onkeydown="if(event.key==='Enter')saveFinField('pending')" />
       </div>
       <div class="fin-row">
         <span class="lbl">Burn rate</span>
-        <span class="badge badge-green">Low</span>
+        <select class="op-select" id="fin-burn" onchange="saveFinField('burn')">
+          <option value="">—</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
       </div>
     </div>
 
@@ -550,30 +483,25 @@ body {
     <div class="panel">
       <div class="panel-header">
         <div class="panel-title"><span class="dot dot-red"></span>Key Blockers</div>
-        <span class="badge badge-red">3 OPEN</span>
+        <span class="badge badge-red" id="blockers-badge">0 OPEN</span>
       </div>
-      <div class="blocker">
-        <div class="blocker-title">Auth API returning 403 on mobile — OAuth scope mismatch</div>
-        <div class="blocker-meta">
-          <span class="badge badge-gray">Eng</span>
-          <span class="badge badge-red">High</span>
-          <span class="age">14h open</span>
-        </div>
-      </div>
-      <div class="blocker">
-        <div class="blocker-title">Investor deck missing Q2 cohort chart — waiting on data</div>
-        <div class="blocker-meta">
-          <span class="badge badge-gray">Biz</span>
-          <span class="badge badge-yellow">Med</span>
-          <span class="age">2d open</span>
-        </div>
-      </div>
-      <div class="blocker">
-        <div class="blocker-title">Design handoff for onboarding v2 not received from Figma</div>
-        <div class="blocker-meta">
-          <span class="badge badge-gray">Design</span>
-          <span class="badge badge-blue">Low</span>
-          <span class="age">5h open</span>
+      <div id="blockers-container"></div>
+      <div style="margin-top:8px">
+        <input class="fi" style="width:100%;margin-bottom:5px" id="new-blocker-text" placeholder="Describe the blocker…" onkeydown="if(event.key==='Enter')addBlocker()" />
+        <div style="display:flex;gap:5px">
+          <select class="sel fi-grow" id="new-blocker-tag">
+            <option value="ENG">Eng</option>
+            <option value="BIZ">Biz</option>
+            <option value="DESIGN">Design</option>
+            <option value="OPS">Ops</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <select class="sel fi-grow" id="new-blocker-priority">
+            <option value="High">High</option>
+            <option value="Med">Med</option>
+            <option value="Low">Low</option>
+          </select>
+          <button class="btn btn-blue" onclick="addBlocker()">Add</button>
         </div>
       </div>
     </div>
@@ -599,7 +527,19 @@ body {
           <div class="stat-lbl">Tasks Done</div>
         </div>
         <div class="stat-card">
-          <div class="stat-val">87<span>%</span></div>
+          <div class="stat-val" id="energy-val">
+            <select class="op-select" id="energy-select" onchange="saveEnergy()" style="font-size:14px;font-weight:700;background:transparent;border:none;color:var(--text);padding:0;cursor:pointer">
+              <option value="">—</option>
+              <option value="100">100%</option>
+              <option value="90">90%</option>
+              <option value="80">80%</option>
+              <option value="70">70%</option>
+              <option value="60">60%</option>
+              <option value="50">50%</option>
+              <option value="40">40%</option>
+              <option value="30">30%</option>
+            </select>
+          </div>
           <div class="stat-lbl">Energy</div>
         </div>
         <div class="stat-card">
@@ -609,43 +549,28 @@ body {
       </div>
       <div class="prog-item">
         <div class="prog-meta">
-          <span class="prog-label">Daily goal — 6h deep work</span>
+          <span class="prog-label">Daily goal — <span id="goal-label">set a goal below</span></span>
           <span class="prog-pct" id="daily-pct">0%</span>
         </div>
         <div class="prog-bar"><div class="prog-fill fill-blue" id="daily-bar" style="width:0%"></div></div>
       </div>
       <div class="prog-item">
         <div class="prog-meta">
-          <span class="prog-label">Weekly tasks — <span id="tasks-ratio">0 of 0</span></span>
-          <span class="prog-pct" id="weekly-pct">0%</span>
+          <span class="prog-label">Tasks — <span id="tasks-ratio">0 of 0</span></span>
+          <span class="prog-pct" id="tasks-pct">0%</span>
         </div>
-        <div class="prog-bar"><div class="prog-fill fill-green" id="weekly-bar" style="width:0%"></div></div>
+        <div class="prog-bar"><div class="prog-fill fill-green" id="tasks-bar" style="width:0%"></div></div>
       </div>
-      <div class="prog-item">
-        <div class="prog-meta">
-          <span class="prog-label">Monthly revenue target</span>
-          <span class="prog-pct">61%</span>
-        </div>
-        <div class="prog-bar"><div class="prog-fill fill-orange" style="width:61%"></div></div>
-      </div>
-      <div class="act-section">
-        <div class="act-heading">Recent Activity</div>
-        <div class="act-item">
-          <span class="act-time">09:43</span>
-          <span class="act-text">Merged <strong>feat/onboarding-v2</strong> — 14 files changed</span>
-        </div>
-        <div class="act-item">
-          <span class="act-time">09:12</span>
-          <span class="act-text">Drafted investor update email<span class="ai-tag">AI-assisted</span></span>
-        </div>
-        <div class="act-item">
-          <span class="act-time">11:00</span>
-          <span class="act-text">Closed <strong>#47</strong> Auth bug — awaiting QA sign-off</span>
-        </div>
-        <div class="act-item">
-          <span class="act-time">11:49</span>
-          <span class="act-text">Reviewed <strong>3 PRs</strong> · standup notes generated</span>
-        </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center">
+        <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">Daily focus goal</span>
+        <select class="sel" id="focus-goal-sel" onchange="saveFocusGoal()" style="flex:1">
+          <option value="3">3 hours</option>
+          <option value="4">4 hours</option>
+          <option value="5">5 hours</option>
+          <option value="6" selected>6 hours</option>
+          <option value="7">7 hours</option>
+          <option value="8">8 hours</option>
+        </select>
       </div>
     </div>
 
@@ -656,6 +581,11 @@ body {
         <span class="badge badge-blue" id="week-badge">WEEK --</span>
       </div>
       <div id="habits-container"></div>
+      <div class="add-row">
+        <input class="fi fi-grow" id="new-habit-name" placeholder="Habit name…" onkeydown="if(event.key==='Enter')addHabit()" />
+        <input class="fi" style="width:46px;text-align:center" id="new-habit-icon" placeholder="🌟" maxlength="2" />
+        <button class="btn btn-blue" onclick="addHabit()">Add</button>
+      </div>
     </div>
 
     <!-- PRIORITIES -->
@@ -666,13 +596,13 @@ body {
       </div>
       <div id="priorities-container"></div>
       <div class="add-row">
-        <input class="add-input" id="new-task" placeholder="Add a priority…" />
-        <select class="tag-select" id="new-tag">
+        <input class="fi fi-grow" id="new-task" placeholder="Add a priority…" onkeydown="if(event.key==='Enter')addTask()" />
+        <select class="sel" id="new-tag">
           <option value="PERSONAL">Personal</option>
-          <option value="ENG">Eng</option>
-          <option value="BIZ">Biz</option>
+          <option value="WORK">Work</option>
           <option value="URGENT">Urgent</option>
           <option value="HEALTH">Health</option>
+          <option value="FINANCE">Finance</option>
         </select>
         <button class="btn btn-blue" onclick="addTask()">Add</button>
       </div>
@@ -692,86 +622,67 @@ body {
       <div class="nut-chart">
         <svg width="116" height="116" viewBox="0 0 116 116">
           <circle cx="58" cy="58" r="46" fill="none" stroke="#1e2438" stroke-width="11"/>
-          <!-- Protein 74% -->
           <circle cx="58" cy="58" r="46" fill="none" stroke="#ff4757" stroke-width="11"
-            stroke-dasharray="213.9 289.0" stroke-dashoffset="72.2" stroke-linecap="round"
+            id="donut-protein" stroke-dasharray="0 289" stroke-dashoffset="72.2" stroke-linecap="round"
             transform="rotate(-90 58 58)"/>
-          <!-- Carbs 81% -->
           <circle cx="58" cy="58" r="46" fill="none" stroke="#ffd166" stroke-width="11"
-            stroke-dasharray="234.1 289.0" stroke-dashoffset="72.2" stroke-linecap="round"
+            id="donut-carbs" stroke-dasharray="0 289" stroke-dashoffset="72.2" stroke-linecap="round"
             transform="rotate(144 58 58)" opacity="0.65"/>
-          <!-- Fat 65% -->
           <circle cx="58" cy="58" r="46" fill="none" stroke="#4d8aff" stroke-width="11"
-            stroke-dasharray="187.9 289.0" stroke-dashoffset="72.2" stroke-linecap="round"
+            id="donut-fat" stroke-dasharray="0 289" stroke-dashoffset="72.2" stroke-linecap="round"
             transform="rotate(220 58 58)" opacity="0.55"/>
         </svg>
         <div class="donut-label">
-          <div class="donut-kcal">1640</div>
+          <div class="donut-kcal" id="total-kcal">0</div>
           <div class="donut-sub">kcal</div>
         </div>
       </div>
       <div class="macro-strip">
         <div class="macro-item">
-          <div class="macro-val" style="color:var(--red)">112g</div>
+          <div class="macro-val" style="color:var(--red)" id="total-protein">0g</div>
           <div class="macro-unit">Protein</div>
         </div>
         <div class="macro-item">
-          <div class="macro-val" style="color:var(--yellow)">198g</div>
+          <div class="macro-val" style="color:var(--yellow)" id="total-carbs">0g</div>
           <div class="macro-unit">Carbs</div>
         </div>
         <div class="macro-item">
-          <div class="macro-val" style="color:var(--blue)">54g</div>
+          <div class="macro-val" style="color:var(--blue)" id="total-fat">0g</div>
           <div class="macro-unit">Fat</div>
         </div>
       </div>
       <div>
         <div class="macro-bar-row">
-          <div class="macro-bar-lbl"><span>Protein</span><span class="pct">74%</span></div>
-          <div class="prog-bar"><div class="prog-fill" style="width:74%;background:var(--red)"></div></div>
+          <div class="macro-bar-lbl"><span>Protein <span style="color:var(--text-dim);font-size:10px" id="goal-protein-lbl">/ 150g</span></span><span class="pct" id="pct-protein">0%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="background:var(--red)" id="bar-protein"></div></div>
         </div>
         <div class="macro-bar-row">
-          <div class="macro-bar-lbl"><span>Carbs</span><span class="pct">81%</span></div>
-          <div class="prog-bar"><div class="prog-fill" style="width:81%;background:var(--yellow)"></div></div>
+          <div class="macro-bar-lbl"><span>Carbs <span style="color:var(--text-dim);font-size:10px" id="goal-carbs-lbl">/ 200g</span></span><span class="pct" id="pct-carbs">0%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="background:var(--yellow)" id="bar-carbs"></div></div>
         </div>
         <div class="macro-bar-row">
-          <div class="macro-bar-lbl"><span>Fat</span><span class="pct">65%</span></div>
-          <div class="prog-bar"><div class="prog-fill" style="width:65%;background:var(--blue)"></div></div>
+          <div class="macro-bar-lbl"><span>Fat <span style="color:var(--text-dim);font-size:10px" id="goal-fat-lbl">/ 65g</span></span><span class="pct" id="pct-fat">0%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="background:var(--blue)" id="bar-fat"></div></div>
         </div>
       </div>
       <div class="meals-heading">Meals Logged</div>
-      <div class="meal-item">
-        <div class="meal-dot" style="background:var(--green)"></div>
-        <div class="meal-name">Avocado eggs + toast</div>
-        <div class="meal-kcal">400 kcal</div>
+      <div id="meals-container"></div>
+      <div class="meal-add-grid">
+        <input class="fi" id="meal-name" placeholder="Meal name…" onkeydown="if(event.key==='Enter')addMeal()" />
+        <input class="fi" id="meal-kcal" placeholder="kcal" type="number" min="0" />
+        <input class="fi" id="meal-protein" placeholder="P g" type="number" min="0" />
+        <input class="fi" id="meal-carbs" placeholder="C g" type="number" min="0" />
+        <input class="fi" id="meal-fat" placeholder="F g" type="number" min="0" />
       </div>
-      <div class="meal-item">
-        <div class="meal-dot" style="background:var(--blue)"></div>
-        <div class="meal-name">Chicken rice bowl</div>
-        <div class="meal-kcal">620 kcal</div>
-      </div>
-      <div class="meal-item">
-        <div class="meal-dot" style="background:var(--yellow)"></div>
-        <div class="meal-name">Banana + protein shake</div>
-        <div class="meal-kcal">330 kcal</div>
-      </div>
-      <div class="meal-item">
-        <div class="meal-dot" style="background:var(--orange)"></div>
-        <div class="meal-name">Americano + almonds</div>
-        <div class="meal-kcal">290 kcal</div>
-      </div>
-      <div class="ai-box">
-        <div class="ai-box-lbl">AI Suggestion</div>
-        You're 26g short on protein. Consider a high-protein snack before dinner.
-      </div>
+      <button class="btn btn-blue" style="width:100%;margin-top:5px" onclick="addMeal()">Log Meal</button>
     </div>
 
     <!-- GRATITUDE -->
     <div class="panel">
       <div class="panel-header">
         <div class="panel-title"><span class="dot dot-pink"></span>Gratitude</div>
-        <span class="badge badge-pink" id="grat-badge">TODAY</span>
+        <span class="badge badge-pink">TODAY</span>
       </div>
-
       <div class="grat-streak">
         <div class="grat-streak-num" id="grat-streak-num">0</div>
         <div>
@@ -779,13 +690,10 @@ body {
           <div class="grat-streak-sub">consecutive days logged</div>
         </div>
       </div>
-
       <div class="grat-prompt" id="grat-prompt">What are you grateful for today?</div>
-
       <div id="grat-list"></div>
-
       <div class="grat-add-col">
-        <textarea class="add-input grat-textarea" id="grat-input" placeholder="I am grateful for…"></textarea>
+        <textarea class="fi grat-textarea" id="grat-input" placeholder="I am grateful for…"></textarea>
         <div class="grat-footer">
           <span class="grat-count" id="grat-count">0 entries today</span>
           <button class="btn btn-green" onclick="addGratitude()">Add Entry</button>
@@ -797,57 +705,152 @@ body {
 
 </div><!-- /dashboard -->
 
+<!-- ── PROFILE MODAL ── -->
+<div class="modal-bg" id="profile-modal">
+  <div class="modal">
+    <h3>Edit Profile</h3>
+    <div class="modal-row">
+      <label>Name</label>
+      <input class="fi" style="width:100%" id="profile-name" placeholder="Your name" />
+    </div>
+    <div class="modal-row">
+      <label>Initials</label>
+      <input class="fi" style="width:100%" id="profile-initials" placeholder="e.g. JM" maxlength="3" />
+    </div>
+    <div class="modal-row">
+      <label>Nutrition Goals</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:2px">
+        <input class="fi" id="goal-protein" placeholder="Protein g" type="number" />
+        <input class="fi" id="goal-carbs-in" placeholder="Carbs g" type="number" />
+        <input class="fi" id="goal-fat-in" placeholder="Fat g" type="number" />
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeProfileModal()">Cancel</button>
+      <button class="btn btn-green" onclick="saveProfile()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── UTILS ──────────────────────────────────────────────────────────
-
 const TODAY = new Date().toISOString().split('T')[0];
-
-function load(key, def) {
-  try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
-}
-function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
-
-function esc(str) {
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }
+function save(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ── CLOCK ──────────────────────────────────────────────────────────
-
+const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 function updateClock() {
-  const now = new Date();
-  const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const hh = String(now.getHours()).padStart(2,'0');
-  const mm = String(now.getMinutes()).padStart(2,'0');
-  const ss = String(now.getSeconds()).padStart(2,'0');
-  document.getElementById('clock-time').textContent = `${hh}:${mm}:${ss}`;
+  const n = new Date();
+  document.getElementById('clock-time').textContent =
+    `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
   document.getElementById('clock-date').textContent =
-    `${DAYS[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+    `${DAYS[n.getDay()]} ${n.getDate()} ${MONTHS[n.getMonth()]} ${n.getFullYear()}`;
 }
-setInterval(updateClock, 1000);
-updateClock();
+function pad(x) { return String(x).padStart(2,'0'); }
+setInterval(updateClock, 1000); updateClock();
+document.getElementById('fin-month-badge').textContent = MONTHS[new Date().getMonth()];
 
 // ── WEEK NUMBER ────────────────────────────────────────────────────
-
 function weekNum(d) {
   const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
-  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
-  return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  return Math.ceil(((t - new Date(Date.UTC(t.getUTCFullYear(),0,1))) / 86400000 + 1) / 7);
 }
 document.getElementById('week-badge').textContent = `WEEK ${weekNum(new Date())}`;
 
-// ── SESSION TIMER ──────────────────────────────────────────────────
+// ── PROFILE ────────────────────────────────────────────────────────
+let profile = load('meridian_profile', { name: '', initials: '', goalProtein: 150, goalCarbs: 200, goalFat: 65 });
 
-const SESSION_KEY = 'meridian_session';
-let sessionData = load(SESSION_KEY, { date: null, startTs: null });
+function applyProfile() {
+  document.getElementById('brand-name').textContent = profile.name || 'Meridian';
+  document.getElementById('avatar-initials').textContent = profile.initials || '?';
+}
+
+function openProfileModal() {
+  document.getElementById('profile-name').value     = profile.name;
+  document.getElementById('profile-initials').value = profile.initials;
+  document.getElementById('goal-protein').value     = profile.goalProtein;
+  document.getElementById('goal-carbs-in').value    = profile.goalCarbs;
+  document.getElementById('goal-fat-in').value      = profile.goalFat;
+  document.getElementById('profile-modal').classList.add('open');
+}
+
+function closeProfileModal() {
+  document.getElementById('profile-modal').classList.remove('open');
+}
+
+function saveProfile() {
+  profile.name        = document.getElementById('profile-name').value.trim();
+  profile.initials    = document.getElementById('profile-initials').value.trim().toUpperCase();
+  profile.goalProtein = parseInt(document.getElementById('goal-protein').value) || 150;
+  profile.goalCarbs   = parseInt(document.getElementById('goal-carbs-in').value) || 200;
+  profile.goalFat     = parseInt(document.getElementById('goal-fat-in').value) || 65;
+  save('meridian_profile', profile);
+  applyProfile();
+  renderNutrition();
+  closeProfileModal();
+}
+
+document.getElementById('profile-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('profile-modal')) closeProfileModal();
+});
+
+applyProfile();
+
+// ── OPERATOR ──────────────────────────────────────────────────────
+let opData = load('meridian_op', { mode: 'Deep Work', context: '', interruptions: 0 });
+let counters = load('meridian_counters', { interruptions: 0 });
+
+function loadOp() {
+  document.getElementById('op-mode').value    = opData.mode    || 'Deep Work';
+  document.getElementById('op-context').value = opData.context || '';
+  document.getElementById('interruptions-val').textContent = counters.interruptions;
+}
+
+function saveOp() {
+  opData.mode    = document.getElementById('op-mode').value;
+  opData.context = document.getElementById('op-context').value.trim();
+  save('meridian_op', opData);
+}
+
+function changeCounter(key, delta) {
+  counters[key] = Math.max(0, (counters[key] || 0) + delta);
+  save('meridian_counters', counters);
+  document.getElementById(`${key}-val`).textContent = counters[key];
+}
+
+loadOp();
+
+// ── SESSION TIMER ─────────────────────────────────────────────────
+let sessionData = load('meridian_session', { date: null, startTs: null });
 if (sessionData.date !== TODAY) {
   sessionData = { date: TODAY, startTs: Date.now() };
-  save(SESSION_KEY, sessionData);
+  save('meridian_session', sessionData);
 }
 const sessionStart = sessionData.startTs;
+let focusGoal = load('meridian_focus_goal', 6);
+document.getElementById('focus-goal-sel').value = String(focusGoal);
+document.getElementById('goal-label').textContent = `${focusGoal}h deep work goal`;
+
+function saveFocusGoal() {
+  focusGoal = parseInt(document.getElementById('focus-goal-sel').value);
+  save('meridian_focus_goal', focusGoal);
+  document.getElementById('goal-label').textContent = `${focusGoal}h deep work goal`;
+}
+
+let energyVal = load('meridian_energy_today', { date: TODAY, val: '' });
+if (energyVal.date !== TODAY) energyVal = { date: TODAY, val: '' };
+document.getElementById('energy-select').value = energyVal.val;
+
+function saveEnergy() {
+  energyVal = { date: TODAY, val: document.getElementById('energy-select').value };
+  save('meridian_energy_today', energyVal);
+}
 
 function updateSession() {
   const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
@@ -856,68 +859,177 @@ function updateSession() {
   document.getElementById('session-time').textContent = `${h}h ${m}m`;
   document.getElementById('deep-focus-val').innerHTML = `${h}h <span>${m}m</span>`;
 
-  const pct = Math.min(100, Math.round(elapsed / 216)); // 6h = 21600s
+  const goalSecs = focusGoal * 3600;
+  const pct = Math.min(100, Math.round(elapsed / goalSecs * 100));
   document.getElementById('daily-pct').textContent = pct + '%';
   document.getElementById('daily-bar').style.width = pct + '%';
 
   const pomos = Math.floor(elapsed / 1500);
   document.getElementById('pomodoro-val').textContent = pomos;
+  document.getElementById('op-pomo').textContent = pomos;
 
   const breakIn = 25 - Math.floor((elapsed % 1500) / 60);
   document.getElementById('next-break').textContent = `${breakIn} min`;
+
+  const focusScore = Math.min(100, Math.round((pomos * 10) + (pct * 0.5)));
+  document.getElementById('focus-score-val').textContent = focusScore || '—';
+  document.getElementById('focus-score-bar').style.width = focusScore + '%';
 }
-setInterval(updateSession, 1000);
-updateSession();
+setInterval(updateSession, 1000); updateSession();
 
-// ── HABITS ─────────────────────────────────────────────────────────
+// ── FINANCE ───────────────────────────────────────────────────────
+let finData = load('meridian_finance', { balance: '', delta: '', mrr: '', spent: '', pending: '', burn: '' });
 
-const DEFAULT_HABITS = [
-  { id: 'meditation', icon: '🧘', name: 'Meditation',      streak: 14 },
-  { id: 'run',        icon: '🏃', name: 'Run / Walk 5k',   streak: 6  },
-  { id: 'read',       icon: '📖', name: 'Read 30 min',     streak: 21 },
-  { id: 'water',      icon: '💧', name: '2L Water',         streak: 3  },
-  { id: 'journal',    icon: '📓', name: 'Journal',          streak: 9  },
-  { id: 'guitar',     icon: '🎸', name: 'Guitar practice', streak: 2  },
-];
+function renderFinance() {
+  document.getElementById('fin-balance-val').textContent = finData.balance ? `$${Number(finData.balance).toLocaleString()}` : '—';
+  document.getElementById('fin-delta-val').textContent   = finData.delta || 'Savings balance';
+  document.getElementById('fin-mrr').textContent         = finData.mrr     ? `$${Number(finData.mrr).toLocaleString()}` : '—';
+  document.getElementById('fin-spent').textContent       = finData.spent   ? `$${Number(finData.spent).toLocaleString()}` : '—';
+  document.getElementById('fin-pending').textContent     = finData.pending ? `$${Number(finData.pending).toLocaleString()}` : '—';
+  document.getElementById('fin-burn').value              = finData.burn    || '';
+}
 
-let habits   = load('meridian_habits', DEFAULT_HABITS);
+function editFinField(field) {
+  if (field === 'balance') {
+    document.getElementById('fin-balance-display').style.display = 'none';
+    document.getElementById('fin-balance-edit').style.display    = 'block';
+    document.getElementById('fin-balance-input').value = finData.balance;
+    document.getElementById('fin-delta-input').value   = finData.delta;
+    document.getElementById('fin-balance-input').focus();
+  } else {
+    document.getElementById(`fin-${field}`).style.display          = 'none';
+    document.getElementById(`fin-${field}-edit-row`).style.display = 'flex';
+    document.getElementById(`fin-${field}-input`).value            = finData[field];
+    document.getElementById(`fin-${field}-input`).focus();
+  }
+}
+
+function saveFinField(field) {
+  if (field === 'balance') {
+    finData.balance = document.getElementById('fin-balance-input').value.replace(/[^0-9.]/g,'');
+    finData.delta   = document.getElementById('fin-delta-input').value.trim();
+    document.getElementById('fin-balance-display').style.display = 'block';
+    document.getElementById('fin-balance-edit').style.display    = 'none';
+  } else if (field === 'burn') {
+    finData.burn = document.getElementById('fin-burn').value;
+  } else {
+    finData[field] = document.getElementById(`fin-${field}-input`).value.replace(/[^0-9.]/g,'');
+    document.getElementById(`fin-${field}`).style.display          = 'inline';
+    document.getElementById(`fin-${field}-edit-row`).style.display = 'none';
+  }
+  save('meridian_finance', finData);
+  renderFinance();
+}
+
+renderFinance();
+
+// ── KEY BLOCKERS ──────────────────────────────────────────────────
+let blockers = load('meridian_blockers', []);
+let nextBid  = Math.max(0, ...blockers.map(b => b.id)) + 1;
+
+const BLOCKER_TAG_CLS = { ENG:'badge-blue', BIZ:'badge-yellow', DESIGN:'badge-orange', OPS:'badge-purple', OTHER:'badge-gray' };
+const BLOCKER_PRI_CLS = { High:'badge-red', Med:'badge-yellow', Low:'badge-blue' };
+
+function timeAgo(ts) {
+  const m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 60) return `${m}m open`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h open`;
+  return `${Math.floor(h/24)}d open`;
+}
+
+function renderBlockers() {
+  document.getElementById('blockers-badge').textContent = `${blockers.length} OPEN`;
+  const c = document.getElementById('blockers-container');
+  if (!blockers.length) { c.innerHTML = `<div class="empty-state">No blockers — you're unblocked!</div>`; return; }
+  c.innerHTML = blockers.map(b => `
+    <div class="blocker">
+      <div class="blocker-top">
+        <div class="blocker-title">${esc(b.text)}</div>
+        <button class="del-btn" onclick="deleteBlocker(${b.id})">✕</button>
+      </div>
+      <div class="blocker-meta">
+        <span class="badge ${BLOCKER_TAG_CLS[b.tag] || 'badge-gray'}">${esc(b.tag)}</span>
+        <span class="badge ${BLOCKER_PRI_CLS[b.priority] || 'badge-gray'}">${esc(b.priority)}</span>
+        <span class="age">${timeAgo(b.ts)}</span>
+      </div>
+    </div>`).join('');
+}
+
+function addBlocker() {
+  const text = document.getElementById('new-blocker-text').value.trim();
+  if (!text) return;
+  blockers.push({
+    id: nextBid++,
+    text,
+    tag:      document.getElementById('new-blocker-tag').value,
+    priority: document.getElementById('new-blocker-priority').value,
+    ts: Date.now()
+  });
+  save('meridian_blockers', blockers);
+  document.getElementById('new-blocker-text').value = '';
+  renderBlockers();
+}
+
+function deleteBlocker(id) {
+  blockers = blockers.filter(b => b.id !== id);
+  save('meridian_blockers', blockers);
+  renderBlockers();
+}
+
+renderBlockers();
+
+// ── HABITS ────────────────────────────────────────────────────────
+let habits   = load('meridian_habits', []);
 let habitLog = load('meridian_habit_log', {});
+let nextHid  = Math.max(0, ...habits.map(h => h.id)) + 1;
 
 function getWeekDates() {
-  const now = new Date();
-  const dow = (now.getDay() + 6) % 7; // Mon=0 … Sun=6
+  const now = new Date(), dow = (now.getDay() + 6) % 7;
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(now);
-    d.setDate(now.getDate() - dow + i);
+    const d = new Date(now); d.setDate(now.getDate() - dow + i);
     return d.toISOString().split('T')[0];
   });
+}
+
+function calcHabitStreak(id) {
+  let streak = 0;
+  const d = new Date();
+  while (streak < 365) {
+    const key = d.toISOString().split('T')[0];
+    if ((habitLog[key] || {})[id]) { streak++; d.setDate(d.getDate() - 1); } else break;
+  }
+  return streak;
 }
 
 function renderHabits() {
   const weekDates = getWeekDates();
   const labels = ['M','T','W','T','F','S','S'];
+  const c = document.getElementById('habits-container');
+  if (!habits.length) { c.innerHTML = `<div class="empty-state">No habits yet — add one below.</div>`; return; }
+
   let html = `<div class="habit-day-labels"><div style="flex:1"></div><div style="width:26px"></div>`;
   labels.forEach(l => html += `<div class="habit-day-lbl">${l}</div>`);
   html += `</div>`;
 
   habits.forEach(h => {
+    const streak = calcHabitStreak(h.id);
     html += `<div class="habit-row">
-      <span class="habit-icon">${h.icon}</span>
+      <span class="habit-icon">${h.icon || '⭐'}</span>
       <span class="habit-name">${esc(h.name)}</span>
-      <span class="habit-streak">${h.streak}d</span>
+      <span class="habit-streak">${streak}d</span>
       <div class="habit-dots">`;
     weekDates.forEach(date => {
       const done = (habitLog[date] || {})[h.id];
       let cls = 'empty';
-      if (done === true)             cls = 'done';
+      if (done === true) cls = 'done';
       else if (done === false && date < TODAY) cls = 'missed';
-      if (date === TODAY)            cls += ' today';
-      html += `<div class="habit-dot ${cls}" onclick="toggleHabit('${h.id}','${date}')"></div>`;
+      if (date === TODAY) cls += ' today';
+      html += `<div class="habit-dot ${cls}" onclick="toggleHabit(${h.id},'${date}')"></div>`;
     });
-    html += `</div></div>`;
+    html += `</div><button class="del-btn" onclick="deleteHabit(${h.id})">✕</button></div>`;
   });
-
-  document.getElementById('habits-container').innerHTML = html;
+  c.innerHTML = html;
 }
 
 function toggleHabit(id, date) {
@@ -927,47 +1039,54 @@ function toggleHabit(id, date) {
   renderHabits();
 }
 
+function addHabit() {
+  const name = document.getElementById('new-habit-name').value.trim();
+  if (!name) return;
+  const icon = document.getElementById('new-habit-icon').value.trim() || '⭐';
+  habits.push({ id: nextHid++, name, icon });
+  save('meridian_habits', habits);
+  document.getElementById('new-habit-name').value = '';
+  document.getElementById('new-habit-icon').value = '';
+  renderHabits();
+}
+
+function deleteHabit(id) {
+  habits = habits.filter(h => h.id !== id);
+  save('meridian_habits', habits);
+  renderHabits();
+}
+
 renderHabits();
 
-// ── PRIORITIES ─────────────────────────────────────────────────────
-
-const DEFAULT_TASKS = [
-  { id:1, text:'Ship dashboard auth flow to staging',        tag:'ENG',      done:true,  time:'done 09:38' },
-  { id:2, text:'Review Q2 OKRs with advisor — call notes',  tag:'BIZ',      done:true,  time:'done 10:55' },
-  { id:3, text:'Fix OAuth scope — mobile 403 blocker',       tag:'URGENT',   done:false, time:'in progress' },
-  { id:4, text:'Prepare pitch deck Q2 cohort slide',         tag:'BIZ',      done:false, time:'due today' },
-  { id:5, text:'Write weekly reflection — journal prompt',   tag:'PERSONAL', done:false, time:'evening' },
-  { id:6, text:'Integrate Mixpanel product feedback sync',   tag:'ENG',      done:true,  time:'done 08:30' },
-];
-
-let tasks   = load('meridian_tasks', DEFAULT_TASKS);
+// ── PRIORITIES ────────────────────────────────────────────────────
+let tasks   = load('meridian_tasks', []);
 let nextTid = Math.max(0, ...tasks.map(t => t.id)) + 1;
 
-const TAG_CLASS = {
-  ENG:'badge-blue', BIZ:'badge-yellow', URGENT:'badge-red',
-  PERSONAL:'badge-purple', HEALTH:'badge-teal', DESIGN:'badge-orange',
-  PEOPLE:'badge-green',
+const TAG_CLS = {
+  WORK:'badge-blue', URGENT:'badge-red', PERSONAL:'badge-purple',
+  HEALTH:'badge-teal', FINANCE:'badge-yellow',
 };
 
 function renderTasks() {
-  const done  = tasks.filter(t => t.done).length;
-  const total = tasks.length;
-  document.getElementById('pri-badge').textContent = `${done} / ${total} DONE`;
-  document.getElementById('tasks-done-val').textContent = done;
+  const done = tasks.filter(t => t.done).length, total = tasks.length;
+  document.getElementById('pri-badge').textContent       = `${done} / ${total} DONE`;
+  document.getElementById('tasks-done-val').textContent  = done;
   const pct = total ? Math.round(done / total * 100) : 0;
-  document.getElementById('tasks-ratio').textContent = `${done} of ${total}`;
-  document.getElementById('weekly-pct').textContent = pct + '%';
-  document.getElementById('weekly-bar').style.width = pct + '%';
+  document.getElementById('tasks-ratio').textContent     = `${done} of ${total}`;
+  document.getElementById('tasks-pct').textContent       = pct + '%';
+  document.getElementById('tasks-bar').style.width       = pct + '%';
 
-  document.getElementById('priorities-container').innerHTML = tasks.map(t => `
+  const c = document.getElementById('priorities-container');
+  if (!tasks.length) { c.innerHTML = `<div class="empty-state">No priorities yet — add one below.</div>`; return; }
+  c.innerHTML = tasks.map(t => `
     <div class="priority-item">
       <div class="p-checkbox ${t.done ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
       <div class="p-content">
         <div class="p-title ${t.done ? 'done' : ''}">${esc(t.text)}</div>
         <div class="p-meta">
-          <span class="badge ${TAG_CLASS[t.tag] || 'badge-gray'}">${esc(t.tag)}</span>
+          <span class="badge ${TAG_CLS[t.tag] || 'badge-gray'}">${esc(t.tag)}</span>
           ${t.time ? `<span class="p-time">${esc(t.time)}</span>` : ''}
-          <button class="p-del" onclick="deleteTask(${t.id})">✕</button>
+          <button class="del-btn" onclick="deleteTask(${t.id})">✕</button>
         </div>
       </div>
     </div>`).join('');
@@ -975,10 +1094,8 @@ function renderTasks() {
 
 function toggleTask(id) {
   const now = new Date();
-  const hh  = String(now.getHours()).padStart(2,'0');
-  const mm  = String(now.getMinutes()).padStart(2,'0');
   tasks = tasks.map(t => t.id === id
-    ? { ...t, done: !t.done, time: !t.done ? `done ${hh}:${mm}` : t.time }
+    ? { ...t, done: !t.done, time: !t.done ? `done ${pad(now.getHours())}:${pad(now.getMinutes())}` : '' }
     : t);
   save('meridian_tasks', tasks);
   renderTasks();
@@ -991,24 +1108,94 @@ function deleteTask(id) {
 }
 
 function addTask() {
-  const input = document.getElementById('new-task');
-  const text  = input.value.trim();
+  const text = document.getElementById('new-task').value.trim();
   if (!text) return;
-  const tag = document.getElementById('new-tag').value;
-  tasks.push({ id: nextTid++, text, tag, done: false, time: 'added now' });
+  tasks.push({ id: nextTid++, text, tag: document.getElementById('new-tag').value, done: false, time: '' });
   save('meridian_tasks', tasks);
-  input.value = '';
+  document.getElementById('new-task').value = '';
   renderTasks();
 }
 
-document.getElementById('new-task').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addTask();
-});
-
 renderTasks();
 
-// ── GRATITUDE ──────────────────────────────────────────────────────
+// ── NUTRITION ─────────────────────────────────────────────────────
+let mealsData = load('meridian_meals', { date: null, meals: [] });
+if (mealsData.date !== TODAY) mealsData = { date: TODAY, meals: [] };
 
+const MEAL_COLORS = ['#00d97e','#4d8aff','#ffd166','#ff9340','#f472b6','#2dd4bf','#8b5cf6','#ff4757'];
+
+function renderNutrition() {
+  const meals   = mealsData.meals;
+  const totKcal = meals.reduce((s,m) => s + (m.kcal||0), 0);
+  const totP    = meals.reduce((s,m) => s + (m.protein||0), 0);
+  const totC    = meals.reduce((s,m) => s + (m.carbs||0), 0);
+  const totF    = meals.reduce((s,m) => s + (m.fat||0), 0);
+
+  document.getElementById('total-kcal').textContent    = totKcal;
+  document.getElementById('total-protein').textContent = totP + 'g';
+  document.getElementById('total-carbs').textContent   = totC + 'g';
+  document.getElementById('total-fat').textContent     = totF + 'g';
+
+  const gP = profile.goalProtein || 150;
+  const gC = profile.goalCarbs   || 200;
+  const gF = profile.goalFat     || 65;
+
+  document.getElementById('goal-protein-lbl').textContent = `/ ${gP}g`;
+  document.getElementById('goal-carbs-lbl').textContent   = `/ ${gC}g`;
+  document.getElementById('goal-fat-lbl').textContent     = `/ ${gF}g`;
+
+  const pctP = Math.min(100, Math.round(totP / gP * 100));
+  const pctC = Math.min(100, Math.round(totC / gC * 100));
+  const pctF = Math.min(100, Math.round(totF / gF * 100));
+
+  document.getElementById('pct-protein').textContent = pctP + '%';
+  document.getElementById('pct-carbs').textContent   = pctC + '%';
+  document.getElementById('pct-fat').textContent     = pctF + '%';
+  document.getElementById('bar-protein').style.width = pctP + '%';
+  document.getElementById('bar-carbs').style.width   = pctC + '%';
+  document.getElementById('bar-fat').style.width     = pctF + '%';
+
+  // Donut arcs
+  const circ = 289;
+  document.getElementById('donut-protein').setAttribute('stroke-dasharray', `${circ * pctP / 100} ${circ}`);
+  document.getElementById('donut-carbs').setAttribute('stroke-dasharray',   `${circ * pctC / 100} ${circ}`);
+  document.getElementById('donut-fat').setAttribute('stroke-dasharray',     `${circ * pctF / 100} ${circ}`);
+
+  const c = document.getElementById('meals-container');
+  if (!meals.length) { c.innerHTML = `<div class="empty-state">No meals logged yet.</div>`; return; }
+  c.innerHTML = meals.map((m, i) => `
+    <div class="meal-item">
+      <div class="meal-dot" style="background:${MEAL_COLORS[i % MEAL_COLORS.length]}"></div>
+      <div class="meal-name">${esc(m.name)}</div>
+      <div class="meal-kcal">${m.kcal ? m.kcal + ' kcal' : ''}</div>
+      <button class="del-btn" onclick="deleteMeal(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addMeal() {
+  const name = document.getElementById('meal-name').value.trim();
+  if (!name) return;
+  mealsData.meals.push({
+    name,
+    kcal:    parseInt(document.getElementById('meal-kcal').value)    || 0,
+    protein: parseInt(document.getElementById('meal-protein').value) || 0,
+    carbs:   parseInt(document.getElementById('meal-carbs').value)   || 0,
+    fat:     parseInt(document.getElementById('meal-fat').value)     || 0,
+  });
+  save('meridian_meals', mealsData);
+  ['meal-name','meal-kcal','meal-protein','meal-carbs','meal-fat'].forEach(id => document.getElementById(id).value = '');
+  renderNutrition();
+}
+
+function deleteMeal(idx) {
+  mealsData.meals.splice(idx, 1);
+  save('meridian_meals', mealsData);
+  renderNutrition();
+}
+
+renderNutrition();
+
+// ── GRATITUDE ─────────────────────────────────────────────────────
 let gratData = load('meridian_gratitude', {});
 
 const PROMPTS = [
@@ -1026,31 +1213,25 @@ function gratStreak() {
   const d = new Date();
   while (streak < 365) {
     const key = d.toISOString().split('T')[0];
-    if (gratData[key] && gratData[key].length > 0) { streak++; d.setDate(d.getDate() - 1); }
-    else break;
+    if (gratData[key] && gratData[key].length > 0) { streak++; d.setDate(d.getDate() - 1); } else break;
   }
   return streak;
 }
 
 function renderGratitude() {
   const entries = gratData[TODAY] || [];
-  const streak  = gratStreak();
-  document.getElementById('grat-streak-num').textContent = streak;
-  document.getElementById('grat-prompt').textContent = PROMPTS[new Date().getDay() % PROMPTS.length];
-  document.getElementById('grat-count').textContent =
-    entries.length === 1 ? '1 entry today' : `${entries.length} entries today`;
+  document.getElementById('grat-streak-num').textContent = gratStreak();
+  document.getElementById('grat-prompt').textContent     = PROMPTS[new Date().getDay() % PROMPTS.length];
+  document.getElementById('grat-count').textContent      = entries.length === 1 ? '1 entry today' : `${entries.length} entries today`;
 
   const list = document.getElementById('grat-list');
-  if (entries.length === 0) {
-    list.innerHTML = `<div class="grat-empty">No entries yet today — start with one thing.</div>`;
-  } else {
-    list.innerHTML = entries.map((entry, i) => `
-      <div class="grat-entry">
-        <span class="grat-bullet">✦</span>
-        <span class="grat-text">${esc(entry)}</span>
-        <button class="grat-del" onclick="deleteGratitude(${i})">✕</button>
-      </div>`).join('');
-  }
+  if (!entries.length) { list.innerHTML = `<div class="empty-state">No entries yet today.</div>`; return; }
+  list.innerHTML = entries.map((entry, i) => `
+    <div class="grat-entry">
+      <span class="grat-bullet">✦</span>
+      <span class="grat-text">${esc(entry)}</span>
+      <button class="del-btn" onclick="deleteGratitude(${i})">✕</button>
+    </div>`).join('');
 }
 
 function addGratitude() {
@@ -1077,8 +1258,7 @@ document.getElementById('grat-input').addEventListener('keydown', e => {
 
 renderGratitude();
 
-// ── NAV TABS ───────────────────────────────────────────────────────
-
+// ── NAV TABS ──────────────────────────────────────────────────────
 document.querySelectorAll('.nav-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
