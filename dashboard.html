@@ -959,7 +959,8 @@ body {
 
 <script>
 // ── LOCK SCREEN ────────────────────────────────────────────────────
-const LOCK_KEY = 'meridian_pw_hash';
+const LOCK_KEY     = 'meridian_pw_hash';
+const DEFAULT_HASH = '7b6754f95af6990cf0ebfd078de3cf4cb31ebece7a513439848848f5370691a3';
 
 async function hashPassword(pw) {
   const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
@@ -968,20 +969,15 @@ async function hashPassword(pw) {
 
 let pageUnlocked = false;  // resets on every page load
 
-async function lockInit() {
-  const stored = localStorage.getItem(LOCK_KEY);
-  const brand  = document.getElementById('lock-brand');
-  const name   = JSON.parse(localStorage.getItem('meridian_profile') || '{}').name;
-  if (name) brand.textContent = name;
+function getStoredHash() {
+  return localStorage.getItem(LOCK_KEY) || DEFAULT_HASH;
+}
 
-  if (!stored) {
-    document.getElementById('lock-label').textContent = 'Create a password';
-    document.getElementById('lock-btn').textContent   = 'Set Password';
-    document.getElementById('lock-input').placeholder = 'Choose a password';
-    document.getElementById('lock-input').setAttribute('autocomplete','new-password');
-  } else {
-    document.getElementById('lock-change-link').style.display = 'block';
-  }
+async function lockInit() {
+  const brand = document.getElementById('lock-brand');
+  const name  = JSON.parse(localStorage.getItem('meridian_profile') || '{}').name;
+  if (name) brand.textContent = name;
+  document.getElementById('lock-change-link').style.display = 'block';
   document.getElementById('lock-input').focus();
 }
 
@@ -995,21 +991,14 @@ async function lockSubmit() {
 
   const hash = await hashPassword(pw);
 
-  if (!stored) {
-    // Saving new password
-    if (pw.length < 4) { showLockError('Use at least 4 characters'); return; }
-    localStorage.setItem(LOCK_KEY, hash);
+  if (hash === getStoredHash()) {
     unlock();
   } else {
-    if (hash === stored) {
-      unlock();
-    } else {
-      showLockError('Incorrect password');
-      input.classList.add('error');
-      setTimeout(() => input.classList.remove('error'), 400);
-      input.value = '';
-      input.focus();
-    }
+    showLockError('Incorrect password');
+    input.classList.add('error');
+    setTimeout(() => input.classList.remove('error'), 400);
+    input.value = '';
+    input.focus();
   }
 }
 
