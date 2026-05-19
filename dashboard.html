@@ -966,6 +966,8 @@ async function hashPassword(pw) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
+let pageUnlocked = false;  // resets on every page load
+
 async function lockInit() {
   const stored = localStorage.getItem(LOCK_KEY);
   const brand  = document.getElementById('lock-brand');
@@ -973,7 +975,6 @@ async function lockInit() {
   if (name) brand.textContent = name;
 
   if (!stored) {
-    // First time — set a password
     document.getElementById('lock-label').textContent = 'Create a password';
     document.getElementById('lock-btn').textContent   = 'Set Password';
     document.getElementById('lock-input').placeholder = 'Choose a password';
@@ -982,11 +983,6 @@ async function lockInit() {
     document.getElementById('lock-change-link').style.display = 'block';
   }
   document.getElementById('lock-input').focus();
-
-  // Already unlocked this session?
-  if (sessionStorage.getItem('meridian_unlocked') === 'yes' && stored) {
-    unlock();
-  }
 }
 
 async function lockSubmit() {
@@ -1018,7 +1014,7 @@ async function lockSubmit() {
 }
 
 function unlock() {
-  sessionStorage.setItem('meridian_unlocked', 'yes');
+  pageUnlocked = true;
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('lock-error').textContent = '';
 }
