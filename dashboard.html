@@ -444,6 +444,44 @@ body {
   font-size: 11px; color: var(--text-dim); flex-shrink: 0;
 }
 
+/* ── LOCK SCREEN ── */
+#lock-screen {
+  position: fixed; inset: 0; z-index: 999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.lock-box {
+  width: 340px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 36px 32px; text-align: center;
+}
+.lock-logo  { font-size: 22px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 4px; }
+.lock-sub   { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 28px; }
+.lock-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; text-align: left; }
+.lock-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 7px; padding: 10px 14px; font-size: 14px;
+  color: var(--text); font-family: inherit; outline: none;
+  text-align: center; letter-spacing: 3px; margin-bottom: 14px;
+  transition: border-color 0.15s;
+}
+.lock-input:focus { border-color: var(--blue); }
+.lock-input.error { border-color: var(--red); animation: shake 0.3s ease; }
+.lock-btn {
+  width: 100%; padding: 11px; border-radius: 7px; font-size: 13px;
+  font-weight: 700; cursor: pointer; border: none; font-family: inherit;
+  background: var(--blue); color: #fff; transition: opacity 0.15s;
+}
+.lock-btn:hover { opacity: 0.85; }
+.lock-error { font-size: 11px; color: var(--red); margin-top: 10px; min-height: 16px; }
+.lock-change { font-size: 11px; color: var(--text-dim); margin-top: 16px; cursor: pointer; }
+.lock-change:hover { color: var(--text-muted); }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-6px); }
+  75%      { transform: translateX(6px); }
+}
+
 /* ── MODAL (name edit) ── */
 .modal-bg {
   display: none; position: fixed; inset: 0;
@@ -464,6 +502,20 @@ body {
 </style>
 </head>
 <body>
+
+<!-- ── LOCK SCREEN ── -->
+<div id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-logo" id="lock-brand">Meridian</div>
+    <div class="lock-sub">Personal OS</div>
+    <div class="lock-label" id="lock-label">Password</div>
+    <input class="lock-input" id="lock-input" type="password" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')lockSubmit()" autocomplete="current-password" />
+    <button class="lock-btn" onclick="lockSubmit()" id="lock-btn">Unlock</button>
+    <div class="lock-error" id="lock-error"></div>
+    <div class="lock-change" id="lock-change-link" onclick="lockShowChange()" style="display:none">Change password</div>
+  </div>
+</div>
 
 <!-- ── NAV ── -->
 <header class="nav">
@@ -906,6 +958,88 @@ body {
 </div>
 
 <script>
+// ── LOCK SCREEN ────────────────────────────────────────────────────
+const LOCK_KEY = 'meridian_pw_hash';
+
+async function hashPassword(pw) {
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function lockInit() {
+  const stored = localStorage.getItem(LOCK_KEY);
+  const brand  = document.getElementById('lock-brand');
+  const name   = JSON.parse(localStorage.getItem('meridian_profile') || '{}').name;
+  if (name) brand.textContent = name;
+
+  if (!stored) {
+    // First time — set a password
+    document.getElementById('lock-label').textContent = 'Create a password';
+    document.getElementById('lock-btn').textContent   = 'Set Password';
+    document.getElementById('lock-input').placeholder = 'Choose a password';
+    document.getElementById('lock-input').setAttribute('autocomplete','new-password');
+  } else {
+    document.getElementById('lock-change-link').style.display = 'block';
+  }
+  document.getElementById('lock-input').focus();
+
+  // Already unlocked this session?
+  if (sessionStorage.getItem('meridian_unlocked') === 'yes' && stored) {
+    unlock();
+  }
+}
+
+async function lockSubmit() {
+  const input  = document.getElementById('lock-input');
+  const pw     = input.value;
+  const errEl  = document.getElementById('lock-error');
+  const stored = localStorage.getItem(LOCK_KEY);
+
+  if (!pw) { showLockError('Enter a password'); return; }
+
+  const hash = await hashPassword(pw);
+
+  if (!stored) {
+    // Saving new password
+    if (pw.length < 4) { showLockError('Use at least 4 characters'); return; }
+    localStorage.setItem(LOCK_KEY, hash);
+    unlock();
+  } else {
+    if (hash === stored) {
+      unlock();
+    } else {
+      showLockError('Incorrect password');
+      input.classList.add('error');
+      setTimeout(() => input.classList.remove('error'), 400);
+      input.value = '';
+      input.focus();
+    }
+  }
+}
+
+function unlock() {
+  sessionStorage.setItem('meridian_unlocked', 'yes');
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('lock-error').textContent = '';
+}
+
+function showLockError(msg) {
+  document.getElementById('lock-error').textContent = msg;
+}
+
+async function lockShowChange() {
+  const current = prompt('Enter your current password:');
+  if (!current) return;
+  const hash = await hashPassword(current);
+  if (hash !== localStorage.getItem(LOCK_KEY)) { alert('Incorrect password.'); return; }
+  const next = prompt('Enter your new password:');
+  if (!next || next.length < 4) { alert('Password must be at least 4 characters.'); return; }
+  localStorage.setItem(LOCK_KEY, await hashPassword(next));
+  alert('Password updated!');
+}
+
+lockInit();
+
 // ── UTILS ──────────────────────────────────────────────────────────
 const TODAY = new Date().toISOString().split('T')[0];
 function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }
