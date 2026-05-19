@@ -332,6 +332,34 @@ body {
 .grat-footer   { display: flex; align-items: center; justify-content: space-between; }
 .grat-count    { font-size: 10px; color: var(--text-dim); }
 
+/* ── FINANCE VIEW ── */
+.finance-view { display: none; max-width: 1200px; margin: 0 auto; padding: 12px; height: calc(100vh - 50px); }
+.finance-view.active { display: grid; grid-template-columns: 190px 1fr; gap: 10px; }
+.fin-sidebar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+.fin-sidebar-header { padding: 13px 14px 11px; border-bottom: 1px solid var(--border); font-size: 9px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.fin-month-list { flex: 1; overflow-y: auto; padding: 8px; }
+.fin-month-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background 0.15s; margin-bottom: 3px; font-size: 12px; color: var(--text-muted); border: 1px solid transparent; }
+.fin-month-item:hover  { background: var(--surface2); color: var(--text); }
+.fin-month-item.active { background: var(--surface2); color: var(--text); border-color: var(--border2); font-weight: 600; }
+.fin-main { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+.fin-main-header { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.fin-main-title { font-size: 20px; font-weight: 700; }
+.fin-main-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.fin-view-scroll { flex: 1; overflow-y: auto; padding: 16px 18px; }
+.fin-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 16px; }
+.fin-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.fin-card-val { font-size: 18px; font-weight: 700; line-height: 1; margin-bottom: 5px; }
+.fin-card-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px; }
+.fin-section-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin: 16px 0 9px; }
+.cat-bar-row { margin-bottom: 9px; }
+.cat-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.txn-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; }
+.txn-table th { text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); padding: 0 10px 8px 0; font-weight: 700; }
+.txn-table td { padding: 6px 10px 6px 0; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+.txn-table tr:last-child td { border-bottom: none; }
+.txn-date { color: var(--text-muted); white-space: nowrap; width: 70px; }
+.txn-amt  { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
 /* ── JOURNAL VIEW ── */
 .journal-view {
   display: none;
@@ -496,44 +524,39 @@ body {
         <div class="panel-title"><span class="dot dot-yellow"></span>Finance Pulse</div>
         <span class="badge badge-yellow" id="fin-month-badge">—</span>
       </div>
-      <div id="fin-balance-display" onclick="editFinField('balance')" title="Click to edit" style="cursor:pointer">
-        <div class="fin-balance" id="fin-balance-val">—</div>
-        <div class="fin-delta" id="fin-delta-val">Savings balance</div>
+      <div id="fin-panel-loading" class="empty-state" style="padding:8px 0">Loading from Google Sheets…</div>
+      <div id="fin-panel-content" style="display:none">
+        <div class="fin-balance" id="fin-income-val">—</div>
+        <div class="fin-delta" style="color:var(--text-muted);margin-bottom:10px">Monthly Income</div>
+        <div style="margin-bottom:12px">
+          <div class="prog-meta">
+            <span class="prog-label">Savings vs target</span>
+            <span class="prog-pct" id="fin-sav-pct">—</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill fill-green" id="fin-sav-bar" style="width:0%"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:3px;font-size:10px;color:var(--text-dim)">
+            <span id="fin-sav-actual">—</span>
+            <span id="fin-sav-target">—</span>
+          </div>
+        </div>
+        <div class="fin-row">
+          <span class="lbl">Total Expenses</span>
+          <span class="val" style="color:var(--red)" id="fin-expenses-val">—</span>
+        </div>
+        <div class="fin-row">
+          <span class="lbl">Available Savings</span>
+          <span class="val" style="color:var(--green)" id="fin-available-val">—</span>
+        </div>
+        <div class="fin-row">
+          <span class="lbl">Fun Budget Left</span>
+          <span class="val" style="color:var(--yellow)" id="fin-fun-val">—</span>
+        </div>
+        <div class="fin-row">
+          <span class="lbl">Net Worth</span>
+          <span class="val" style="color:var(--cyan)" id="fin-networth-val">—</span>
+        </div>
       </div>
-      <div id="fin-balance-edit" style="display:none;margin-bottom:8px">
-        <input class="fi fi-grow" id="fin-balance-input" placeholder="e.g. 6842" onblur="saveFinField('balance')" onkeydown="if(event.key==='Enter')saveFinField('balance')" />
-        <input class="fi fi-grow" style="margin-top:5px" id="fin-delta-input" placeholder="delta label, e.g. +$348 this week" onblur="saveFinField('balance')" onkeydown="if(event.key==='Enter')saveFinField('balance')" />
-      </div>
-      <div class="fin-row">
-        <span class="lbl">MRR</span>
-        <span class="val" id="fin-mrr" onclick="editFinField('mrr')" title="Click to edit">—</span>
-      </div>
-      <div class="fin-row" id="fin-mrr-edit-row" style="display:none">
-        <input class="fi fi-grow" id="fin-mrr-input" placeholder="e.g. 2400" onblur="saveFinField('mrr')" onkeydown="if(event.key==='Enter')saveFinField('mrr')" />
-      </div>
-      <div class="fin-row">
-        <span class="lbl">Spent (MTD)</span>
-        <span class="val" id="fin-spent" onclick="editFinField('spent')" title="Click to edit">—</span>
-      </div>
-      <div class="fin-row" id="fin-spent-edit-row" style="display:none">
-        <input class="fi fi-grow" id="fin-spent-input" placeholder="e.g. 1156" onblur="saveFinField('spent')" onkeydown="if(event.key==='Enter')saveFinField('spent')" />
-      </div>
-      <div class="fin-row">
-        <span class="lbl">Pending</span>
-        <span class="val" id="fin-pending" onclick="editFinField('pending')" title="Click to edit">—</span>
-      </div>
-      <div class="fin-row" id="fin-pending-edit-row" style="display:none">
-        <input class="fi fi-grow" id="fin-pending-input" placeholder="e.g. 320" onblur="saveFinField('pending')" onkeydown="if(event.key==='Enter')saveFinField('pending')" />
-      </div>
-      <div class="fin-row">
-        <span class="lbl">Burn rate</span>
-        <select class="op-select" id="fin-burn" onchange="saveFinField('burn')">
-          <option value="">—</option>
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
-        </select>
-      </div>
+      <div id="fin-panel-error" style="display:none;font-size:11px;color:var(--red);margin-top:6px"></div>
     </div>
 
     <!-- KEY BLOCKERS -->
@@ -762,6 +785,32 @@ body {
 
 </div><!-- /dashboard -->
 
+<!-- ── FINANCE VIEW ── -->
+<div class="finance-view" id="finance-view">
+  <div class="fin-sidebar">
+    <div class="fin-sidebar-header"><span class="dot dot-yellow"></span>Months</div>
+    <div class="fin-month-list" id="fin-month-list"></div>
+  </div>
+  <div class="fin-main">
+    <div class="fin-main-header">
+      <div>
+        <div class="fin-main-title" id="fin-main-title">—</div>
+        <div class="fin-main-sub">Budget Overview</div>
+      </div>
+      <button class="btn btn-blue" onclick="refreshFinanceView()">↻ Refresh</button>
+    </div>
+    <div id="fin-view-loading" class="empty-state" style="padding:30px 18px">Loading…</div>
+    <div id="fin-view-content" class="fin-view-scroll" style="display:none">
+      <div class="fin-cards" id="fin-view-cards"></div>
+      <div id="fin-view-savings"></div>
+      <div class="fin-section-label">Spending by Category</div>
+      <div id="fin-view-categories"></div>
+      <div class="fin-section-label">Transactions</div>
+      <div id="fin-view-transactions"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ── JOURNAL VIEW ── -->
 <div class="journal-view" id="journal-view">
   <div class="journal-sidebar">
@@ -842,7 +891,7 @@ function updateClock() {
 }
 function pad(x) { return String(x).padStart(2,'0'); }
 setInterval(updateClock, 1000); updateClock();
-document.getElementById('fin-month-badge').textContent = MONTHS[new Date().getMonth()];
+document.getElementById('fin-month-badge').textContent = `${MONTHS[new Date().getMonth()]} ${new Date().getFullYear()}`;
 
 // ── WEEK NUMBER ────────────────────────────────────────────────────
 function weekNum(d) {
@@ -966,51 +1015,262 @@ function updateSession() {
 }
 setInterval(updateSession, 1000); updateSession();
 
-// ── FINANCE ───────────────────────────────────────────────────────
-let finData = load('meridian_finance', { balance: '', delta: '', mrr: '', spent: '', pending: '', burn: '' });
+// ── FINANCE (Google Sheets) ───────────────────────────────────────
+const SHEET_ID  = '14B-NpJPj8dN2wb5KA9hSj_omll4llBwnwJc6F9cgQHs';
+const GAPI_KEY  = 'AIzaSyBayQCbbYr2hzq9DNkQfF2uE6P2mhdr4Ws';
+const MONTH_TABS = [
+  'November 2025','December 2025','January 2026','February 2026',
+  'March 2026','April 2026','May 2026',
+];
 
-function renderFinance() {
-  document.getElementById('fin-balance-val').textContent = finData.balance ? `$${Number(finData.balance).toLocaleString()}` : '—';
-  document.getElementById('fin-delta-val').textContent   = finData.delta || 'Savings balance';
-  document.getElementById('fin-mrr').textContent         = finData.mrr     ? `$${Number(finData.mrr).toLocaleString()}` : '—';
-  document.getElementById('fin-spent').textContent       = finData.spent   ? `$${Number(finData.spent).toLocaleString()}` : '—';
-  document.getElementById('fin-pending').textContent     = finData.pending ? `$${Number(finData.pending).toLocaleString()}` : '—';
-  document.getElementById('fin-burn').value              = finData.burn    || '';
+let finActiveMonth = '';
+let finCache = {};
+
+function getCurrentMonthSheet() {
+  const n = new Date();
+  const m = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${m[n.getMonth()]} ${n.getFullYear()}`;
 }
 
-function editFinField(field) {
-  if (field === 'balance') {
-    document.getElementById('fin-balance-display').style.display = 'none';
-    document.getElementById('fin-balance-edit').style.display    = 'block';
-    document.getElementById('fin-balance-input').value = finData.balance;
-    document.getElementById('fin-delta-input').value   = finData.delta;
-    document.getElementById('fin-balance-input').focus();
-  } else {
-    document.getElementById(`fin-${field}`).style.display          = 'none';
-    document.getElementById(`fin-${field}-edit-row`).style.display = 'flex';
-    document.getElementById(`fin-${field}-input`).value            = finData[field];
-    document.getElementById(`fin-${field}-input`).focus();
+async function fetchSheetRange(sheetName, range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(sheetName)}!${range}?key=${GAPI_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Sheets API error ${res.status}`);
+  return (await res.json()).values || [];
+}
+
+function parseCurrency(str) {
+  if (!str) return 0;
+  return parseFloat(String(str).replace(/[$,]/g, '')) || 0;
+}
+
+function fmtDollar(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function findLabelValue(data, label) {
+  const lc = label.toLowerCase();
+  for (let r = 0; r < data.length; r++) {
+    const row = data[r] || [];
+    for (let c = 0; c < row.length; c++) {
+      if (String(row[c] || '').trim().toLowerCase() === lc) {
+        // Check same row: up to 3 cells to the right
+        for (let nc = c + 1; nc <= c + 3 && nc < row.length; nc++) {
+          const v = String(row[nc] || '').trim();
+          if (v && v !== '—') return v;
+        }
+        // Check next two rows at same column and ±1
+        for (let nr = r + 1; nr <= r + 2 && nr < data.length; nr++) {
+          const nextRow = data[nr] || [];
+          for (let nc = c; nc <= c + 2 && nc < nextRow.length; nc++) {
+            const v = String(nextRow[nc] || '').trim();
+            if (v && v !== '—' && !v.toLowerCase().includes('savings') && !v.toLowerCase().includes('income')) return v;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function findTransactions(data) {
+  for (let r = 0; r < data.length; r++) {
+    const row = data[r] || [];
+    const di = row.findIndex(c => String(c || '').trim() === 'Date');
+    if (di < 0) continue;
+    const txns = [];
+    for (let tr = r + 1; tr < data.length; tr++) {
+      const t = data[tr] || [];
+      if (t[di] && t[di + 4]) {
+        txns.push({
+          date:     String(t[di]     || '').trim(),
+          method:   String(t[di + 1] || '').trim(),
+          expense:  String(t[di + 2] || '').trim(),
+          category: String(t[di + 3] || '').trim(),
+          amount:   parseCurrency(t[di + 4]),
+        });
+      }
+    }
+    if (txns.length) return txns;
+  }
+  return [];
+}
+
+function findCategories(data) {
+  for (let r = 0; r < data.length; r++) {
+    const row = data[r] || [];
+    const ci = row.findIndex(c => String(c || '').trim() === 'Category');
+    if (ci < 0) continue;
+    const cats = [];
+    for (let cr = r + 1; cr < data.length; cr++) {
+      const crow = data[cr] || [];
+      const name = String(crow[ci]     || '').trim();
+      const amt  = String(crow[ci + 1] || '').trim();
+      if (name && amt && name !== 'Grand Total' && !amt.includes('—') && !amt.includes('SUM')) {
+        const n = parseCurrency(amt);
+        if (n > 0) cats.push({ name, amount: n });
+      }
+    }
+    if (cats.length) return cats;
+  }
+  return [];
+}
+
+async function loadMonthData(month) {
+  if (finCache[month]) return finCache[month];
+  const data = await fetchSheetRange(month, 'A1:N120');
+  const result = {
+    income:       parseCurrency(findLabelValue(data, 'Monthly Income')),
+    expenses:     parseCurrency(findLabelValue(data, 'Total Expenses')),
+    available:    parseCurrency(findLabelValue(data, 'Available Savings')),
+    funLeft:      parseCurrency(findLabelValue(data, 'Fun Budget Remaining')),
+    targetSav:    parseCurrency(findLabelValue(data, 'Target Total Savings')),
+    actualSav:    parseCurrency(findLabelValue(data, 'Actual Savings')),
+    transactions: findTransactions(data),
+    categories:   findCategories(data),
+  };
+  finCache[month] = result;
+  return result;
+}
+
+// ── Finance Pulse (home panel) ────────────────────────────────────
+async function loadFinancePanel() {
+  const loading = document.getElementById('fin-panel-loading');
+  const content = document.getElementById('fin-panel-content');
+  const errEl   = document.getElementById('fin-panel-error');
+  loading.style.display = 'block';
+  content.style.display = 'none';
+  errEl.style.display   = 'none';
+  try {
+    const month = getCurrentMonthSheet();
+    const d     = await loadMonthData(month);
+    const savPct = d.targetSav > 0 ? Math.min(100, Math.round(d.actualSav / d.targetSav * 100)) : 0;
+
+    document.getElementById('fin-income-val').textContent    = fmtDollar(d.income);
+    document.getElementById('fin-expenses-val').textContent  = fmtDollar(d.expenses);
+    document.getElementById('fin-available-val').textContent = fmtDollar(d.available);
+    document.getElementById('fin-fun-val').textContent       = fmtDollar(d.funLeft);
+    document.getElementById('fin-sav-actual').textContent    = `Actual: ${fmtDollar(d.actualSav)}`;
+    document.getElementById('fin-sav-target').textContent    = `Target: ${fmtDollar(d.targetSav)}`;
+    document.getElementById('fin-sav-pct').textContent       = savPct + '%';
+    document.getElementById('fin-sav-bar').style.width       = savPct + '%';
+
+    const nwData = await fetchSheetRange('Net Worth', 'A1:G15');
+    const nw     = parseCurrency(findLabelValue(nwData, 'Net Worth'));
+    document.getElementById('fin-networth-val').textContent  = fmtDollar(nw);
+
+    loading.style.display = 'none';
+    content.style.display = 'block';
+  } catch(e) {
+    loading.style.display = 'none';
+    errEl.style.display   = 'block';
+    errEl.textContent     = 'Could not load sheet — check sharing is set to "Anyone with the link".';
+    console.error(e);
   }
 }
 
-function saveFinField(field) {
-  if (field === 'balance') {
-    finData.balance = document.getElementById('fin-balance-input').value.replace(/[^0-9.]/g,'');
-    finData.delta   = document.getElementById('fin-delta-input').value.trim();
-    document.getElementById('fin-balance-display').style.display = 'block';
-    document.getElementById('fin-balance-edit').style.display    = 'none';
-  } else if (field === 'burn') {
-    finData.burn = document.getElementById('fin-burn').value;
-  } else {
-    finData[field] = document.getElementById(`fin-${field}-input`).value.replace(/[^0-9.]/g,'');
-    document.getElementById(`fin-${field}`).style.display          = 'inline';
-    document.getElementById(`fin-${field}-edit-row`).style.display = 'none';
-  }
-  save('meridian_finance', finData);
-  renderFinance();
+loadFinancePanel();
+
+// ── Finance full view (Finance tab) ───────────────────────────────
+const CAT_COLORS = {
+  'Dining Out':'#ff4757', 'Groceries':'#00d97e', 'Transportation':'#4d8aff',
+  'Fun Purchases':'#ffd166', 'Entertainment':'#8b5cf6', 'Hobbies/Recreation':'#2dd4bf',
+  'Personal':'#f472b6', 'Coffee/Snacks':'#ff9340', 'Gifts & Donations':'#00c8ff',
+};
+
+function renderFinMonthList() {
+  const current = getCurrentMonthSheet();
+  document.getElementById('fin-month-list').innerHTML = MONTH_TABS.map(m => `
+    <div class="fin-month-item ${m === finActiveMonth ? 'active' : ''}" onclick="loadFinanceView('${m}')">
+      ${m}${m === current ? ' <span style="font-size:9px;color:var(--green)">●</span>' : ''}
+    </div>`).join('');
 }
 
-renderFinance();
+async function loadFinanceView(month) {
+  finActiveMonth = month;
+  renderFinMonthList();
+  document.getElementById('fin-main-title').textContent      = month;
+  document.getElementById('fin-view-loading').style.display  = 'block';
+  document.getElementById('fin-view-content').style.display  = 'none';
+  try {
+    const d      = await loadMonthData(month);
+    const savPct = d.targetSav > 0 ? Math.min(100, Math.round(d.actualSav / d.targetSav * 100)) : 0;
+    const funSpent = d.income - d.expenses - d.available;
+
+    // Cards
+    document.getElementById('fin-view-cards').innerHTML = `
+      <div class="fin-card">
+        <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.income)}</div>
+        <div class="fin-card-lbl">Monthly Income</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-val" style="color:var(--red)">${fmtDollar(d.expenses)}</div>
+        <div class="fin-card-lbl">Total Expenses</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-val" style="color:var(--cyan)">${fmtDollar(d.available)}</div>
+        <div class="fin-card-lbl">Available Savings</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-val" style="color:var(--yellow)">${fmtDollar(d.funLeft)}</div>
+        <div class="fin-card-lbl">Fun Budget Left</div>
+      </div>`;
+
+    // Savings progress
+    document.getElementById('fin-view-savings').innerHTML = `
+      <div class="prog-meta" style="margin-top:4px">
+        <span class="prog-label">Savings — <strong style="color:var(--text)">${fmtDollar(d.actualSav)}</strong> of ${fmtDollar(d.targetSav)} target</span>
+        <span class="prog-pct" style="color:${savPct >= 100 ? 'var(--green)' : 'var(--text)'}">${savPct}%</span>
+      </div>
+      <div class="prog-bar" style="height:6px"><div class="prog-fill fill-green" style="width:${savPct}%"></div></div>`;
+
+    // Categories
+    const sorted = [...d.categories].sort((a, b) => b.amount - a.amount);
+    const maxAmt = sorted[0]?.amount || 1;
+    document.getElementById('fin-view-categories').innerHTML = sorted.length
+      ? sorted.map(c => `
+          <div class="cat-bar-row">
+            <div class="cat-bar-label">
+              <span>${esc(c.name)}</span>
+              <span style="font-weight:600;color:var(--text)">${fmtDollar(c.amount)}</span>
+            </div>
+            <div class="prog-bar">
+              <div class="prog-fill" style="width:${Math.round(c.amount / maxAmt * 100)}%;background:${CAT_COLORS[c.name] || 'var(--blue)'}"></div>
+            </div>
+          </div>`).join('')
+      : '<div class="empty-state">No category data found</div>';
+
+    // Transactions
+    document.getElementById('fin-view-transactions').innerHTML = d.transactions.length
+      ? `<table class="txn-table">
+           <thead><tr>
+             <th>Date</th><th>Expense</th><th>Category</th><th>Method</th><th style="text-align:right">Amount</th>
+           </tr></thead>
+           <tbody>${d.transactions.map(t => `
+             <tr>
+               <td class="txn-date">${esc(t.date)}</td>
+               <td>${esc(t.expense)}</td>
+               <td><span class="badge badge-gray" style="font-size:9px">${esc(t.category)}</span></td>
+               <td style="color:var(--text-muted)">${esc(t.method)}</td>
+               <td class="txn-amt">${fmtDollar(t.amount)}</td>
+             </tr>`).join('')}
+           </tbody>
+         </table>`
+      : '<div class="empty-state">No transactions found</div>';
+
+    document.getElementById('fin-view-loading').style.display = 'none';
+    document.getElementById('fin-view-content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('fin-view-loading').textContent = 'Could not load data. Check sharing settings.';
+    console.error(e);
+  }
+}
+
+function refreshFinanceView() {
+  delete finCache[finActiveMonth];
+  loadFinanceView(finActiveMonth);
+}
 
 // ── KEY BLOCKERS ──────────────────────────────────────────────────
 let blockers = load('meridian_blockers', []);
@@ -1453,15 +1713,24 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     const label       = tab.textContent.trim();
     const dashboard   = document.querySelector('.dashboard');
     const journalView = document.getElementById('journal-view');
+    const financeView = document.getElementById('finance-view');
+
+    dashboard.style.display = 'none';
+    journalView.classList.remove('active');
+    financeView.classList.remove('active');
 
     if (label === 'Journal') {
-      dashboard.style.display = 'none';
       journalView.classList.add('active');
       openTodayEntry();
       renderJournalSidebar();
+    } else if (label === 'Finance') {
+      financeView.classList.add('active');
+      const month = getCurrentMonthSheet();
+      finActiveMonth = finActiveMonth || month;
+      renderFinMonthList();
+      loadFinanceView(finActiveMonth);
     } else {
       dashboard.style.display = 'grid';
-      journalView.classList.remove('active');
     }
   });
 });
