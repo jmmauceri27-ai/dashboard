@@ -130,6 +130,7 @@ body {
 }
 .fi:focus { border-color: var(--blue); }
 .fi::placeholder { color: var(--text-dim); }
+select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 22px; }
 .fi-grow { flex: 1; }
 .fi-sm { width: 80px; }
 .sel {
@@ -838,10 +839,18 @@ body {
         </div>
         <div class="food-dropdown" id="food-dropdown" style="display:none"></div>
         <div style="display:none" id="food-manual-row">
-          <div class="food-serving-label">Serving (g) — <span id="food-selected-name" style="color:var(--text)"></span></div>
-          <div style="display:grid;grid-template-columns:1fr 60px;gap:5px;margin-bottom:5px">
+          <div class="food-serving-label"><span id="food-selected-name" style="color:var(--text)"></span></div>
+          <div style="display:grid;grid-template-columns:1fr 70px 72px;gap:5px;margin-bottom:5px">
             <input class="fi" id="meal-name" placeholder="Label / meal name…" />
-            <input class="fi" id="meal-serving" placeholder="g" type="number" min="1" value="100" oninput="updateMacrosFromServing()" />
+            <input class="fi" id="meal-serving" placeholder="Amount" type="number" min="0.1" step="0.1" value="100" oninput="updateMacrosFromServing()" />
+            <select class="fi" id="meal-unit" onchange="updateMacrosFromServing()" style="cursor:pointer">
+              <option value="g">g (grams)</option>
+              <option value="oz">oz (ounces)</option>
+              <option value="lb">lb (pounds)</option>
+              <option value="cup">cup</option>
+              <option value="tbsp">tbsp</option>
+              <option value="tsp">tsp</option>
+            </select>
           </div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">
             <input class="fi" id="meal-kcal" placeholder="kcal" type="number" min="0" />
@@ -1746,6 +1755,8 @@ function addMeal() {
   ['meal-name','meal-kcal','meal-protein','meal-carbs','meal-fat'].forEach(id => document.getElementById(id).value = '');
   const srv = document.getElementById('meal-serving');
   if (srv) srv.value = 100;
+  const unitEl = document.getElementById('meal-unit');
+  if (unitEl) unitEl.value = 'g';
   document.getElementById('food-manual-row').style.display = 'none';
   document.getElementById('food-search-input').value = '';
   _selectedPer100 = null;
@@ -1838,6 +1849,7 @@ function selectFood(idx) {
   document.getElementById('food-selected-name').textContent = food.description;
   document.getElementById('meal-name').value = food.description;
   document.getElementById('meal-serving').value = 100;
+  document.getElementById('meal-unit').value = 'g';
   updateMacrosFromServing();
   hideFoodDropdown();
   document.getElementById('food-search-input').value = '';
@@ -1845,10 +1857,17 @@ function selectFood(idx) {
   document.getElementById('meal-serving').focus();
 }
 
+const UNIT_TO_G = { g: 1, oz: 28.3495, lb: 453.592, cup: 240, tbsp: 15, tsp: 5 };
+
+function servingToGrams() {
+  const amt  = parseFloat(document.getElementById('meal-serving').value) || 0;
+  const unit = document.getElementById('meal-unit').value;
+  return amt * (UNIT_TO_G[unit] ?? 1);
+}
+
 function updateMacrosFromServing() {
   if (!_selectedPer100) return;
-  const g = parseFloat(document.getElementById('meal-serving').value) || 0;
-  const scale = g / 100;
+  const scale = servingToGrams() / 100;
   document.getElementById('meal-kcal').value    = Math.round(_selectedPer100.kcal    * scale) || '';
   document.getElementById('meal-protein').value = Math.round(_selectedPer100.protein * scale) || '';
   document.getElementById('meal-carbs').value   = Math.round(_selectedPer100.carbs   * scale) || '';
