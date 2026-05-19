@@ -1919,20 +1919,25 @@ function deleteMeal(idx) {
   renderNutrition();
 }
 
-// ── FOOD SEARCH (Open Food Facts — no key, no rate limit) ────────
+// ── FOOD SEARCH (USDA FoodData Central) ──────────────────────────
+// Get a free personal key at https://fdc.nal.usda.gov/api-key-signup.html
+// Replace DEMO_KEY below — personal keys allow 3,600 req/hour vs 30.
+const USDA_KEY = load('meridian_usda_key', 'DEMO_KEY');
+
 let _foodResults = [];
 let _selectedPer100 = null;
 let _foodSearchTimer = null;
 
-function offNutr(food, key) {
-  return parseFloat((food.nutriments || {})[key]) || 0;
+function usdaNutr(food, id) {
+  const n = (food.foodNutrients || []).find(x => x.nutrientId === id);
+  return n ? (n.value || 0) : 0;
 }
 
 function debounceFoodSearch() {
   clearTimeout(_foodSearchTimer);
   const q = document.getElementById('food-search-input').value.trim();
   if (!q) { hideFoodDropdown(); return; }
-  _foodSearchTimer = setTimeout(() => searchAndShowFood(q), 500);
+  _foodSearchTimer = setTimeout(() => searchAndShowFood(q), 450);
 }
 
 async function searchAndShowFood(query) {
@@ -1944,44 +1949,47 @@ async function searchAndShowFood(query) {
   const timer = setTimeout(() => controller.abort(), 8000);
 
   try {
-    // Use the v2 REST endpoint — more reliable than the CGI one
-    const url = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(query)}&fields=product_name,nutriments,brands&page_size=20&json=true`;
+    const key = load('meridian_usda_key', 'DEMO_KEY');
+    const url  = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=10&dataType=Foundation,SR%20Legacy,Survey%20(FNDDS)&api_key=${key}`;
     const res  = await fetch(url, { signal: controller.signal });
     clearTimeout(timer);
+    if (res.status === 403 || res.status === 429) {
+      dd.innerHTML = `<div class="food-result-item" style="color:var(--yellow)">Rate limit reached. <span style="cursor:pointer;text-decoration:underline" onclick="promptUsdaKey()">Enter your free API key</span> or fill macros manually.</div>`;
+      dd.style.display = 'block'; return;
+    }
     if (!res.ok) throw new Error(res.status);
     const json = await res.json();
-    _foodResults = (json.products || [])
-      .filter(p => p.product_name && offNutr(p, 'energy-kcal_100g') > 0)
-      .slice(0, 10);
+    _foodResults = (json.foods || []).slice(0, 10);
     if (!_foodResults.length) {
-      dd.innerHTML = `<div class="food-result-item" style="color:var(--text-muted)">No results for "${esc(query)}" — try a simpler term or enter macros manually.</div>`;
-      dd.style.display = 'block';
-      return;
+      dd.innerHTML = `<div class="food-result-item" style="color:var(--text-muted)">No results for "${esc(query)}" — try a different term or fill macros manually.</div>`;
+      dd.style.display = 'block'; return;
     }
     showFoodDropdown();
   } catch(e) {
     clearTimeout(timer);
     _foodResults = [];
-    const msg = e.name === 'AbortError'
-      ? 'Search timed out — enter macros manually below.'
-      : 'Search unavailable — enter macros manually below.';
-    dd.innerHTML = `<div class="food-result-item" style="color:var(--text-muted)">${msg}</div>`;
+    const msg = e.name === 'AbortError' ? 'Search timed out.' : 'Search unavailable.';
+    dd.innerHTML = `<div class="food-result-item" style="color:var(--text-muted)">${msg} Fill macros manually below.</div>`;
     dd.style.display = 'block';
   } finally {
     spinner.style.display = 'none';
   }
 }
 
+function promptUsdaKey() {
+  const key = prompt('Paste your free USDA API key (get one at fdc.nal.usda.gov/api-key-signup.html):');
+  if (key && key.trim()) { save('meridian_usda_key', key.trim()); hideFoodDropdown(); }
+}
+
 function showFoodDropdown() {
   const dd = document.getElementById('food-dropdown');
   dd.innerHTML = _foodResults.map((f, i) => {
-    const kcal = Math.round(offNutr(f, 'energy-kcal_100g'));
-    const prot = Math.round(offNutr(f, 'proteins_100g'));
-    const carb = Math.round(offNutr(f, 'carbohydrates_100g'));
-    const fat  = Math.round(offNutr(f, 'fat_100g'));
-    const brand = f.brands ? ` · ${esc(f.brands.split(',')[0].trim())}` : '';
+    const kcal = Math.round(usdaNutr(f, 1008));
+    const prot = Math.round(usdaNutr(f, 1003));
+    const carb = Math.round(usdaNutr(f, 1005));
+    const fat  = Math.round(usdaNutr(f, 1004));
     return `<div class="food-result-item" onclick="selectFood(${i})">
-      <div class="food-result-name">${esc(f.product_name)}${brand}</div>
+      <div class="food-result-name">${esc(f.description)}</div>
       <div class="food-result-macros">per 100g · ${kcal} kcal · ${prot}g P · ${carb}g C · ${fat}g F</div>
     </div>`;
   }).join('');
@@ -2009,12 +2017,12 @@ function selectFood(idx) {
   const food = _foodResults[idx];
   if (!food) return;
   _selectedPer100 = {
-    kcal:    offNutr(food, 'energy-kcal_100g'),
-    protein: offNutr(food, 'proteins_100g'),
-    carbs:   offNutr(food, 'carbohydrates_100g'),
-    fat:     offNutr(food, 'fat_100g'),
+    kcal:    usdaNutr(food, 1008),
+    protein: usdaNutr(food, 1003),
+    carbs:   usdaNutr(food, 1005),
+    fat:     usdaNutr(food, 1004),
   };
-  document.getElementById('food-selected-name').textContent = food.product_name;
+  document.getElementById('food-selected-name').textContent = food.description;
   document.getElementById('meal-name').value  = food.product_name;
   document.getElementById('meal-serving').value = 100;
   document.getElementById('meal-unit').value    = 'g';
