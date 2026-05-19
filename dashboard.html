@@ -1233,8 +1233,15 @@ async function loadFinanceView(month) {
       </div>
       <div class="prog-bar" style="height:6px"><div class="prog-fill fill-green" style="width:${savPct}%"></div></div>`;
 
-    // Categories
-    const sorted = [...d.categories].sort((a, b) => b.amount - a.amount);
+    // Group transactions by category
+    const catMap = {};
+    d.transactions.forEach(t => {
+      if (!t.category || !t.amount) return;
+      catMap[t.category] = (catMap[t.category] || 0) + t.amount;
+    });
+    const sorted = Object.entries(catMap)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount);
     const maxAmt = sorted[0]?.amount || 1;
     document.getElementById('fin-view-categories').innerHTML = sorted.length
       ? sorted.map(c => `
