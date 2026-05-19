@@ -527,7 +527,7 @@ body {
       <div id="fin-panel-loading" class="empty-state" style="padding:8px 0">Loading from Google Sheets…</div>
       <div id="fin-panel-content" style="display:none">
         <div class="fin-balance" id="fin-income-val">—</div>
-        <div class="fin-delta" style="color:var(--text-muted);margin-bottom:10px">Monthly Income</div>
+        <div class="fin-delta" style="color:var(--text-muted);margin-bottom:10px">Total Savings This Month</div>
         <div style="margin-bottom:12px">
           <div class="prog-meta">
             <span class="prog-label">Savings vs target</span>
@@ -1121,7 +1121,7 @@ async function loadMonthData(month) {
   if (finCache[month]) return finCache[month];
   const data = await fetchSheetRange(month, 'A1:N120');
   const result = {
-    income:       parseCurrency(findLabelValue(data, 'Monthly Income')),
+    totalSavings: parseCurrency(data[6]?.[12]),  // M7 = Total savings for the month
     expenses:     parseCurrency(data[69]?.[7]),  // H70 = Grand Total spent
     available:    parseCurrency(findLabelValue(data, 'Available Savings')),
     funLeft:      parseCurrency(findLabelValue(data, 'Fun Budget Remaining')),
@@ -1147,7 +1147,7 @@ async function loadFinancePanel() {
     const d     = await loadMonthData(month);
     const savPct = d.targetSav > 0 ? Math.min(100, Math.round(d.actualSav / d.targetSav * 100)) : 0;
 
-    document.getElementById('fin-income-val').textContent    = fmtDollar(d.income);
+    document.getElementById('fin-income-val').textContent    = fmtDollar(d.totalSavings);
     document.getElementById('fin-expenses-val').textContent  = fmtDollar(d.expenses);
     document.getElementById('fin-available-val').textContent = fmtDollar(d.available);
     document.getElementById('fin-fun-val').textContent       = fmtDollar(d.funLeft);
@@ -1201,8 +1201,8 @@ async function loadFinanceView(month) {
     // Cards
     document.getElementById('fin-view-cards').innerHTML = `
       <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.income)}</div>
-        <div class="fin-card-lbl">Monthly Income</div>
+        <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.totalSavings)}</div>
+        <div class="fin-card-lbl">Total Savings</div>
       </div>
       <div class="fin-card">
         <div class="fin-card-val" style="color:var(--red)">${fmtDollar(d.expenses)}</div>
