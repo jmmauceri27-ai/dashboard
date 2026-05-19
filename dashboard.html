@@ -1134,16 +1134,10 @@ async function loadFinancePanel() {
   try {
     const month = getCurrentMonthSheet();
     const d     = await loadMonthData(month);
-    const savPct = d.targetSav > 0 ? Math.min(100, Math.round(d.actualSav / d.targetSav * 100)) : 0;
-
     document.getElementById('fin-income-val').textContent    = fmtDollar(d.totalSavings);
     document.getElementById('fin-expenses-val').textContent  = fmtDollar(d.expenses);
     document.getElementById('fin-available-val').textContent = fmtDollar(d.available);
     document.getElementById('fin-fun-val').textContent       = fmtDollar(d.funLeft);
-    document.getElementById('fin-sav-actual').textContent    = `Actual: ${fmtDollar(d.actualSav)}`;
-    document.getElementById('fin-sav-target').textContent    = `Target: ${fmtDollar(d.targetSav)}`;
-    document.getElementById('fin-sav-pct').textContent       = savPct + '%';
-    document.getElementById('fin-sav-bar').style.width       = savPct + '%';
 
     const nwData = await fetchSheetRange('Net Worth', 'A1:G15');
     const nw     = parseCurrency(findLabelValue(nwData, 'Net Worth'));
