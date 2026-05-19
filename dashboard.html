@@ -130,7 +130,6 @@ body {
 }
 .fi:focus { border-color: var(--blue); }
 .fi::placeholder { color: var(--text-dim); }
-select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 22px; }
 .fi-grow { flex: 1; }
 .fi-sm { width: 80px; }
 .sel {
@@ -311,18 +310,22 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .meal-add-grid .fi { min-width: 0; }
 .food-search-wrap { position: relative; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 .food-search-row { display: flex; gap: 6px; align-items: center; }
-.food-search-row .fi { flex: 1; }
-.food-search-spinner { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
-.food-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 3px); background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; z-index: 200; max-height: 220px; overflow-y: auto; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
-.food-result-item { padding: 8px 11px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .12s; }
+.food-search-row .fi { flex: 1; min-width: 0; }
+.food-search-spinner { font-size: 11px; color: var(--text-dim); white-space: nowrap; flex-shrink: 0; }
+.food-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 3px); background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; z-index: 200; max-height: 200px; overflow-y: auto; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
+.food-result-item { padding: 7px 10px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .12s; }
 .food-result-item:last-child { border-bottom: none; }
 .food-result-item:hover, .food-result-item.active { background: var(--surface); }
-.food-result-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; color: var(--text); }
+.food-result-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .food-result-macros { font-size: 10px; color: var(--text-muted); }
-.food-serving-row { display: grid; grid-template-columns: 1fr 60px 44px 44px 44px; gap: 5px; margin-top: 7px; }
-.food-serving-row .fi { min-width: 0; }
-.food-serving-label { font-size: 10px; color: var(--text-dim); margin: 5px 0 2px; text-align: center; }
-.food-serving-label span { color: var(--text-muted); }
+.food-serving-label { font-size: 10px; color: var(--text-dim); margin: 6px 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.food-form-grid { display: grid; grid-template-columns: 1fr 46px 46px repeat(4,1fr); gap: 5px; }
+.food-form-grid .fi { min-width: 0; width: 100%; box-sizing: border-box; }
+.food-form-name  { grid-column: 1; }
+.food-form-amt   { grid-column: 2; padding-left: 5px; padding-right: 5px; }
+.food-form-unit  { grid-column: 3; padding-left: 4px; padding-right: 4px; cursor: pointer; }
+.food-form-macro { }
+select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 5px center; padding-right: 16px; }
 
 /* ── GRATITUDE ── */
 .grat-streak {
@@ -840,23 +843,21 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
         <div class="food-dropdown" id="food-dropdown" style="display:none"></div>
         <div style="display:none" id="food-manual-row">
           <div class="food-serving-label"><span id="food-selected-name" style="color:var(--text)"></span></div>
-          <div style="display:grid;grid-template-columns:1fr 70px 72px;gap:5px;margin-bottom:5px">
-            <input class="fi" id="meal-name" placeholder="Label / meal name…" />
-            <input class="fi" id="meal-serving" placeholder="Amount" type="number" min="0.1" step="0.1" value="100" oninput="updateMacrosFromServing()" />
-            <select class="fi" id="meal-unit" onchange="updateMacrosFromServing()" style="cursor:pointer">
-              <option value="g">g (grams)</option>
-              <option value="oz">oz (ounces)</option>
-              <option value="lb">lb (pounds)</option>
+          <div class="food-form-grid">
+            <input class="fi food-form-name" id="meal-name" placeholder="Label…" />
+            <input class="fi food-form-amt" id="meal-serving" placeholder="Amt" type="number" min="0.1" step="0.1" value="100" oninput="updateMacrosFromServing()" />
+            <select class="fi food-form-unit" id="meal-unit" onchange="updateMacrosFromServing()">
+              <option value="g">g</option>
+              <option value="oz">oz</option>
+              <option value="lb">lb</option>
               <option value="cup">cup</option>
               <option value="tbsp">tbsp</option>
               <option value="tsp">tsp</option>
             </select>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">
-            <input class="fi" id="meal-kcal" placeholder="kcal" type="number" min="0" />
-            <input class="fi" id="meal-protein" placeholder="P g" type="number" min="0" />
-            <input class="fi" id="meal-carbs" placeholder="C g" type="number" min="0" />
-            <input class="fi" id="meal-fat" placeholder="F g" type="number" min="0" />
+            <input class="fi food-form-macro" id="meal-kcal" placeholder="kcal" type="number" min="0" />
+            <input class="fi food-form-macro" id="meal-protein" placeholder="P" type="number" min="0" />
+            <input class="fi food-form-macro" id="meal-carbs" placeholder="C" type="number" min="0" />
+            <input class="fi food-form-macro" id="meal-fat" placeholder="F" type="number" min="0" />
           </div>
         </div>
         <button class="btn btn-blue" style="width:100%;margin-top:7px" onclick="addMeal()">Log Meal</button>
