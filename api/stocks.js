@@ -7,9 +7,14 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
 
   const symbols = [
-    { symbol: 'SPY', name: 'S&P 500' },
-    { symbol: 'DIA', name: 'Dow Jones' },
-    { symbol: 'QQQ', name: 'Nasdaq 100' },
+    { symbol: 'SPY',   name: 'S&P 500' },
+    { symbol: 'DIA',   name: 'Dow Jones' },
+    { symbol: 'QQQ',   name: 'Nasdaq 100' },
+    { symbol: 'FXAIX', name: 'FXAIX' },
+    { symbol: 'FSDMX', name: 'FSDMX' },
+    { symbol: 'FSSNX', name: 'FSSNX' },
+    { symbol: 'FXNAX', name: 'FXNAX' },
+    { symbol: 'SPAXX', name: 'SPAXX' },
   ];
 
   async function fetchQuote({ symbol, name }) {
