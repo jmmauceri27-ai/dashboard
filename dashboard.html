@@ -595,7 +595,8 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .modal-bg.open { display: flex; }
 .modal {
   background: var(--surface); border: 1px solid var(--border2);
-  border-radius: 10px; padding: 20px; width: 280px;
+  border-radius: 10px; padding: 20px; width: 300px;
+  max-height: 90vh; overflow-y: auto;
 }
 .modal h3 { font-size: 13px; margin-bottom: 12px; color: var(--text); }
 .modal-row { margin-bottom: 8px; }
