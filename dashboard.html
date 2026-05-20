@@ -62,6 +62,20 @@ body::before {
 }
 body > * { position: relative; z-index: 1; }
 
+/* ── TICKER ── */
+.ticker-bar { background: var(--surface); border-bottom: 1px solid var(--border); height: 26px; overflow: hidden; display: flex; align-items: center; }
+.ticker-track { display: flex; align-items: center; white-space: nowrap; animation: ticker-scroll 40s linear infinite; }
+.ticker-track:hover { animation-play-state: paused; }
+.ticker-content { display: inline-flex; align-items: center; }
+.ticker-item { display: inline-flex; align-items: center; gap: 7px; padding: 0 22px; border-right: 1px solid var(--border); height: 26px; font-size: 10px; }
+.ticker-name { color: var(--text-dim); font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; font-size: 9px; }
+.ticker-price { color: var(--text); font-weight: 300; }
+.ticker-change { font-size: 9px; font-weight: 400; }
+.ticker-up { color: var(--green); }
+.ticker-down { color: var(--red); }
+.ticker-dot { color: var(--border2); font-size: 8px; }
+@keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
 /* ── NAV ── */
 .nav {
   display: flex; align-items: center; justify-content: space-between;
@@ -695,6 +709,7 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
   .nav-tab { padding: 10px 14px; font-size: 10px; white-space: nowrap; }
   .nav-right { padding-bottom: 8px; }
   .nav-right .clock, .nav-right .energy-row { display: none; }
+  .ticker-bar { display: none; }
 
   /* Dashboard: single column */
   .dashboard {
@@ -790,6 +805,14 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
     </div>
   </div>
 </header>
+
+<!-- ── TICKER ── -->
+<div class="ticker-bar" id="ticker-bar">
+  <div class="ticker-track" id="ticker-track">
+    <div class="ticker-content" id="ticker-content-a"></div>
+    <div class="ticker-content" id="ticker-content-b" aria-hidden="true"></div>
+  </div>
+</div>
 
 <!-- ── GRID ── -->
 <div class="dashboard">
@@ -2989,6 +3012,56 @@ function startNewsRotation() {
 }
 
 loadNews();
+
+// ── STOCK TICKER ──────────────────────────────────────────────────
+const TICKER_NAMES = {
+  '^GSPC': 'S&P 500', '^DJI': 'Dow Jones', '^IXIC': 'Nasdaq', '^TNX': '10-Yr Treasury',
+};
+
+function renderTicker(quotes) {
+  const html = quotes.map(q => {
+    const up      = q.change >= 0;
+    const cls     = up ? 'ticker-up' : 'ticker-down';
+    const arrow   = up ? '▲' : '▼';
+    const price   = q.symbol === '^TNX'
+      ? q.price.toFixed(3) + '%'
+      : q.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const chg     = (up ? '+' : '') + q.change.toFixed(2);
+    const pct     = (up ? '+' : '') + q.changePercent.toFixed(2) + '%';
+    const name    = TICKER_NAMES[q.symbol] || q.name;
+    return `<div class="ticker-item">
+      <span class="ticker-name">${name}</span>
+      <span class="ticker-price">${price}</span>
+      <span class="ticker-change ${cls}">${arrow} ${chg} (${pct})</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('ticker-content-a').innerHTML = html;
+  document.getElementById('ticker-content-b').innerHTML = html;
+}
+
+async function loadTicker() {
+  const cacheKey = 'meridian_stocks';
+  const cached   = load(cacheKey, null);
+  const fiveMin  = 5 * 60 * 1000;
+
+  if (cached && (Date.now() - cached.ts) < fiveMin) {
+    renderTicker(cached.quotes); return;
+  }
+
+  try {
+    const res  = await fetch('/api/stocks');
+    const data = await res.json();
+    if (!res.ok || !data.quotes?.length) throw new Error(data.error || 'No data');
+    save(cacheKey, { ts: Date.now(), quotes: data.quotes });
+    renderTicker(data.quotes);
+    setTimeout(loadTicker, fiveMin);
+  } catch {
+    document.getElementById('ticker-bar').style.display = 'none';
+  }
+}
+
+loadTicker();
 
 // ── JOURNAL ───────────────────────────────────────────────────────
 let journalData       = load('meridian_journal', {});
