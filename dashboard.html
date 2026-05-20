@@ -1568,7 +1568,7 @@ const TODAY = new Date().toISOString().split('T')[0];
 function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }
 
 // ── SUPABASE SYNC ──────────────────────────────────────────────────
-const SB_SKIP = new Set(['meridian_pw_hash','meridian_oura_token','meridian_supabase_url','meridian_supabase_key','meridian_usda_key','meridian_av_key']);
+const SB_SKIP = new Set(['meridian_pw_hash','meridian_oura_token','meridian_supabase_url','meridian_supabase_key','meridian_usda_key','meridian_av_key','meridian_stocks']);
 
 function sbUrl()  { return localStorage.getItem('meridian_supabase_url') || ''; }
 function sbKey()  { return localStorage.getItem('meridian_supabase_key') || ''; }
@@ -3089,7 +3089,6 @@ async function loadTicker() {
   }
 }
 
-localStorage.removeItem('meridian_stocks'); // clear stale cache
 loadTicker();
 
 // ── JOURNAL ───────────────────────────────────────────────────────
