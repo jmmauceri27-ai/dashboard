@@ -1477,6 +1477,14 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       </div>
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 14px">
+    <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase">Market Data</div>
+    <div class="modal-row">
+      <label>Alpha Vantage API Key</label>
+      <input class="fi" id="av-key-input" style="width:100%" type="password" placeholder="Enter key from alphavantage.co" />
+    </div>
+    <button class="btn btn-green" style="width:100%;margin-top:4px" onclick="saveAvKey()">Save Key</button>
+    <div id="av-key-status" style="font-size:0.8rem;margin-top:6px;color:var(--green);display:none">Key saved — ticker will reload.</div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 14px">
     <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase">Data Backup</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" style="flex:1;min-width:120px" onclick="exportData()">Export Data</button>
@@ -1560,7 +1568,7 @@ const TODAY = new Date().toISOString().split('T')[0];
 function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }
 
 // ── SUPABASE SYNC ──────────────────────────────────────────────────
-const SB_SKIP = new Set(['meridian_pw_hash','meridian_oura_token','meridian_supabase_url','meridian_supabase_key','meridian_usda_key']);
+const SB_SKIP = new Set(['meridian_pw_hash','meridian_oura_token','meridian_supabase_url','meridian_supabase_key','meridian_usda_key','meridian_av_key']);
 
 function sbUrl()  { return localStorage.getItem('meridian_supabase_url') || ''; }
 function sbKey()  { return localStorage.getItem('meridian_supabase_key') || ''; }
@@ -1762,9 +1770,21 @@ function openProfileModal() {
   document.getElementById('goal-protein').value     = profile.goalProtein;
   document.getElementById('goal-carbs-in').value    = profile.goalCarbs;
   document.getElementById('goal-fat-in').value      = profile.goalFat;
+  document.getElementById('av-key-input').value     = localStorage.getItem('meridian_av_key') || '';
+  document.getElementById('av-key-status').style.display = 'none';
   renderSbState();
   document.getElementById('sb-status').style.display = 'none';
   document.getElementById('profile-modal').classList.add('open');
+}
+
+function saveAvKey() {
+  const key = document.getElementById('av-key-input').value.trim();
+  if (!key) return;
+  localStorage.setItem('meridian_av_key', key);
+  const status = document.getElementById('av-key-status');
+  status.style.display = 'block';
+  localStorage.removeItem('meridian_stocks');
+  loadTicker();
 }
 
 function closeProfileModal() {
@@ -3050,7 +3070,9 @@ async function loadTicker() {
   }
 
   try {
-    const res  = await fetch('/api/stocks');
+    const avKey = localStorage.getItem('meridian_av_key') || '';
+    if (!avKey) throw new Error('No API key');
+    const res  = await fetch(`/api/stocks?key=${encodeURIComponent(avKey)}`);
     const data = await res.json();
     if (!res.ok || !data.quotes?.length) throw new Error(data.error || 'No data');
     save(cacheKey, { ts: Date.now(), quotes: data.quotes });

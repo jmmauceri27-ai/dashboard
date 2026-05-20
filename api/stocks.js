@@ -3,42 +3,36 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const apiKey = req.query.key;
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+
   const symbols = [
-    { stooq: '%5Espx',   key: '^GSPC', name: 'S&P 500' },
-    { stooq: '%5Edji',   key: '^DJI',  name: 'Dow Jones' },
-    { stooq: '%5Endq',   key: '^NDQ',  name: 'Nasdaq 100' },
-    { stooq: '10usy.b',  key: '^TNX',  name: '10-Yr Treasury' },
+    { symbol: 'SPY',  name: 'S&P 500' },
+    { symbol: 'DIA',  name: 'Dow Jones' },
+    { symbol: 'QQQ',  name: 'Nasdaq 100' },
+    { symbol: '^TNX', name: '10-Yr Treasury' },
   ];
 
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-    'Accept': 'text/csv,text/plain,*/*',
-  };
+  async function fetchQuote({ symbol, name }) {
+    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
+    const r    = await fetch(url);
+    const json = await r.json();
+    const q    = json['Global Quote'];
+    if (!q || !q['05. price']) throw new Error(`No data for ${symbol}`);
 
-  async function fetchQuote({ stooq, key, name }) {
-    const url = `https://stooq.com/q/d/l/?s=${stooq}&i=d`;
-    const r   = await fetch(url, { headers });
-    const csv = await r.text();
+    const price         = parseFloat(q['05. price']);
+    const change        = parseFloat(q['09. change']);
+    const changePctRaw  = q['10. change percent'].replace('%', '');
+    const changePercent = parseFloat(changePctRaw);
 
-    const lines = csv.trim().split('\n')
-      .slice(1)                          // skip header
-      .map(l => l.split(','))
-      .filter(c => c.length >= 5 && !isNaN(parseFloat(c[4])));
-
-    if (lines.length < 2) throw new Error(`Insufficient data for ${key}`);
-
-    // Stooq returns ascending order (oldest first)
-    const curr = parseFloat(lines[lines.length - 1][4]);
-    const prev = parseFloat(lines[lines.length - 2][4]);
-    const change = curr - prev;
-
-    return { symbol: key, name, price: curr, change, changePercent: (change / prev) * 100 };
+    return { symbol, name, price, change, changePercent };
   }
 
-  try {
-    const quotes = await Promise.all(symbols.map(fetchQuote));
-    res.json({ quotes });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  const results = await Promise.allSettled(symbols.map(fetchQuote));
+  const quotes  = results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value);
+
+  if (!quotes.length) return res.status(500).json({ error: 'All quotes failed' });
+  res.json({ quotes });
 }
