@@ -317,8 +317,10 @@ body > * { position: relative; z-index: 1; }
 .p-star.on { opacity: 1; }
 .p-star:hover { opacity: 0.75; }
 .p-due { font-size: 9px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; }
-.p-due.today { color: var(--gold); }
-.p-due.week  { color: var(--text-muted); }
+.p-due.today { color: var(--red); }
+.p-due.week  { color: #c9a030; }
+.p-due.month { color: var(--green); }
+.p-due.someday { color: var(--text); }
 .priority-item[draggable="true"] { cursor: grab; }
 .priority-item[draggable="true"]:active { cursor: grabbing; }
 .priority-item.dragging { opacity: 0.35; }
@@ -954,7 +956,8 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
         <select class="sel" id="new-due">
           <option value="today">Today</option>
           <option value="week">This Week</option>
-          <option value="">Someday</option>
+          <option value="month">This Month</option>
+          <option value="someday">Someday</option>
         </select>
         <select class="sel" id="new-tag">
           <option value="PERSONAL">Personal</option>
@@ -1214,7 +1217,8 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
     <select class="sel" id="crm-new-due">
       <option value="today">Today</option>
       <option value="week">This Week</option>
-      <option value="">Someday</option>
+      <option value="month">This Month</option>
+      <option value="someday">Someday</option>
     </select>
     <select class="sel" id="crm-new-tag">
       <option value="PERSONAL">Personal</option>
@@ -1225,17 +1229,21 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
     </select>
     <button class="btn btn-blue" onclick="addTask(true)">Add Task</button>
   </div>
-  <div id="crm-today-section" class="crm-section">
-    <div class="crm-section-header"><span class="dot dot-orange"></span>Today <span class="crm-section-count" id="crm-today-count"></span></div>
+  <div class="crm-section">
+    <div class="crm-section-header"><span class="dot" style="background:var(--red)"></span>Today <span class="crm-section-count" id="crm-today-count"></span></div>
     <div id="crm-today-list"></div>
   </div>
-  <div id="crm-week-section" class="crm-section">
-    <div class="crm-section-header"><span class="dot dot-blue"></span>This Week <span class="crm-section-count" id="crm-week-count"></span></div>
+  <div class="crm-section">
+    <div class="crm-section-header"><span class="dot" style="background:#c9a030"></span>This Week <span class="crm-section-count" id="crm-week-count"></span></div>
     <div id="crm-week-list"></div>
   </div>
-  <div id="crm-backlog-section" class="crm-section">
-    <div class="crm-section-header"><span class="dot dot-gray" style="background:var(--text-dim)"></span>Backlog <span class="crm-section-count" id="crm-backlog-count"></span></div>
-    <div id="crm-backlog-list"></div>
+  <div class="crm-section">
+    <div class="crm-section-header"><span class="dot" style="background:var(--green)"></span>This Month <span class="crm-section-count" id="crm-month-count"></span></div>
+    <div id="crm-month-list"></div>
+  </div>
+  <div class="crm-section">
+    <div class="crm-section-header"><span class="dot" style="background:var(--text-muted)"></span>Someday <span class="crm-section-count" id="crm-someday-count"></span></div>
+    <div id="crm-someday-list"></div>
   </div>
 </div>
 
@@ -2216,9 +2224,9 @@ const TAG_CLS = {
 };
 
 function taskItemHTML(t, showDue = false, draggable = false) {
-  const dueLabel = showDue && t.due === 'today' ? `<span class="p-due today">Today</span>`
-                 : showDue && t.due === 'week'  ? `<span class="p-due week">This Week</span>`
-                 : '';
+  const dueMap = { today: 'Today', week: 'This Week', month: 'This Month', someday: 'Someday' };
+  const dueLabel = showDue && t.due && dueMap[t.due]
+    ? `<span class="p-due ${t.due}">${dueMap[t.due]}</span>` : '';
   return `
     <div class="priority-item" ${draggable ? `draggable="true" data-id="${t.id}"` : ''}>
       <div class="p-star ${t.starred ? 'on' : ''}" onclick="starTask(${t.id})" title="Star">★</div>
@@ -2261,15 +2269,15 @@ function renderTasks() {
 }
 
 function renderCRM() {
-  const groups = { today: [], week: [], backlog: [] };
+  const groups = { today: [], week: [], month: [], someday: [] };
   tasks.forEach(t => {
-    if (t.due === 'today')     groups.today.push(t);
-    else if (t.due === 'week') groups.week.push(t);
-    else                       groups.backlog.push(t);
+    const key = ['today','week','month','someday'].includes(t.due) ? t.due : 'someday';
+    groups[key].push(t);
   });
-  [['today', 'crm-today-list', 'crm-today-count'],
-   ['week',  'crm-week-list',  'crm-week-count'],
-   ['backlog','crm-backlog-list','crm-backlog-count']].forEach(([key, listId, countId]) => {
+  [['today',   'crm-today-list',   'crm-today-count'],
+   ['week',    'crm-week-list',    'crm-week-count'],
+   ['month',   'crm-month-list',   'crm-month-count'],
+   ['someday', 'crm-someday-list', 'crm-someday-count']].forEach(([key, listId, countId]) => {
     // respect manual drag order; only push done tasks to bottom
     const active = groups[key].filter(t => !t.done);
     const done   = groups[key].filter(t => t.done);
@@ -2285,7 +2293,7 @@ function renderCRM() {
 let dragSrcId = null;
 
 function initCRMDrag() {
-  ['crm-today-list','crm-week-list','crm-backlog-list'].forEach(containerId => {
+  ['crm-today-list','crm-week-list','crm-month-list','crm-someday-list'].forEach(containerId => {
     const el = document.getElementById(containerId);
     if (!el || el._dragInit) return;
     el._dragInit = true;
