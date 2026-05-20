@@ -449,9 +449,6 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .grat-textarea { width: 100%; resize: none; min-height: 58px; line-height: 1.6; }
 .grat-footer   { display: flex; align-items: center; justify-content: space-between; }
 .grat-count    { font-size: 9px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
-.grat-log-day  { margin-bottom: 14px; }
-.grat-log-date { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
-.grat-log-date span { color: var(--gold); margin-right: 4px; }
 
 /* ── HEALTH VIEW ── */
 .health-view { display: none; max-width: 900px; margin: 0 auto; padding: 12px; height: calc(100vh - 54px); flex-direction: column; gap: 12px; overflow-y: auto; }
@@ -573,6 +570,13 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
   text-transform: uppercase; color: var(--text-dim);
   display: flex; align-items: center; gap: 8px; flex-shrink: 0;
 }
+.journal-sidebar-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.journal-sidebar-tab { flex: 1; padding: 8px 6px; font-size: 9px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; background: transparent; border: none; font-family: inherit; transition: color 0.15s; position: relative; text-align: center; }
+.journal-sidebar-tab.active { color: var(--gold); }
+.journal-sidebar-tab.active::after { content: ''; position: absolute; bottom: 0; left: 10px; right: 10px; height: 1px; background: var(--gold); }
+.grat-log-day  { margin-bottom: 14px; }
+.grat-log-date { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+.grat-log-date span { color: var(--gold); margin-right: 4px; }
 .journal-entries-list { flex: 1; overflow-y: auto; padding: 8px; }
 .journal-entry-item {
   padding: 9px 10px; border-radius: 2px; cursor: pointer;
@@ -1125,28 +1129,23 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
     <div class="panel">
       <div class="panel-header">
         <div class="panel-title"><span class="dot dot-pink"></span>Gratitude</div>
-        <button class="btn" id="grat-log-btn" onclick="toggleGratLog()" style="font-size:9px;padding:3px 10px">View Log</button>
+        <span class="badge badge-pink">TODAY</span>
       </div>
-      <div id="grat-today-wrap">
-        <div class="grat-streak">
-          <div class="grat-streak-num" id="grat-streak-num">0</div>
-          <div>
-            <div class="grat-streak-lbl">day streak</div>
-            <div class="grat-streak-sub">consecutive days logged</div>
-          </div>
-        </div>
-        <div class="grat-prompt" id="grat-prompt">What are you grateful for today?</div>
-        <div id="grat-list"></div>
-        <div class="grat-add-col">
-          <textarea class="fi grat-textarea" id="grat-input" placeholder="I am grateful for…"></textarea>
-          <div class="grat-footer">
-            <span class="grat-count" id="grat-count">0 entries today</span>
-            <button class="btn btn-green" onclick="addGratitude()">Add Entry</button>
-          </div>
+      <div class="grat-streak">
+        <div class="grat-streak-num" id="grat-streak-num">0</div>
+        <div>
+          <div class="grat-streak-lbl">day streak</div>
+          <div class="grat-streak-sub">consecutive days logged</div>
         </div>
       </div>
-      <div id="grat-log-wrap" style="display:none">
-        <div id="grat-log-list"></div>
+      <div class="grat-prompt" id="grat-prompt">What are you grateful for today?</div>
+      <div id="grat-list"></div>
+      <div class="grat-add-col">
+        <textarea class="fi grat-textarea" id="grat-input" placeholder="I am grateful for…"></textarea>
+        <div class="grat-footer">
+          <span class="grat-count" id="grat-count">0 entries today</span>
+          <button class="btn btn-green" onclick="addGratitude()">Add Entry</button>
+        </div>
       </div>
     </div>
 
@@ -1365,11 +1364,17 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 <!-- ── JOURNAL VIEW ── -->
 <div class="journal-view" id="journal-view">
   <div class="journal-sidebar">
-    <div class="journal-sidebar-header">
-      <span class="dot dot-blue"></span>Past Entries
+    <div class="journal-sidebar-tabs">
+      <button class="journal-sidebar-tab active" id="jsb-journal-tab" onclick="switchJournalSidebar('journal')">Journal</button>
+      <button class="journal-sidebar-tab" id="jsb-gratitude-tab" onclick="switchJournalSidebar('gratitude')">Gratitude</button>
     </div>
-    <div class="journal-entries-list" id="journal-entries-list">
-      <div class="empty-state" style="padding:16px 0">No entries yet.</div>
+    <div id="jsb-journal-pane" style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+      <div class="journal-entries-list" id="journal-entries-list">
+        <div class="empty-state" style="padding:16px 0">No entries yet.</div>
+      </div>
+    </div>
+    <div id="jsb-gratitude-pane" style="flex:1;overflow-y:auto;display:none;padding:10px">
+      <div id="journal-grat-log"></div>
     </div>
   </div>
   <div class="journal-main">
@@ -2877,14 +2882,12 @@ function deleteGratitude(idx) {
   renderGratitude();
 }
 
-let gratLogOpen = false;
-
-function toggleGratLog() {
-  gratLogOpen = !gratLogOpen;
-  document.getElementById('grat-today-wrap').style.display = gratLogOpen ? 'none' : '';
-  document.getElementById('grat-log-wrap').style.display   = gratLogOpen ? '' : 'none';
-  document.getElementById('grat-log-btn').textContent      = gratLogOpen ? 'Today' : 'View Log';
-  if (gratLogOpen) renderGratitudeLog();
+function switchJournalSidebar(tab) {
+  document.getElementById('jsb-journal-tab').classList.toggle('active',    tab === 'journal');
+  document.getElementById('jsb-gratitude-tab').classList.toggle('active',  tab === 'gratitude');
+  document.getElementById('jsb-journal-pane').style.display    = tab === 'journal'    ? 'flex' : 'none';
+  document.getElementById('jsb-gratitude-pane').style.display  = tab === 'gratitude'  ? 'block' : 'none';
+  if (tab === 'gratitude') renderGratitudeLog();
 }
 
 function renderGratitudeLog() {
@@ -2892,22 +2895,22 @@ function renderGratitudeLog() {
     .filter(d => gratData[d]?.length)
     .sort((a, b) => b.localeCompare(a));
 
-  const el = document.getElementById('grat-log-list');
+  const el = document.getElementById('journal-grat-log');
+  if (!el) return;
   if (!dates.length) {
     el.innerHTML = `<div class="empty-state" style="padding:12px 0">No entries yet.</div>`;
     return;
   }
 
   const total = dates.reduce((sum, d) => sum + gratData[d].length, 0);
-  el.innerHTML = `<div style="font-size:9px;color:var(--text-dim);margin-bottom:14px;letter-spacing:0.06em">${total} ENTR${total===1?'Y':'IES'} ACROSS ${dates.length} DAY${dates.length===1?'':'S'}</div>`
+  el.innerHTML = `<div style="font-size:9px;color:var(--text-dim);margin-bottom:14px;letter-spacing:0.06em">${total} ENTR${total===1?'Y':'IES'} · ${dates.length} DAY${dates.length===1?'':'S'}</div>`
     + dates.map(date => {
-      const dt      = new Date(date + 'T12:00:00');
-      const label   = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-      const isToday = date === TODAY;
+      const dt    = new Date(date + 'T12:00:00');
+      const label = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       return `<div class="grat-log-day">
-        <div class="grat-log-date"><span>✦</span>${label}${isToday ? ' · Today' : ''}</div>
+        <div class="grat-log-date"><span>✦</span>${label}${date === TODAY ? ' · Today' : ''}</div>
         ${gratData[date].map(entry => `
-          <div class="grat-entry">
+          <div class="grat-entry" style="padding:4px 0">
             <span class="grat-bullet">·</span>
             <span class="grat-text">${esc(entry)}</span>
           </div>`).join('')}
@@ -3369,6 +3372,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
       journalView.classList.add('active');
       openTodayEntry();
       renderJournalSidebar();
+      switchJournalSidebar('journal');
     } else if (label === 'Finance') {
       financeView.classList.add('active');
       const month = getCurrentMonthSheet();
