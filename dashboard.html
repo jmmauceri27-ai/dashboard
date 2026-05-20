@@ -3056,11 +3056,15 @@ async function loadTicker() {
     save(cacheKey, { ts: Date.now(), quotes: data.quotes });
     renderTicker(data.quotes);
     setTimeout(loadTicker, fiveMin);
-  } catch {
-    document.getElementById('ticker-bar').style.display = 'none';
+  } catch (e) {
+    // show error in ticker rather than hiding it
+    const msg = `<div class="ticker-item"><span class="ticker-name" style="color:var(--red)">Market data unavailable</span></div>`;
+    document.getElementById('ticker-content-a').innerHTML = msg;
+    document.getElementById('ticker-content-b').innerHTML = msg;
   }
 }
 
+localStorage.removeItem('meridian_stocks'); // clear stale cache
 loadTicker();
 
 // ── JOURNAL ───────────────────────────────────────────────────────
