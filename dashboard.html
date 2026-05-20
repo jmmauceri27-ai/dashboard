@@ -609,6 +609,77 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .modal-btns { display: flex; gap: 6px; justify-content: flex-end; margin-top: 14px; }
 .btn-cancel { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border2); }
 .btn-cancel:hover { color: var(--text); }
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  /* Nav: stack brand + tabs */
+  .nav {
+    flex-wrap: wrap; height: auto; padding: 10px 14px 0;
+    gap: 0; position: sticky; top: 0; z-index: 100;
+  }
+  .nav-brand { padding-bottom: 8px; }
+  .nav-tabs {
+    order: 3; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; border-top: 1px solid var(--border);
+    margin: 0 -14px; padding: 0 14px;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab { padding: 10px 14px; font-size: 10px; white-space: nowrap; }
+  .nav-right { padding-bottom: 8px; }
+  .nav-right .clock, .nav-right .energy-row { display: none; }
+
+  /* Dashboard: single column */
+  .dashboard {
+    grid-template-columns: 1fr;
+    padding: 10px;
+    gap: 10px;
+    height: auto;
+    overflow: visible;
+  }
+  .col { gap: 10px; }
+
+  /* Health view */
+  .health-view { height: auto; padding: 10px; }
+
+  /* Finance view */
+  .finance-view.active { grid-template-columns: 1fr; height: auto; }
+  .fin-sidebar { max-height: 180px; }
+  .fin-cards { grid-template-columns: repeat(2,1fr) !important; }
+
+  /* Journal view */
+  .journal-view.active { grid-template-columns: 1fr; height: auto; }
+  .journal-sidebar { max-height: 160px; overflow-y: auto; }
+
+  /* Nutrition form */
+  .meal-add-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .meal-add-grid .fi:first-child { grid-column: 1 / -1; }
+
+  /* Oura scores */
+  .oura-score-card { padding: 10px 6px; }
+  .oura-score-val  { font-size: 26px; }
+
+  /* Calorie history grid: 7 cols still but smaller */
+  .cal-history-grid { gap: 3px; }
+
+  /* Touch targets */
+  .btn { min-height: 38px; }
+  .fi  { min-height: 38px; font-size: 14px; }
+  .nav-tab { min-height: 38px; }
+
+  /* Modal full-width */
+  .modal { width: calc(100vw - 32px); max-width: 420px; }
+
+  /* Lock screen */
+  #lock-screen { padding: 40px 24px; }
+}
+
+@media (max-width: 420px) {
+  .fin-cards { grid-template-columns: 1fr 1fr !important; }
+  .oura-score-val { font-size: 22px; }
+}
 </style>
 </head>
 <body>
