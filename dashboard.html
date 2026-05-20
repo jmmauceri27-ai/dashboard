@@ -256,16 +256,6 @@ body > * { position: relative; z-index: 1; }
   outline: none; width: 100px; text-align: right;
 }
 
-/* ── BLOCKERS ── */
-.blocker {
-  padding: 8px 10px; background: var(--surface2);
-  border: 1px solid var(--border); border-radius: 7px; margin-bottom: 7px;
-}
-.blocker:last-child { margin-bottom: 0; }
-.blocker-top { display: flex; align-items: flex-start; gap: 6px; }
-.blocker-title { flex: 1; font-size: 12px; color: var(--text); line-height: 1.45; margin-bottom: 5px; }
-.blocker-meta  { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-.blocker-meta .age { font-size: 10px; color: var(--text-dim); margin-left: 2px; }
 
 /* ── SESSION STATS ── */
 .session-stats {
@@ -879,29 +869,14 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
     </div>
 
     <!-- KEY BLOCKERS -->
-    <div class="panel">
+    <!-- DEVOTIONAL (left col) -->
+    <div class="panel" id="devotional-panel">
       <div class="panel-header">
-        <div class="panel-title"><span class="dot dot-red"></span>Key Blockers</div>
-        <span class="badge badge-red" id="blockers-badge">0 OPEN</span>
+        <div class="panel-title"><span class="dot" style="background:var(--gold)"></span>Daily Devotional</div>
+        <span class="badge" style="background:var(--gold-bg);color:var(--gold);border-color:var(--gold-border)" id="dev-ref"></span>
       </div>
-      <div id="blockers-container"></div>
-      <div style="margin-top:8px">
-        <input class="fi" style="width:100%;margin-bottom:5px" id="new-blocker-text" placeholder="Describe the blocker…" onkeydown="if(event.key==='Enter')addBlocker()" />
-        <div style="display:flex;gap:5px">
-          <select class="sel fi-grow" id="new-blocker-tag">
-            <option value="ENG">Eng</option>
-            <option value="BIZ">Biz</option>
-            <option value="DESIGN">Design</option>
-            <option value="OPS">Ops</option>
-            <option value="OTHER">Other</option>
-          </select>
-          <select class="sel fi-grow" id="new-blocker-priority">
-            <option value="High">High</option>
-            <option value="Med">Med</option>
-            <option value="Low">Low</option>
-          </select>
-          <button class="btn btn-blue" onclick="addBlocker()">Add</button>
-        </div>
+      <div id="dev-body">
+        <div style="font-size:11px;color:var(--text-dim);font-weight:300">Loading verse…</div>
       </div>
     </div>
 
@@ -1148,17 +1123,6 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
           <span class="grat-count" id="grat-count">0 entries today</span>
           <button class="btn btn-green" onclick="addGratitude()">Add Entry</button>
         </div>
-      </div>
-    </div>
-
-    <!-- DEVOTIONAL -->
-    <div class="panel" id="devotional-panel">
-      <div class="panel-header">
-        <div class="panel-title"><span class="dot" style="background:var(--gold)"></span>Daily Devotional</div>
-        <span class="badge" style="background:var(--gold-bg);color:var(--gold);border-color:var(--gold-border)" id="dev-ref"></span>
-      </div>
-      <div id="dev-body">
-        <div style="font-size:11px;color:var(--text-dim);font-weight:300">Loading verse…</div>
       </div>
     </div>
 
@@ -2187,60 +2151,6 @@ function refreshFinanceView() {
 }
 
 // ── KEY BLOCKERS ──────────────────────────────────────────────────
-let blockers = load('meridian_blockers', []);
-let nextBid  = Math.max(0, ...blockers.map(b => b.id)) + 1;
-
-const BLOCKER_TAG_CLS = { ENG:'badge-blue', BIZ:'badge-yellow', DESIGN:'badge-orange', OPS:'badge-purple', OTHER:'badge-gray' };
-const BLOCKER_PRI_CLS = { High:'badge-red', Med:'badge-yellow', Low:'badge-blue' };
-
-function timeAgo(ts) {
-  const m = Math.floor((Date.now() - ts) / 60000);
-  if (m < 60) return `${m}m open`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h open`;
-  return `${Math.floor(h/24)}d open`;
-}
-
-function renderBlockers() {
-  document.getElementById('blockers-badge').textContent = `${blockers.length} OPEN`;
-  const c = document.getElementById('blockers-container');
-  if (!blockers.length) { c.innerHTML = `<div class="empty-state">No blockers — you're unblocked!</div>`; return; }
-  c.innerHTML = blockers.map(b => `
-    <div class="blocker">
-      <div class="blocker-top">
-        <div class="blocker-title">${esc(b.text)}</div>
-        <button class="del-btn" onclick="deleteBlocker(${b.id})">✕</button>
-      </div>
-      <div class="blocker-meta">
-        <span class="badge ${BLOCKER_TAG_CLS[b.tag] || 'badge-gray'}">${esc(b.tag)}</span>
-        <span class="badge ${BLOCKER_PRI_CLS[b.priority] || 'badge-gray'}">${esc(b.priority)}</span>
-        <span class="age">${timeAgo(b.ts)}</span>
-      </div>
-    </div>`).join('');
-}
-
-function addBlocker() {
-  const text = document.getElementById('new-blocker-text').value.trim();
-  if (!text) return;
-  blockers.push({
-    id: nextBid++,
-    text,
-    tag:      document.getElementById('new-blocker-tag').value,
-    priority: document.getElementById('new-blocker-priority').value,
-    ts: Date.now()
-  });
-  save('meridian_blockers', blockers);
-  document.getElementById('new-blocker-text').value = '';
-  renderBlockers();
-}
-
-function deleteBlocker(id) {
-  blockers = blockers.filter(b => b.id !== id);
-  save('meridian_blockers', blockers);
-  renderBlockers();
-}
-
-renderBlockers();
 
 // ── HABITS ────────────────────────────────────────────────────────
 let habits   = load('meridian_habits', []);
