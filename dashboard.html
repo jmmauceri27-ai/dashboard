@@ -428,15 +428,6 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .oura-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 9px 10px; }
 .oura-stat-val { font-size: 16px; font-weight: 300; line-height: 1; }
 .oura-stat-lbl { font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
-.oura-upload-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 7px 14px; border-radius: 3px; font-size: 10px; font-weight: 500;
-  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
-  border: 1px solid var(--gold-border); color: var(--gold);
-  background: var(--gold-bg); transition: background 0.2s; font-family: inherit;
-  width: 100%;
-}
-.oura-upload-btn:hover { background: rgba(201,169,110,0.18); }
 
 /* ── CALENDAR VIEW ── */
 .calendar-view { display: none; max-width: 1400px; margin: 0 auto; padding: 12px; height: calc(100vh - 54px); flex-direction: column; gap: 10px; }
@@ -1077,46 +1068,35 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
   <div class="health-card" id="oura-card">
     <div class="health-card-title" style="justify-content:space-between">
       <span style="display:flex;align-items:center;gap:8px"><span class="dot dot-green"></span>Oura Ring</span>
-      <span id="oura-import-date" style="font-size:9px;color:var(--text-dim);font-weight:300;letter-spacing:0.05em"></span>
+      <span id="oura-sync-time" style="font-size:9px;color:var(--text-dim);font-weight:300;letter-spacing:0.05em"></span>
     </div>
 
-    <!-- Upload prompt -->
+    <!-- Token setup -->
     <div id="oura-setup">
       <p style="font-size:12px;font-weight:300;color:var(--text-muted);line-height:1.8;margin-bottom:12px">
-        Export your data from the Oura app:<br>
-        <span style="color:var(--text-dim)">Profile → Settings → Export Data → Export to CSV</span><br>
-        Then upload the <strong style="color:var(--text)">sleep.csv</strong> and/or <strong style="color:var(--text)">readiness.csv</strong> files below.
+        Generate a Personal Access Token at<br>
+        <span style="color:var(--gold)">cloud.ouraring.com/personal-access-tokens</span><br>
+        and paste it below to connect your ring.
       </p>
-      <div style="display:flex;flex-direction:column;gap:7px">
-        <label class="oura-upload-btn">
-          Upload sleep.csv
-          <input type="file" accept=".csv" style="display:none" onchange="importOuraCSV(event,'sleep')" />
-        </label>
-        <label class="oura-upload-btn">
-          Upload readiness.csv
-          <input type="file" accept=".csv" style="display:none" onchange="importOuraCSV(event,'readiness')" />
-        </label>
-        <label class="oura-upload-btn">
-          Upload activity.csv
-          <input type="file" accept=".csv" style="display:none" onchange="importOuraCSV(event,'activity')" />
-        </label>
+      <div style="display:flex;gap:7px">
+        <input class="fi" id="oura-token-input" type="password" placeholder="Paste token…" style="flex:1"
+          onkeydown="if(event.key==='Enter')saveOuraToken()" />
+        <button class="btn btn-blue" onclick="saveOuraToken()">Connect</button>
       </div>
     </div>
 
-    <!-- Data -->
+    <!-- Live data -->
     <div id="oura-data" style="display:none">
       <div class="oura-score-row" id="oura-score-row"></div>
       <div class="oura-stats"     id="oura-stats"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
-        <label class="oura-upload-btn" style="font-size:9px;padding:4px 10px">
-          Import new CSV
-          <input type="file" accept=".csv" style="display:none" onchange="importOuraCSV(event,'auto')" />
-        </label>
-        <span style="font-size:9px;color:var(--text-dim);cursor:pointer" onclick="clearOuraData()">Clear data</span>
+        <button class="btn btn-blue" onclick="fetchOuraData()">↻ Sync</button>
+        <span style="font-size:9px;color:var(--text-dim);cursor:pointer;letter-spacing:0.05em" onclick="disconnectOura()">Disconnect</span>
       </div>
     </div>
 
-    <div id="oura-error" style="display:none;font-size:11px;color:var(--red);padding:6px 0;margin-top:8px"></div>
+    <div id="oura-loading" style="display:none;font-size:11px;color:var(--text-dim);padding:8px 0;font-weight:300">Syncing with Oura…</div>
+    <div id="oura-error"   style="display:none;font-size:11px;color:var(--red);padding:6px 0;margin-top:4px"></div>
   </div>
 
 </div>
@@ -2396,135 +2376,118 @@ function renderHealthView() {
   }).join('');
 }
 
-// ── OURA RING (CSV import) ─────────────────────────────────────────
-let ouraData = load('meridian_oura', null);
+// ── OURA RING ─────────────────────────────────────────────────────
+function getOuraToken() { return localStorage.getItem('meridian_oura_token') || ''; }
 
-function ouraScore(val) {
-  if (val == null || val === '') return { color: 'var(--text-dim)' };
-  const n = Number(val);
-  if (n >= 85) return { color: 'var(--green)'  };
-  if (n >= 70) return { color: 'var(--gold)'   };
-  if (n >= 60) return { color: 'var(--orange)' };
-  return              { color: 'var(--red)'    };
+function saveOuraToken() {
+  const t = document.getElementById('oura-token-input').value.trim();
+  if (!t) return;
+  localStorage.setItem('meridian_oura_token', t);
+  fetchOuraData();
 }
 
-function fmtMinutes(min) {
-  if (!min && min !== 0) return '—';
-  const m = Math.round(Number(min));
-  if (!m) return '—';
-  return `${Math.floor(m/60)}h ${m%60}m`;
-}
-
-function parseOuraCSV(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
-  return lines.slice(1).map(line => {
-    const vals = line.match(/(".*?"|[^,]+|(?<=,)(?=,)|(?<=,)$|^(?=,))/g) || line.split(',');
-    const row = {};
-    headers.forEach((h, i) => { row[h] = (vals[i] || '').trim().replace(/^"|"$/g,''); });
-    return row;
-  }).filter(r => r['date'] || r['summary_date']);
-}
-
-function importOuraCSV(event, type) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const name = file.name.toLowerCase();
-  // Auto-detect type from filename
-  if (type === 'auto') {
-    if (name.includes('sleep'))     type = 'sleep';
-    else if (name.includes('read')) type = 'readiness';
-    else if (name.includes('acti')) type = 'activity';
-    else { showOuraError('Could not detect file type from filename. Please use sleep.csv, readiness.csv, or activity.csv.'); return; }
-  }
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const rows = parseOuraCSV(e.target.result);
-      if (!rows.length) { showOuraError('No data found in file.'); return; }
-      if (!ouraData) ouraData = {};
-      ouraData[type] = rows;
-      ouraData.importedAt = new Date().toLocaleDateString();
-      save('meridian_oura', ouraData);
-      renderOuraData();
-    } catch(err) {
-      showOuraError('Failed to parse CSV: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-function showOuraError(msg) {
-  const el = document.getElementById('oura-error');
-  el.textContent = msg; el.style.display = 'block';
-}
-
-function clearOuraData() {
-  if (!confirm('Clear all Oura data?')) return;
-  ouraData = null;
-  localStorage.removeItem('meridian_oura');
+function disconnectOura() {
+  if (!confirm('Disconnect Oura Ring?')) return;
+  localStorage.removeItem('meridian_oura_token');
   renderOuraSetup();
 }
 
 function renderOuraSetup() {
-  const hasData = !!(ouraData && (ouraData.sleep || ouraData.readiness || ouraData.activity));
-  document.getElementById('oura-setup').style.display = hasData ? 'none' : 'block';
-  document.getElementById('oura-data').style.display  = hasData ? 'block' : 'none';
-  document.getElementById('oura-error').style.display = 'none';
-  if (hasData) renderOuraData();
+  const has = !!getOuraToken();
+  document.getElementById('oura-setup').style.display   = has ? 'none'  : 'block';
+  document.getElementById('oura-data').style.display    = has ? 'block' : 'none';
+  document.getElementById('oura-loading').style.display = 'none';
+  document.getElementById('oura-error').style.display   = 'none';
 }
 
-function findRow(rows, date) {
-  if (!rows) return null;
-  return rows.find(r => (r['date'] || r['summary_date'] || '').startsWith(date)) || rows[rows.length - 1] || null;
+function ouraScoreColor(val) {
+  if (val == null) return 'var(--text-dim)';
+  if (val >= 85) return 'var(--green)';
+  if (val >= 70) return 'var(--gold)';
+  if (val >= 60) return 'var(--orange)';
+  return 'var(--red)';
 }
 
-function renderOuraData() {
-  const sl = findRow(ouraData?.sleep,     TODAY);
-  const rd = findRow(ouraData?.readiness, TODAY);
-  const ac = findRow(ouraData?.activity,  TODAY);
+function fmtSecs(s) {
+  if (!s) return '—';
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return `${h}h ${m}m`;
+}
 
-  // Score cards
-  const scores = [
-    { label: 'Readiness', val: rd?.['score'] },
-    { label: 'Sleep',     val: sl?.['score'] },
-    { label: 'Activity',  val: ac?.['score'] },
-  ];
-  document.getElementById('oura-score-row').innerHTML = scores.map(sc => {
-    const { color } = ouraScore(sc.val);
-    return `<div class="oura-score-card">
-      <div class="oura-score-val" style="color:${color}">${sc.val || '—'}</div>
+async function ouraFetch(endpoint, params = {}) {
+  const qs = new URLSearchParams({ endpoint, start_date: TODAY, end_date: TODAY, ...params }).toString();
+  const res = await fetch(`/api/oura?${qs}`, {
+    headers: { 'x-oura-token': getOuraToken() },
+  });
+  if (res.status === 401) throw new Error('invalid_token');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function fetchOuraData() {
+  if (!getOuraToken()) return;
+  document.getElementById('oura-loading').style.display = 'block';
+  document.getElementById('oura-error').style.display   = 'none';
+  document.getElementById('oura-data').style.display    = 'none';
+
+  try {
+    const [readiness, sleepScore, sleep, activity] = await Promise.all([
+      ouraFetch('daily_readiness'),
+      ouraFetch('daily_sleep'),
+      ouraFetch('sleep'),
+      ouraFetch('daily_activity'),
+    ]);
+
+    const r  = readiness?.data?.[0]  || {};
+    const ss = sleepScore?.data?.[0] || {};
+    const s  = sleep?.data?.find(d => d.type === 'long_sleep') || sleep?.data?.[0] || {};
+    const a  = activity?.data?.[0]   || {};
+
+    document.getElementById('oura-score-row').innerHTML = [
+      { label: 'Readiness', val: r.score  },
+      { label: 'Sleep',     val: ss.score },
+      { label: 'Activity',  val: a.score  },
+    ].map(sc => `<div class="oura-score-card">
+      <div class="oura-score-val" style="color:${ouraScoreColor(sc.val)}">${sc.val ?? '—'}</div>
       <div class="oura-score-lbl">${sc.label}</div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
 
-  // Stat tiles — pull common Oura CSV column names
-  const stats = [
-    { label: 'Total Sleep', val: fmtMinutes(sl?.['total sleep duration'] || sl?.['total_sleep_duration']) },
-    { label: 'REM',         val: fmtMinutes(sl?.['rem sleep duration']   || sl?.['rem_sleep_duration'])   },
-    { label: 'Deep',        val: fmtMinutes(sl?.['deep sleep duration']  || sl?.['deep_sleep_duration'])  },
-    { label: 'HRV',         val: sl?.['average hrv'] || sl?.['average_hrv'] ? Math.round(sl?.['average hrv'] || sl?.['average_hrv']) + ' ms' : '—' },
-    { label: 'Resting HR',  val: sl?.['resting heart rate'] || sl?.['lowest_heart_rate'] ? (sl?.['resting heart rate'] || sl?.['lowest_heart_rate']) + ' bpm' : '—' },
-    { label: 'Steps',       val: ac?.['steps'] ? Number(ac['steps']).toLocaleString() : '—' },
-    { label: 'Active Cal',  val: ac?.['active calories'] || ac?.['active_calories'] ? (ac?.['active calories'] || ac?.['active_calories']) + ' kcal' : '—' },
-    { label: 'Efficiency',  val: sl?.['sleep efficiency'] ? sl['sleep efficiency'] + '%' : '—' },
-  ];
-  document.getElementById('oura-stats').innerHTML = stats.map(st =>
-    `<div class="oura-stat">
+    document.getElementById('oura-stats').innerHTML = [
+      { label: 'Total Sleep', val: fmtSecs(s.total_sleep_duration) },
+      { label: 'REM',         val: fmtSecs(s.rem_sleep_duration)   },
+      { label: 'Deep',        val: fmtSecs(s.deep_sleep_duration)  },
+      { label: 'HRV',         val: s.average_hrv       ? Math.round(s.average_hrv) + ' ms'    : '—' },
+      { label: 'Resting HR',  val: s.lowest_heart_rate ? s.lowest_heart_rate + ' bpm'          : '—' },
+      { label: 'Steps',       val: a.steps             ? a.steps.toLocaleString()              : '—' },
+      { label: 'Active Cal',  val: a.active_calories   ? a.active_calories + ' kcal'           : '—' },
+      { label: 'Total Cal',   val: a.total_calories    ? a.total_calories  + ' kcal'           : '—' },
+    ].map(st => `<div class="oura-stat">
       <div class="oura-stat-val">${st.val}</div>
       <div class="oura-stat-lbl">${st.label}</div>
-    </div>`
-  ).join('');
+    </div>`).join('');
 
-  const imported = ouraData?.importedAt || '';
-  document.getElementById('oura-import-date').textContent = imported ? `Imported ${imported}` : '';
-  document.getElementById('oura-setup').style.display = 'none';
-  document.getElementById('oura-data').style.display  = 'block';
+    document.getElementById('oura-sync-time').textContent =
+      'Synced ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    document.getElementById('oura-loading').style.display = 'none';
+    document.getElementById('oura-data').style.display    = 'block';
+
+  } catch(e) {
+    document.getElementById('oura-loading').style.display = 'none';
+    const el = document.getElementById('oura-error');
+    if (e.message === 'invalid_token') {
+      localStorage.removeItem('meridian_oura_token');
+      renderOuraSetup();
+      el.textContent = 'Token invalid — please reconnect.';
+    } else {
+      el.textContent = `Sync failed: ${e.message}`;
+      document.getElementById('oura-data').style.display = 'block';
+    }
+    el.style.display = 'block';
+  }
 }
 
 renderOuraSetup();
+if (getOuraToken()) fetchOuraData();
 
 function renderWeightChart() {
   const canvas = document.getElementById('weight-chart');
