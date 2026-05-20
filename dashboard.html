@@ -3039,23 +3039,26 @@ const TICKER_NAMES = {
 };
 
 function renderTicker(quotes) {
-  const html = quotes.map(q => {
-    const up      = q.change >= 0;
-    const cls     = up ? 'ticker-up' : 'ticker-down';
-    const arrow   = up ? '▲' : '▼';
-    const price   = q.symbol === '^TNX'
+  const items = quotes.map(q => {
+    const up    = q.change >= 0;
+    const cls   = up ? 'ticker-up' : 'ticker-down';
+    const arrow = up ? '▲' : '▼';
+    const price = q.symbol === '^TNX'
       ? q.price.toFixed(3) + '%'
       : q.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const chg     = (up ? '+' : '') + q.change.toFixed(2);
-    const pct     = (up ? '+' : '') + q.changePercent.toFixed(2) + '%';
-    const name    = TICKER_NAMES[q.symbol] || q.name;
+    const chg   = (up ? '+' : '') + q.change.toFixed(2);
+    const pct   = (up ? '+' : '') + q.changePercent.toFixed(2) + '%';
+    const name  = TICKER_NAMES[q.symbol] || q.name;
     return `<div class="ticker-item">
       <span class="ticker-name">${name}</span>
       <span class="ticker-price">${price}</span>
       <span class="ticker-change ${cls}">${arrow} ${chg} (${pct})</span>
     </div>`;
-  }).join('');
+  });
 
+  // Repeat enough times so the content fills and scrolls smoothly across the bar
+  const reps = Math.max(1, Math.ceil(8 / items.length));
+  const html = Array(reps).fill(items.join('')).join('');
   document.getElementById('ticker-content-a').innerHTML = html;
   document.getElementById('ticker-content-b').innerHTML = html;
 }
