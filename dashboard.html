@@ -2177,11 +2177,7 @@ function sortTasks(list) {
 function renderTasks() {
   const done = tasks.filter(t => t.done).length, total = tasks.length;
   document.getElementById('pri-badge').textContent      = `${done} / ${total} DONE`;
-  document.getElementById('tasks-done-val').textContent = done;
   const pct = total ? Math.round(done / total * 100) : 0;
-  document.getElementById('tasks-ratio').textContent    = `${done} of ${total}`;
-  document.getElementById('tasks-pct').textContent      = pct + '%';
-  document.getElementById('tasks-bar').style.width      = pct + '%';
 
   const c = document.getElementById('priorities-container');
   const active = tasks.filter(t => !t.done || t.starred);
