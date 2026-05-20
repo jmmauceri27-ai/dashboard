@@ -424,10 +424,15 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .oura-score-val { font-size: 32px; font-weight: 200; line-height: 1; }
 .oura-score-lbl { font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 4px; }
 .oura-score-ring { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-bottom: 2px; }
-.oura-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
-.oura-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 9px 10px; }
-.oura-stat-val { font-size: 16px; font-weight: 300; line-height: 1; }
-.oura-stat-lbl { font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+.oura-log { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.oura-log-row { display: grid; grid-template-columns: 64px 1fr 1fr 1fr; align-items: center; gap: 6px; padding: 6px 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; }
+.oura-log-date { font-size: 9px; color: var(--text-dim); letter-spacing: 0.04em; }
+.oura-log-score { text-align: center; }
+.oura-log-val { font-size: 14px; font-weight: 300; line-height: 1; }
+.oura-log-lbl { font-size: 7px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.oura-log-header { display: grid; grid-template-columns: 64px 1fr 1fr 1fr; gap: 6px; padding: 0 8px 4px; }
+.oura-log-header span { font-size: 7px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+.oura-log-header span:first-child { text-align: left; }
 
 /* ── CALENDAR VIEW ── */
 .calendar-view { display: none; max-width: 1400px; margin: 0 auto; padding: 12px; height: calc(100vh - 54px); flex-direction: column; gap: 10px; }
@@ -1089,7 +1094,7 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
     <!-- Live data -->
     <div id="oura-data" style="display:none">
       <div class="oura-score-row" id="oura-score-row"></div>
-      <div class="oura-stats"     id="oura-stats"></div>
+      <div id="oura-log-wrap"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
         <button class="btn btn-blue" onclick="fetchOuraData()">↻ Sync</button>
         <span style="font-size:9px;color:var(--text-dim);cursor:pointer;letter-spacing:0.05em" onclick="disconnectOura()">Disconnect</span>
@@ -2465,11 +2470,6 @@ function ouraScoreColor(val) {
   return 'var(--red)';
 }
 
-function fmtSecs(s) {
-  if (!s) return '—';
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
-  return `${h}h ${m}m`;
-}
 
 async function ouraFetch(endpoint, params = {}) {
   const qs = new URLSearchParams({ endpoint, start_date: TODAY, end_date: TODAY, ...params }).toString();
@@ -2496,18 +2496,15 @@ async function fetchOuraData() {
   const YESTERDAY = yesterdayStr();
 
   try {
-    const [readiness, sleepScore, sleep, activity] = await Promise.all([
+    const [readiness, sleepScore, activity] = await Promise.all([
       ouraFetch('daily_readiness'),
       ouraFetch('daily_sleep'),
-      ouraFetch('sleep',          { start_date: YESTERDAY, end_date: TODAY }),
       ouraFetch('daily_activity', { start_date: YESTERDAY, end_date: TODAY }),
     ]);
 
-    const r  = readiness?.data?.at(-1)  || {};
+    const r  = readiness?.data?.at(-1) || {};
     const ss = sleepScore?.data?.at(-1) || {};
-    const sleepArr = sleep?.data || [];
-    const s  = sleepArr.find(d => d.type === 'long_sleep') || sleepArr.at(-1) || {};
-    const a  = activity?.data?.at(-1)   || {};
+    const a  = activity?.data?.at(-1)  || {};
 
     document.getElementById('oura-score-row').innerHTML = [
       { label: 'Readiness', val: r.score  },
@@ -2518,19 +2515,13 @@ async function fetchOuraData() {
       <div class="oura-score-lbl">${sc.label}</div>
     </div>`).join('');
 
-    document.getElementById('oura-stats').innerHTML = [
-      { label: 'Total Sleep', val: fmtSecs(s.total_sleep_duration) },
-      { label: 'REM',         val: fmtSecs(s.rem_sleep_duration)   },
-      { label: 'Deep',        val: fmtSecs(s.deep_sleep_duration)  },
-      { label: 'HRV',         val: s.average_hrv       ? Math.round(s.average_hrv) + ' ms'    : '—' },
-      { label: 'Resting HR',  val: s.lowest_heart_rate ? s.lowest_heart_rate + ' bpm'          : '—' },
-      { label: 'Steps',       val: a.steps             ? a.steps.toLocaleString()              : '—' },
-      { label: 'Active Cal',  val: a.active_calories   ? a.active_calories + ' kcal'           : '—' },
-      { label: 'Total Cal',   val: a.total_calories    ? a.total_calories  + ' kcal'           : '—' },
-    ].map(st => `<div class="oura-stat">
-      <div class="oura-stat-val">${st.val}</div>
-      <div class="oura-stat-lbl">${st.label}</div>
-    </div>`).join('');
+    // persist today's scores to history
+    const ouraHistory = load('meridian_oura_history', {});
+    if (r.score || ss.score || a.score) {
+      ouraHistory[TODAY] = { r: r.score ?? null, s: ss.score ?? null, a: a.score ?? null };
+      save('meridian_oura_history', ouraHistory);
+    }
+    renderOuraLog(ouraHistory);
 
     document.getElementById('oura-sync-time').textContent =
       'Synced ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -2550,6 +2541,32 @@ async function fetchOuraData() {
     }
     el.style.display = 'block';
   }
+}
+
+function renderOuraLog(history) {
+  const wrap = document.getElementById('oura-log-wrap');
+  if (!wrap) return;
+  const entries = Object.entries(history)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .slice(0, 14);
+  if (!entries.length) { wrap.innerHTML = ''; return; }
+  const fmtDate = d => {
+    const dt = new Date(d + 'T12:00:00');
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  wrap.innerHTML = `
+    <div class="oura-log-header">
+      <span>Date</span><span>Readiness</span><span>Sleep</span><span>Activity</span>
+    </div>
+    <div class="oura-log">
+      ${entries.map(([date, sc]) => `
+        <div class="oura-log-row">
+          <div class="oura-log-date">${fmtDate(date)}</div>
+          ${['r','s','a'].map(k => `<div class="oura-log-score">
+            <div class="oura-log-val" style="color:${ouraScoreColor(sc[k])}">${sc[k] ?? '—'}</div>
+          </div>`).join('')}
+        </div>`).join('')}
+    </div>`;
 }
 
 renderOuraSetup();
