@@ -837,34 +837,21 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       </div>
     </div>
 
-    <!-- FINANCE PULSE -->
+    <!-- NEWS BRIEFING -->
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title"><span class="dot dot-yellow"></span>Finance Pulse</div>
-        <span class="badge badge-yellow" id="fin-month-badge">—</span>
+        <div class="panel-title"><span class="dot dot-blue"></span>Business News</div>
+        <span id="news-counter" style="font-size:9px;color:var(--text-dim)"></span>
       </div>
-      <div id="fin-panel-loading" class="empty-state" style="padding:8px 0">Loading from Google Sheets…</div>
-      <div id="fin-panel-content" style="display:none">
-        <div class="fin-balance" id="fin-income-val">—</div>
-        <div class="fin-delta" style="color:var(--text-muted);margin-bottom:10px">Total Savings This Month</div>
-        <div class="fin-row">
-          <span class="lbl">Total Spent</span>
-          <span class="val" style="color:var(--red)" id="fin-expenses-val">—</span>
-        </div>
-        <div class="fin-row">
-          <span class="lbl">Available Savings</span>
-          <span class="val" style="color:var(--green)" id="fin-available-val">—</span>
-        </div>
-        <div class="fin-row">
-          <span class="lbl">Fun Budget Left</span>
-          <span class="val" style="color:var(--yellow)" id="fin-fun-val">—</span>
-        </div>
-        <div class="fin-row">
-          <span class="lbl">Net Worth</span>
-          <span class="val" style="color:var(--cyan)" id="fin-networth-val">—</span>
-        </div>
+      <div id="news-card-wrap">
+        <div id="news-card-source" class="news-card-source"></div>
+        <div id="news-card-headline" class="news-card-headline"></div>
+        <a id="news-card-link" class="news-card-link" href="#" target="_blank" rel="noopener">Read more →</a>
       </div>
-      <div id="fin-panel-error" style="display:none;font-size:11px;color:var(--red);margin-top:6px"></div>
+      <div class="news-nav">
+        <button class="news-nav-btn" onclick="newsStep(-1)">‹</button>
+        <button class="news-nav-btn" onclick="newsStep(1)">›</button>
+      </div>
     </div>
 
     <!-- KEY BLOCKERS -->
@@ -925,21 +912,34 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       </div>
     </div>
 
-    <!-- NEWS BRIEFING -->
+    <!-- FINANCE PULSE -->
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title"><span class="dot dot-blue"></span>Business News</div>
-        <span id="news-counter" style="font-size:9px;color:var(--text-dim)"></span>
+        <div class="panel-title"><span class="dot dot-yellow"></span>Finance Pulse</div>
+        <span class="badge badge-yellow" id="fin-month-badge">—</span>
       </div>
-      <div id="news-card-wrap">
-        <div id="news-card-source" class="news-card-source"></div>
-        <div id="news-card-headline" class="news-card-headline"></div>
-        <a id="news-card-link" class="news-card-link" href="#" target="_blank" rel="noopener">Read more →</a>
+      <div id="fin-panel-loading" class="empty-state" style="padding:8px 0">Loading from Google Sheets…</div>
+      <div id="fin-panel-content" style="display:none">
+        <div class="fin-balance" id="fin-income-val">—</div>
+        <div class="fin-delta" style="color:var(--text-muted);margin-bottom:10px">Total Savings This Month</div>
+        <div class="fin-row">
+          <span class="lbl">Total Spent</span>
+          <span class="val" style="color:var(--red)" id="fin-expenses-val">—</span>
+        </div>
+        <div class="fin-row">
+          <span class="lbl">Available Savings</span>
+          <span class="val" style="color:var(--green)" id="fin-available-val">—</span>
+        </div>
+        <div class="fin-row">
+          <span class="lbl">Fun Budget Left</span>
+          <span class="val" style="color:var(--yellow)" id="fin-fun-val">—</span>
+        </div>
+        <div class="fin-row">
+          <span class="lbl">Net Worth</span>
+          <span class="val" style="color:var(--cyan)" id="fin-networth-val">—</span>
+        </div>
       </div>
-      <div class="news-nav">
-        <button class="news-nav-btn" onclick="newsStep(-1)">‹</button>
-        <button class="news-nav-btn" onclick="newsStep(1)">›</button>
-      </div>
+      <div id="fin-panel-error" style="display:none;font-size:11px;color:var(--red);margin-top:6px"></div>
     </div>
 
   </div><!-- /col mid -->
