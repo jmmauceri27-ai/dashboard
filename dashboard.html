@@ -825,27 +825,12 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       <div class="panel-header">
         <div class="panel-title"><span class="dot dot-yellow"></span>Master</div>
       </div>
-      <div style="text-align:center;padding:10px 0 16px">
-        <div id="master-name" style="font-size:22px;font-weight:300;color:var(--gold);letter-spacing:0.08em"></div>
-      </div>
-      <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:10px">Core Values</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <div class="op-row" style="padding:8px 0">
-          <span style="font-size:13px;color:var(--text-muted)">Gratitude</span>
-          <span style="font-size:10px;color:var(--gold);letter-spacing:0.06em">✦</span>
-        </div>
-        <div class="op-row" style="padding:8px 0">
-          <span style="font-size:13px;color:var(--text-muted)">Confidence</span>
-          <span style="font-size:10px;color:var(--gold);letter-spacing:0.06em">✦</span>
-        </div>
-        <div class="op-row" style="padding:8px 0">
-          <span style="font-size:13px;color:var(--text-muted)">Faith</span>
-          <span style="font-size:10px;color:var(--gold);letter-spacing:0.06em">✦</span>
-        </div>
-        <div class="op-row" style="padding:8px 0;border-bottom:none">
-          <span style="font-size:13px;color:var(--text-muted)">Family</span>
-          <span style="font-size:10px;color:var(--gold);letter-spacing:0.06em">✦</span>
-        </div>
+      <div id="master-greeting" style="font-size:13px;font-weight:300;color:var(--gold);margin-bottom:14px;line-height:1.4"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;letter-spacing:0.04em">Gratitude</span>
+        <span style="font-size:10px;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;letter-spacing:0.04em">Confidence</span>
+        <span style="font-size:10px;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;letter-spacing:0.04em">Faith</span>
+        <span style="font-size:10px;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;letter-spacing:0.04em">Family</span>
       </div>
     </div>
 
@@ -1739,11 +1724,17 @@ document.getElementById('week-badge').textContent = `WEEK ${weekNum(new Date())}
 // ── PROFILE ────────────────────────────────────────────────────────
 let profile = load('meridian_profile', { name: '', initials: '', goalProtein: 150, goalCarbs: 200, goalFat: 65 });
 
+function masterGreeting() {
+  const h = new Date().getHours();
+  const salutation = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
+  return `${salutation}, ${profile.name || 'friend'}`;
+}
+
 function applyProfile() {
   document.getElementById('brand-name').textContent = profile.name || 'Meridian';
   document.getElementById('avatar-initials').textContent = profile.initials || '?';
-  const masterName = document.getElementById('master-name');
-  if (masterName) masterName.textContent = profile.name || '';
+  const el = document.getElementById('master-greeting');
+  if (el) el.textContent = masterGreeting();
 }
 
 function openProfileModal() {
