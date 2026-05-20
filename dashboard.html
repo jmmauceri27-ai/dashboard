@@ -898,69 +898,6 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
   <!-- ══ MIDDLE ══ -->
   <div class="col">
 
-    <!-- SESSION -->
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title"><span class="dot dot-green"></span>Session</div>
-        <span class="badge badge-blue">TODAY</span>
-      </div>
-      <div class="session-stats">
-        <div class="stat-card">
-          <div class="stat-val" id="deep-focus-val">0h <span>0m</span></div>
-          <div class="stat-lbl">Deep Focus</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" id="tasks-done-val">0</div>
-          <div class="stat-lbl">Tasks Done</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" id="energy-val">
-            <select class="op-select" id="energy-select" onchange="saveEnergy()" style="font-size:14px;font-weight:700;background:transparent;border:none;color:var(--text);padding:0;cursor:pointer">
-              <option value="">—</option>
-              <option value="100">100%</option>
-              <option value="90">90%</option>
-              <option value="80">80%</option>
-              <option value="70">70%</option>
-              <option value="60">60%</option>
-              <option value="50">50%</option>
-              <option value="40">40%</option>
-              <option value="30">30%</option>
-            </select>
-          </div>
-          <div class="stat-lbl">Energy</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" id="pomodoro-val">0</div>
-          <div class="stat-lbl">Pomodoros</div>
-        </div>
-      </div>
-      <div class="prog-item">
-        <div class="prog-meta">
-          <span class="prog-label">Daily goal — <span id="goal-label">set a goal below</span></span>
-          <span class="prog-pct" id="daily-pct">0%</span>
-        </div>
-        <div class="prog-bar"><div class="prog-fill fill-blue" id="daily-bar" style="width:0%"></div></div>
-      </div>
-      <div class="prog-item">
-        <div class="prog-meta">
-          <span class="prog-label">Tasks — <span id="tasks-ratio">0 of 0</span></span>
-          <span class="prog-pct" id="tasks-pct">0%</span>
-        </div>
-        <div class="prog-bar"><div class="prog-fill fill-green" id="tasks-bar" style="width:0%"></div></div>
-      </div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center">
-        <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">Daily focus goal</span>
-        <select class="sel" id="focus-goal-sel" onchange="saveFocusGoal()" style="flex:1">
-          <option value="3">3 hours</option>
-          <option value="4">4 hours</option>
-          <option value="5">5 hours</option>
-          <option value="6" selected>6 hours</option>
-          <option value="7">7 hours</option>
-          <option value="8">8 hours</option>
-        </select>
-      </div>
-    </div>
-
     <!-- HABIT TRACKER -->
     <div class="panel">
       <div class="panel-header">
@@ -1829,48 +1766,6 @@ function importData(e) {
 applyProfile();
 
 
-// ── SESSION TIMER ─────────────────────────────────────────────────
-let sessionData = load('meridian_session', { date: null, startTs: null });
-if (sessionData.date !== TODAY) {
-  sessionData = { date: TODAY, startTs: Date.now() };
-  save('meridian_session', sessionData);
-}
-const sessionStart = sessionData.startTs;
-let focusGoal = load('meridian_focus_goal', 6);
-document.getElementById('focus-goal-sel').value = String(focusGoal);
-document.getElementById('goal-label').textContent = `${focusGoal}h deep work goal`;
-
-function saveFocusGoal() {
-  focusGoal = parseInt(document.getElementById('focus-goal-sel').value);
-  save('meridian_focus_goal', focusGoal);
-  document.getElementById('goal-label').textContent = `${focusGoal}h deep work goal`;
-}
-
-let energyVal = load('meridian_energy_today', { date: TODAY, val: '' });
-if (energyVal.date !== TODAY) energyVal = { date: TODAY, val: '' };
-document.getElementById('energy-select').value = energyVal.val;
-
-function saveEnergy() {
-  energyVal = { date: TODAY, val: document.getElementById('energy-select').value };
-  save('meridian_energy_today', energyVal);
-}
-
-function updateSession() {
-  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
-  const h = Math.floor(elapsed / 3600);
-  const m = Math.floor((elapsed % 3600) / 60);
-  const _st = document.getElementById('session-time'); if (_st) _st.textContent = `${h}h ${m}m`;
-  document.getElementById('deep-focus-val').innerHTML = `${h}h <span>${m}m</span>`;
-
-  const goalSecs = focusGoal * 3600;
-  const pct = Math.min(100, Math.round(elapsed / goalSecs * 100));
-  document.getElementById('daily-pct').textContent = pct + '%';
-  document.getElementById('daily-bar').style.width = pct + '%';
-
-  const pomos = Math.floor(elapsed / 1500);
-  document.getElementById('pomodoro-val').textContent = pomos;
-}
-setInterval(updateSession, 1000); updateSession();
 
 // ── FINANCE (Google Sheets) ───────────────────────────────────────
 const SHEET_ID  = '14B-NpJPj8dN2wb5KA9hSj_omll4llBwnwJc6F9cgQHs';
