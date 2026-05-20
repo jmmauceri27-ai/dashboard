@@ -1358,7 +1358,11 @@ async function sbPushNow() {
     const res = await fetch(`${sbUrl()}/rest/v1/dashboard_data`, {
       method: 'POST', headers: sbHeaders(), body: JSON.stringify(rows),
     });
-    if (!res.ok) throw new Error(res.status);
+    if (!res.ok) {
+      let msg = `${res.status}`;
+      try { const j = await res.json(); msg = j.message || j.error || msg; } catch {}
+      throw new Error(msg);
+    }
     sbSetLastSync();
     setSbStatus(`Pushed ${rows.length} keys ✓`, 'var(--green)');
   } catch(e) {
