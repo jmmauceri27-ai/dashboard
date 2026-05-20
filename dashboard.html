@@ -2900,12 +2900,6 @@ function renderDevotion(v) {
 loadDevotion();
 
 // ── NEWS BRIEFING ─────────────────────────────────────────────────
-const NEWS_SOURCES = {
-  reuters:     'https://feeds.reuters.com/reuters/businessNews',
-  marketwatch: 'https://feeds.marketwatch.com/marketwatch/topstories/',
-  cnbc:        'https://www.cnbc.com/id/10001147/device/rss/rss.html',
-  yahoo:       'https://finance.yahoo.com/news/rssindex',
-};
 
 function newsTimeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 60000);
@@ -2925,18 +2919,16 @@ async function loadNews(force = false) {
   }
 
   document.getElementById('news-body').innerHTML = `<div class="news-loading">Loading headlines…</div>`;
-  const rssUrl = encodeURIComponent(NEWS_SOURCES[source]);
 
   try {
-    const res  = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&count=8`);
+    const res  = await fetch(`/api/news?source=${source}`);
     const data = await res.json();
-    if (data.status !== 'ok') throw new Error('Feed error');
-    const items = data.items.map(i => ({ title: i.title, link: i.link, pubDate: i.pubDate }));
-    save(cacheKey, { ts: Date.now(), items });
-    renderNews(items);
-  } catch {
+    if (!res.ok) throw new Error(data.error || res.status);
+    save(cacheKey, { ts: Date.now(), items: data.items });
+    renderNews(data.items);
+  } catch (e) {
     document.getElementById('news-body').innerHTML =
-      `<div class="news-loading" style="color:var(--text-muted)">Could not load headlines. Try refreshing.</div>`;
+      `<div class="news-loading" style="color:var(--text-muted)">Could not load headlines: ${e.message}</div>`;
   }
 }
 
