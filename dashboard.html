@@ -448,8 +448,6 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .news-nav          { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); }
 .news-nav-btn      { background: none; border: 1px solid var(--border2); color: var(--text-muted); border-radius: 3px; width: 24px; height: 24px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: color 0.15s, border-color 0.15s; }
 .news-nav-btn:hover { color: var(--gold); border-color: var(--gold-border); }
-.news-progress-track { flex: 1; height: 2px; background: var(--border2); border-radius: 1px; overflow: hidden; }
-.news-progress-bar  { height: 100%; width: 0%; background: var(--gold); border-radius: 1px; transition: width linear; }
 .news-loading { font-size: 11px; color: var(--text-dim); font-weight: 300; padding: 4px 0; }
 
 /* ── HEALTH VIEW ── */
@@ -903,7 +901,6 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       </div>
       <div class="news-nav">
         <button class="news-nav-btn" onclick="newsStep(-1)">‹</button>
-        <div class="news-progress-track"><div id="news-progress-bar" class="news-progress-bar"></div></div>
         <button class="news-nav-btn" onclick="newsStep(1)">›</button>
       </div>
     </div>
@@ -2906,7 +2903,6 @@ loadDevotion();
 let newsItems       = [];
 let newsIndex       = 0;
 let newsTimer       = null;
-let newsProgTimer   = null;
 const NEWS_INTERVAL = 30000;
 const NEWS_SOURCES  = ['reuters','marketwatch','cnbc','yahoo'];
 const NEWS_LABELS   = { reuters:'Reuters', marketwatch:'MarketWatch', cnbc:'CNBC', yahoo:'Yahoo Finance' };
@@ -2937,20 +2933,9 @@ function showNewsCard(idx) {
     headline.style.opacity  = '1';
   }, 180);
 
-  startNewsProgress();
+
 }
 
-function startNewsProgress() {
-  const bar = document.getElementById('news-progress-bar');
-  if (!bar) return;
-  clearTimeout(newsProgTimer);
-  bar.style.transition = 'none';
-  bar.style.width      = '0%';
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    bar.style.transition = `width ${NEWS_INTERVAL}ms linear`;
-    bar.style.width      = '100%';
-  }));
-}
 
 function newsStep(dir) {
   clearInterval(newsTimer);
