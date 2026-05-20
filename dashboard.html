@@ -449,6 +449,8 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .grat-textarea { width: 100%; resize: none; min-height: 58px; line-height: 1.6; }
 .grat-footer   { display: flex; align-items: center; justify-content: space-between; }
 .grat-count    { font-size: 9px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+.dev-verse     { font-size: 13px; font-weight: 300; color: var(--text); line-height: 1.8; font-style: italic; margin-bottom: 10px; }
+.dev-reflection { font-size: 10px; color: var(--text-muted); font-weight: 300; line-height: 1.7; padding-top: 10px; border-top: 1px solid var(--border); }
 
 /* ── HEALTH VIEW ── */
 .health-view { display: none; max-width: 900px; margin: 0 auto; padding: 12px; height: calc(100vh - 54px); flex-direction: column; gap: 12px; overflow-y: auto; }
@@ -1146,6 +1148,17 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
           <span class="grat-count" id="grat-count">0 entries today</span>
           <button class="btn btn-green" onclick="addGratitude()">Add Entry</button>
         </div>
+      </div>
+    </div>
+
+    <!-- DEVOTIONAL -->
+    <div class="panel" id="devotional-panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot" style="background:var(--gold)"></span>Daily Devotional</div>
+        <span class="badge" style="background:var(--gold-bg);color:var(--gold);border-color:var(--gold-border)" id="dev-ref"></span>
+      </div>
+      <div id="dev-body">
+        <div style="font-size:11px;color:var(--text-dim);font-weight:300">Loading verse…</div>
       </div>
     </div>
 
@@ -2923,6 +2936,33 @@ document.getElementById('grat-input').addEventListener('keydown', e => {
 });
 
 renderGratitude();
+
+// ── DAILY DEVOTIONAL ──────────────────────────────────────────────
+async function loadDevotion() {
+  const cacheKey = `meridian_devotional_${TODAY}`;
+  const cached   = load(cacheKey, null);
+  if (cached) { renderDevotion(cached); return; }
+
+  try {
+    const res  = await fetch('https://labs.bible.org/api/?passage=votd&type=json');
+    const data = await res.json();
+    const v    = data[0];
+    const obj  = { book: v.bookname, chapter: v.chapter, verse: v.verse, text: v.text };
+    save(cacheKey, obj);
+    renderDevotion(obj);
+  } catch {
+    document.getElementById('dev-body').innerHTML =
+      `<div class="dev-verse">"…for I know the plans I have for you," declares the Lord, "plans to prosper you and not to harm you, plans to give you hope and a future."</div>`;
+    document.getElementById('dev-ref').textContent = 'Jeremiah 29:11';
+  }
+}
+
+function renderDevotion(v) {
+  document.getElementById('dev-ref').textContent  = `${v.book} ${v.chapter}:${v.verse}`;
+  document.getElementById('dev-body').innerHTML   = `<div class="dev-verse">"${v.text}"</div>`;
+}
+
+loadDevotion();
 
 // ── JOURNAL ───────────────────────────────────────────────────────
 let journalData       = load('meridian_journal', {});
