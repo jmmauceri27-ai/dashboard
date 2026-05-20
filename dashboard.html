@@ -2424,24 +2424,33 @@ async function ouraFetch(endpoint, params = {}) {
   return res.json();
 }
 
+function yesterdayStr() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
 async function fetchOuraData() {
   if (!getOuraToken()) return;
   document.getElementById('oura-loading').style.display = 'block';
   document.getElementById('oura-error').style.display   = 'none';
   document.getElementById('oura-data').style.display    = 'none';
 
+  const YESTERDAY = yesterdayStr();
+
   try {
     const [readiness, sleepScore, sleep, activity] = await Promise.all([
       ouraFetch('daily_readiness'),
       ouraFetch('daily_sleep'),
-      ouraFetch('sleep'),
-      ouraFetch('daily_activity'),
+      ouraFetch('sleep',          { start_date: YESTERDAY, end_date: TODAY }),
+      ouraFetch('daily_activity', { start_date: YESTERDAY, end_date: TODAY }),
     ]);
 
-    const r  = readiness?.data?.[0]  || {};
-    const ss = sleepScore?.data?.[0] || {};
-    const s  = sleep?.data?.find(d => d.type === 'long_sleep') || sleep?.data?.[0] || {};
-    const a  = activity?.data?.[0]   || {};
+    const r  = readiness?.data?.at(-1)  || {};
+    const ss = sleepScore?.data?.at(-1) || {};
+    const sleepArr = sleep?.data || [];
+    const s  = sleepArr.find(d => d.type === 'long_sleep') || sleepArr.at(-1) || {};
+    const a  = activity?.data?.at(-1)   || {};
 
     document.getElementById('oura-score-row').innerHTML = [
       { label: 'Readiness', val: r.score  },
