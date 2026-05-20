@@ -1839,29 +1839,6 @@ function importData(e) {
 
 applyProfile();
 
-// ── OPERATOR ──────────────────────────────────────────────────────
-let opData = load('meridian_op', { mode: 'Deep Work', context: '', interruptions: 0 });
-let counters = load('meridian_counters', { interruptions: 0 });
-
-function loadOp() {
-  document.getElementById('op-mode').value    = opData.mode    || 'Deep Work';
-  document.getElementById('op-context').value = opData.context || '';
-  document.getElementById('interruptions-val').textContent = counters.interruptions;
-}
-
-function saveOp() {
-  opData.mode    = document.getElementById('op-mode').value;
-  opData.context = document.getElementById('op-context').value.trim();
-  save('meridian_op', opData);
-}
-
-function changeCounter(key, delta) {
-  counters[key] = Math.max(0, (counters[key] || 0) + delta);
-  save('meridian_counters', counters);
-  document.getElementById(`${key}-val`).textContent = counters[key];
-}
-
-loadOp();
 
 // ── SESSION TIMER ─────────────────────────────────────────────────
 let sessionData = load('meridian_session', { date: null, startTs: null });
@@ -1893,7 +1870,7 @@ function updateSession() {
   const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
   const h = Math.floor(elapsed / 3600);
   const m = Math.floor((elapsed % 3600) / 60);
-  document.getElementById('session-time').textContent = `${h}h ${m}m`;
+  const _st = document.getElementById('session-time'); if (_st) _st.textContent = `${h}h ${m}m`;
   document.getElementById('deep-focus-val').innerHTML = `${h}h <span>${m}m</span>`;
 
   const goalSecs = focusGoal * 3600;
@@ -1903,14 +1880,6 @@ function updateSession() {
 
   const pomos = Math.floor(elapsed / 1500);
   document.getElementById('pomodoro-val').textContent = pomos;
-  document.getElementById('op-pomo').textContent = pomos;
-
-  const breakIn = 25 - Math.floor((elapsed % 1500) / 60);
-  document.getElementById('next-break').textContent = `${breakIn} min`;
-
-  const focusScore = Math.min(100, Math.round((pomos * 10) + (pct * 0.5)));
-  document.getElementById('focus-score-val').textContent = focusScore || '—';
-  document.getElementById('focus-score-bar').style.width = focusScore + '%';
 }
 setInterval(updateSession, 1000); updateSession();
 
