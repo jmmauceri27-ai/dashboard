@@ -3064,11 +3064,11 @@ function renderTicker(quotes) {
 }
 
 async function loadTicker() {
-  const cacheKey = 'meridian_stocks';
-  const cached   = load(cacheKey, null);
-  const fiveMin  = 5 * 60 * 1000;
+  const cacheKey  = 'meridian_stocks';
+  const cached    = load(cacheKey, null);
+  const thirtyMin = 30 * 60 * 1000;
 
-  if (cached && (Date.now() - cached.ts) < fiveMin) {
+  if (cached && (Date.now() - cached.ts) < thirtyMin) {
     renderTicker(cached.quotes); return;
   }
 
@@ -3080,7 +3080,7 @@ async function loadTicker() {
     if (!res.ok || !data.quotes?.length) throw new Error(data.error || 'No data');
     save(cacheKey, { ts: Date.now(), quotes: data.quotes });
     renderTicker(data.quotes);
-    setTimeout(loadTicker, fiveMin);
+    setTimeout(loadTicker, thirtyMin);
   } catch (e) {
     // show error in ticker rather than hiding it
     const msg = `<div class="ticker-item"><span class="ticker-name" style="color:var(--red)">Market data unavailable</span></div>`;
