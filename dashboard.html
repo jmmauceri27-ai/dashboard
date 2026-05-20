@@ -449,6 +449,9 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .grat-textarea { width: 100%; resize: none; min-height: 58px; line-height: 1.6; }
 .grat-footer   { display: flex; align-items: center; justify-content: space-between; }
 .grat-count    { font-size: 9px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+.grat-log-day  { margin-bottom: 14px; }
+.grat-log-date { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+.grat-log-date span { color: var(--gold); margin-right: 4px; }
 
 /* ── HEALTH VIEW ── */
 .health-view { display: none; max-width: 900px; margin: 0 auto; padding: 12px; height: calc(100vh - 54px); flex-direction: column; gap: 12px; overflow-y: auto; }
@@ -1122,23 +1125,28 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
     <div class="panel">
       <div class="panel-header">
         <div class="panel-title"><span class="dot dot-pink"></span>Gratitude</div>
-        <span class="badge badge-pink">TODAY</span>
+        <button class="btn" id="grat-log-btn" onclick="toggleGratLog()" style="font-size:9px;padding:3px 10px">View Log</button>
       </div>
-      <div class="grat-streak">
-        <div class="grat-streak-num" id="grat-streak-num">0</div>
-        <div>
-          <div class="grat-streak-lbl">day streak</div>
-          <div class="grat-streak-sub">consecutive days logged</div>
+      <div id="grat-today-wrap">
+        <div class="grat-streak">
+          <div class="grat-streak-num" id="grat-streak-num">0</div>
+          <div>
+            <div class="grat-streak-lbl">day streak</div>
+            <div class="grat-streak-sub">consecutive days logged</div>
+          </div>
+        </div>
+        <div class="grat-prompt" id="grat-prompt">What are you grateful for today?</div>
+        <div id="grat-list"></div>
+        <div class="grat-add-col">
+          <textarea class="fi grat-textarea" id="grat-input" placeholder="I am grateful for…"></textarea>
+          <div class="grat-footer">
+            <span class="grat-count" id="grat-count">0 entries today</span>
+            <button class="btn btn-green" onclick="addGratitude()">Add Entry</button>
+          </div>
         </div>
       </div>
-      <div class="grat-prompt" id="grat-prompt">What are you grateful for today?</div>
-      <div id="grat-list"></div>
-      <div class="grat-add-col">
-        <textarea class="fi grat-textarea" id="grat-input" placeholder="I am grateful for…"></textarea>
-        <div class="grat-footer">
-          <span class="grat-count" id="grat-count">0 entries today</span>
-          <button class="btn btn-green" onclick="addGratitude()">Add Entry</button>
-        </div>
+      <div id="grat-log-wrap" style="display:none">
+        <div id="grat-log-list"></div>
       </div>
     </div>
 
@@ -2867,6 +2875,44 @@ function deleteGratitude(idx) {
   gratData[TODAY].splice(idx, 1);
   save('meridian_gratitude', gratData);
   renderGratitude();
+}
+
+let gratLogOpen = false;
+
+function toggleGratLog() {
+  gratLogOpen = !gratLogOpen;
+  document.getElementById('grat-today-wrap').style.display = gratLogOpen ? 'none' : '';
+  document.getElementById('grat-log-wrap').style.display   = gratLogOpen ? '' : 'none';
+  document.getElementById('grat-log-btn').textContent      = gratLogOpen ? 'Today' : 'View Log';
+  if (gratLogOpen) renderGratitudeLog();
+}
+
+function renderGratitudeLog() {
+  const dates = Object.keys(gratData)
+    .filter(d => gratData[d]?.length)
+    .sort((a, b) => b.localeCompare(a));
+
+  const el = document.getElementById('grat-log-list');
+  if (!dates.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:12px 0">No entries yet.</div>`;
+    return;
+  }
+
+  const total = dates.reduce((sum, d) => sum + gratData[d].length, 0);
+  el.innerHTML = `<div style="font-size:9px;color:var(--text-dim);margin-bottom:14px;letter-spacing:0.06em">${total} ENTR${total===1?'Y':'IES'} ACROSS ${dates.length} DAY${dates.length===1?'':'S'}</div>`
+    + dates.map(date => {
+      const dt      = new Date(date + 'T12:00:00');
+      const label   = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      const isToday = date === TODAY;
+      return `<div class="grat-log-day">
+        <div class="grat-log-date"><span>✦</span>${label}${isToday ? ' · Today' : ''}</div>
+        ${gratData[date].map(entry => `
+          <div class="grat-entry">
+            <span class="grat-bullet">·</span>
+            <span class="grat-text">${esc(entry)}</span>
+          </div>`).join('')}
+      </div>`;
+    }).join('');
 }
 
 document.getElementById('grat-input').addEventListener('keydown', e => {
