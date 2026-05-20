@@ -419,6 +419,15 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .weight-delta.up   { color: var(--red); }
 .weight-delta.down { color: var(--green); }
 .weight-chart { width: 100%; height: 100px; margin-bottom: 14px; }
+.oura-score-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.oura-score-card { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 12px; text-align: center; }
+.oura-score-val { font-size: 32px; font-weight: 200; line-height: 1; }
+.oura-score-lbl { font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 4px; }
+.oura-score-ring { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-bottom: 2px; }
+.oura-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+.oura-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 9px 10px; }
+.oura-stat-val { font-size: 16px; font-weight: 300; line-height: 1; }
+.oura-stat-lbl { font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
 
 /* ── CALENDAR VIEW ── */
 .calendar-view { display: none; max-width: 1400px; margin: 0 auto; padding: 12px; height: calc(100vh - 54px); flex-direction: column; gap: 10px; }
@@ -1053,6 +1062,42 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       <button class="btn btn-blue" onclick="logWeight()">Log</button>
     </div>
     <div class="weight-history" id="weight-history"></div>
+  </div>
+
+  <!-- Oura Ring -->
+  <div class="health-card" id="oura-card">
+    <div class="health-card-title" style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="dot dot-green"></span>Oura Ring</span>
+      <span id="oura-sync-time" style="font-size:9px;color:var(--text-dim);font-weight:300;letter-spacing:0.05em"></span>
+    </div>
+
+    <!-- Token setup (shown when no token saved) -->
+    <div id="oura-setup" style="display:none">
+      <p style="font-size:12px;font-weight:300;color:var(--text-muted);line-height:1.7;margin-bottom:12px">
+        Connect your Oura Ring by generating a Personal Access Token at
+        <span style="color:var(--gold)">cloud.ouraring.com/personal-access-tokens</span>
+        and pasting it below.
+      </p>
+      <div style="display:flex;gap:7px">
+        <input class="fi" id="oura-token-input" type="password" placeholder="Paste token…" style="flex:1" />
+        <button class="btn btn-blue" onclick="saveOuraToken()">Connect</button>
+      </div>
+    </div>
+
+    <!-- Data (shown when token saved) -->
+    <div id="oura-data" style="display:none">
+      <!-- Score row -->
+      <div class="oura-score-row" id="oura-score-row"></div>
+      <!-- Stats grid -->
+      <div class="oura-stats" id="oura-stats"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+        <button class="btn btn-blue" onclick="fetchOuraData()" id="oura-refresh-btn">↻ Sync</button>
+        <span style="font-size:9px;color:var(--text-dim);cursor:pointer;letter-spacing:0.05em" onclick="disconnectOura()">Disconnect</span>
+      </div>
+    </div>
+
+    <div id="oura-loading" style="display:none;font-size:11px;color:var(--text-dim);padding:8px 0;font-weight:300">Syncing with Oura…</div>
+    <div id="oura-error" style="display:none;font-size:11px;color:var(--red);padding:6px 0"></div>
   </div>
 
 </div>
@@ -2332,6 +2377,130 @@ function renderHealthView() {
   }).join('');
 }
 
+// ── OURA RING ─────────────────────────────────────────────────────
+const OURA_BASE = 'https://api.ouraring.com/v2/usercollection';
+
+function getOuraToken() { return localStorage.getItem('meridian_oura_token') || ''; }
+
+function saveOuraToken() {
+  const t = document.getElementById('oura-token-input').value.trim();
+  if (!t) return;
+  localStorage.setItem('meridian_oura_token', t);
+  fetchOuraData();
+}
+
+function disconnectOura() {
+  if (!confirm('Disconnect Oura Ring?')) return;
+  localStorage.removeItem('meridian_oura_token');
+  renderOuraSetup();
+}
+
+function renderOuraSetup() {
+  const hasToken = !!getOuraToken();
+  document.getElementById('oura-setup').style.display = hasToken ? 'none' : 'block';
+  document.getElementById('oura-data').style.display  = hasToken ? 'block' : 'none';
+  document.getElementById('oura-error').style.display = 'none';
+}
+
+async function ouraGet(endpoint, params = {}) {
+  const token = getOuraToken();
+  const qs = new URLSearchParams({ start_date: TODAY, end_date: TODAY, ...params }).toString();
+  const res = await fetch(`${OURA_BASE}/${endpoint}?${qs}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (res.status === 401) throw new Error('invalid_token');
+  if (!res.ok) throw new Error(res.status);
+  return res.json();
+}
+
+function ouraScore(val) {
+  if (val == null) return { color: 'var(--text-dim)', label: '—' };
+  if (val >= 85) return { color: 'var(--green)',  label: 'Optimal' };
+  if (val >= 70) return { color: 'var(--gold)',   label: 'Good' };
+  if (val >= 60) return { color: 'var(--orange)', label: 'Fair' };
+  return          { color: 'var(--red)',           label: 'Low' };
+}
+
+function fmtDuration(seconds) {
+  if (!seconds) return '—';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return `${h}h ${m}m`;
+}
+
+async function fetchOuraData() {
+  if (!getOuraToken()) return;
+  document.getElementById('oura-loading').style.display = 'block';
+  document.getElementById('oura-error').style.display   = 'none';
+  document.getElementById('oura-data').style.display    = 'none';
+
+  try {
+    const [readiness, sleepScore, sleep, activity] = await Promise.all([
+      ouraGet('daily_readiness'),
+      ouraGet('daily_sleep'),
+      ouraGet('sleep'),
+      ouraGet('daily_activity'),
+    ]);
+
+    const r  = readiness?.data?.[0]  || {};
+    const ss = sleepScore?.data?.[0] || {};
+    const s  = sleep?.data?.find(d => d.type === 'long_sleep') || sleep?.data?.[0] || {};
+    const a  = activity?.data?.[0]   || {};
+
+    // Score cards
+    const scores = [
+      { label: 'Readiness', val: r.score,  },
+      { label: 'Sleep',     val: ss.score, },
+      { label: 'Activity',  val: a.score,  },
+    ];
+    document.getElementById('oura-score-row').innerHTML = scores.map(sc => {
+      const { color } = ouraScore(sc.val);
+      return `<div class="oura-score-card">
+        <div class="oura-score-val" style="color:${color}">${sc.val ?? '—'}</div>
+        <div class="oura-score-lbl">${sc.label}</div>
+      </div>`;
+    }).join('');
+
+    // Stat tiles
+    const stats = [
+      { label: 'Sleep',    val: fmtDuration(s.total_sleep_duration) },
+      { label: 'REM',      val: fmtDuration(s.rem_sleep_duration) },
+      { label: 'Deep',     val: fmtDuration(s.deep_sleep_duration) },
+      { label: 'HRV',      val: s.average_hrv ? Math.round(s.average_hrv) + ' ms' : '—' },
+      { label: 'Resting HR', val: s.lowest_heart_rate ? s.lowest_heart_rate + ' bpm' : '—' },
+      { label: 'Steps',    val: a.steps ? a.steps.toLocaleString() : '—' },
+      { label: 'Active Cal', val: a.active_calories ? a.active_calories + ' kcal' : '—' },
+      { label: 'Total Cal',  val: a.total_calories  ? a.total_calories  + ' kcal' : '—' },
+    ];
+    document.getElementById('oura-stats').innerHTML = stats.map(st =>
+      `<div class="oura-stat">
+        <div class="oura-stat-val">${st.val}</div>
+        <div class="oura-stat-lbl">${st.label}</div>
+      </div>`
+    ).join('');
+
+    const now = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    document.getElementById('oura-sync-time').textContent = `Synced ${now}`;
+    document.getElementById('oura-loading').style.display = 'none';
+    document.getElementById('oura-data').style.display    = 'block';
+
+  } catch(e) {
+    document.getElementById('oura-loading').style.display = 'none';
+    const errEl = document.getElementById('oura-error');
+    errEl.textContent = e.message === 'invalid_token'
+      ? 'Invalid token — reconnect below.'
+      : `Sync failed: ${e.message}`;
+    errEl.style.display = 'block';
+    if (e.message === 'invalid_token') {
+      localStorage.removeItem('meridian_oura_token');
+      document.getElementById('oura-setup').style.display = 'block';
+    }
+  }
+}
+
+renderOuraSetup();
+if (getOuraToken()) fetchOuraData();
+
 function renderWeightChart() {
   const canvas = document.getElementById('weight-chart');
   if (!canvas) return;
@@ -2438,6 +2607,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     } else if (label === 'Health') {
       healthView.classList.add('active');
       renderHealthView();
+      renderOuraSetup();
     } else {
       dashboard.style.display = 'grid';
     }
