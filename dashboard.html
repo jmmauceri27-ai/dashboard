@@ -328,13 +328,48 @@ body > * { position: relative; z-index: 1; }
 .priority-item.drag-over-bot { border-bottom: 2px solid var(--gold) !important; padding-bottom: 6px; }
 
 /* ── CRM VIEW ── */
-.crm-view { display: none; max-width: 860px; margin: 0 auto; padding: 12px; min-height: calc(100vh - 54px); }
-.crm-view.active { display: block; }
+.crm-view { display: none; max-width: 1400px; margin: 0 auto; padding: 12px; min-height: calc(100vh - 54px); }
+.crm-view.active { display: flex; flex-direction: column; }
+.crm-subnav { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; flex-shrink: 0; }
+.crm-tab { padding: 7px 18px; font-size: 10px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; background: transparent; border: none; font-family: inherit; transition: color 0.2s; position: relative; }
+.crm-tab::after { content: ''; position: absolute; bottom: -1px; left: 18px; right: 18px; height: 1px; background: var(--gold); opacity: 0; transition: opacity 0.2s; }
+.crm-tab.active { color: var(--gold); }
+.crm-tab.active::after { opacity: 1; }
+.crm-subview { display: none; flex: 1; }
+.crm-subview.active { display: block; }
 .crm-section { margin-bottom: 20px; }
 .crm-section-header { font-size: 8px; font-weight: 500; letter-spacing: 2.2px; text-transform: uppercase; color: var(--text-dim); padding: 0 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
 .crm-section-count { font-size: 9px; color: var(--text-dim); font-weight: 300; }
-.crm-add-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; margin-bottom: 20px; display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.crm-add-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; margin-bottom: 16px; display: flex; gap: 7px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
 .crm-add-bar .fi { flex: 1; min-width: 160px; }
+
+/* Kanban */
+.kanban-board { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; flex: 1; min-height: 0; }
+.kanban-col { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; min-height: 300px; }
+.kanban-col-header { padding: 10px 14px; font-size: 8px; font-weight: 500; letter-spacing: 2.2px; text-transform: uppercase; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.kanban-col-count { font-size: 9px; color: var(--text-dim); font-weight: 300; margin-left: auto; }
+.kanban-col-body { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.kanban-col-body.drag-over { background: var(--gold-bg); }
+.kanban-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 9px 11px; cursor: grab; user-select: none; position: relative; }
+.kanban-card:active { cursor: grabbing; }
+.kanban-card.dragging { opacity: 0.3; }
+.kanban-card.drag-over-top { border-top: 2px solid var(--gold); }
+.kanban-card.drag-over-bot { border-bottom: 2px solid var(--gold); }
+.kanban-card-title { font-size: 12px; font-weight: 300; color: var(--text); line-height: 1.45; margin-bottom: 6px; }
+.kanban-card-title.done { text-decoration: line-through; color: var(--text-dim); }
+.kanban-card-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.kanban-card-actions { display: flex; gap: 4px; align-items: center; margin-left: auto; }
+
+/* Archive */
+.archive-item { display: flex; align-items: flex-start; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.archive-item:last-child { border-bottom: none; }
+.archive-text { font-size: 12px; font-weight: 300; color: var(--text-dim); text-decoration: line-through; flex: 1; }
+.archive-meta { font-size: 9px; color: var(--text-dim); white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .kanban-board { grid-template-columns: repeat(4, 220px); overflow-x: auto; }
+  .crm-view.active { overflow-x: hidden; }
+}
 @media (max-width: 768px) {
   .crm-add-bar { flex-direction: column; }
   .crm-add-bar .fi, .crm-add-bar .sel, .crm-add-bar .btn { width: 100%; }
@@ -1212,7 +1247,17 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 
 <!-- ── CRM VIEW ── -->
 <div class="crm-view" id="crm-view">
-  <div class="crm-add-bar">
+
+  <!-- Sub-nav -->
+  <nav class="crm-subnav">
+    <button class="crm-tab active" onclick="switchCRMTab('list',this)">List</button>
+    <button class="crm-tab" onclick="switchCRMTab('kanban',this)">Kanban</button>
+    <button class="crm-tab" onclick="switchCRMTab('category',this)">Category</button>
+    <button class="crm-tab" onclick="switchCRMTab('archive',this)">Archive</button>
+  </nav>
+
+  <!-- Shared add bar (hidden on Archive) -->
+  <div class="crm-add-bar" id="crm-add-bar">
     <input class="fi" id="crm-new-task" placeholder="Add a task…" onkeydown="if(event.key==='Enter')addTask(true)" style="flex:2;min-width:180px" />
     <select class="sel" id="crm-new-due">
       <option value="today">Today</option>
@@ -1229,22 +1274,59 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
     </select>
     <button class="btn btn-blue" onclick="addTask(true)">Add Task</button>
   </div>
-  <div class="crm-section">
-    <div class="crm-section-header"><span class="dot" style="background:var(--red)"></span>Today <span class="crm-section-count" id="crm-today-count"></span></div>
-    <div id="crm-today-list"></div>
+
+  <!-- LIST -->
+  <div class="crm-subview active" id="crm-list-view">
+    <div class="crm-section">
+      <div class="crm-section-header"><span class="dot" style="background:var(--red)"></span>Today <span class="crm-section-count" id="crm-today-count"></span></div>
+      <div id="crm-today-list"></div>
+    </div>
+    <div class="crm-section">
+      <div class="crm-section-header"><span class="dot" style="background:#c9a030"></span>This Week <span class="crm-section-count" id="crm-week-count"></span></div>
+      <div id="crm-week-list"></div>
+    </div>
+    <div class="crm-section">
+      <div class="crm-section-header"><span class="dot" style="background:var(--green)"></span>This Month <span class="crm-section-count" id="crm-month-count"></span></div>
+      <div id="crm-month-list"></div>
+    </div>
+    <div class="crm-section">
+      <div class="crm-section-header"><span class="dot" style="background:var(--text-muted)"></span>Someday <span class="crm-section-count" id="crm-someday-count"></span></div>
+      <div id="crm-someday-list"></div>
+    </div>
   </div>
-  <div class="crm-section">
-    <div class="crm-section-header"><span class="dot" style="background:#c9a030"></span>This Week <span class="crm-section-count" id="crm-week-count"></span></div>
-    <div id="crm-week-list"></div>
+
+  <!-- KANBAN -->
+  <div class="crm-subview" id="crm-kanban-view">
+    <div class="kanban-board">
+      <div class="kanban-col" id="kb-col-today" data-due="today">
+        <div class="kanban-col-header"><span class="dot" style="background:var(--red)"></span>Today<span class="kanban-col-count" id="kb-today-count"></span></div>
+        <div class="kanban-col-body" id="kb-today-body"></div>
+      </div>
+      <div class="kanban-col" id="kb-col-week" data-due="week">
+        <div class="kanban-col-header"><span class="dot" style="background:#c9a030"></span>This Week<span class="kanban-col-count" id="kb-week-count"></span></div>
+        <div class="kanban-col-body" id="kb-week-body"></div>
+      </div>
+      <div class="kanban-col" id="kb-col-month" data-due="month">
+        <div class="kanban-col-header"><span class="dot" style="background:var(--green)"></span>This Month<span class="kanban-col-count" id="kb-month-count"></span></div>
+        <div class="kanban-col-body" id="kb-month-body"></div>
+      </div>
+      <div class="kanban-col" id="kb-col-someday" data-due="someday">
+        <div class="kanban-col-header"><span class="dot" style="background:var(--text-muted)"></span>Someday<span class="kanban-col-count" id="kb-someday-count"></span></div>
+        <div class="kanban-col-body" id="kb-someday-body"></div>
+      </div>
+    </div>
   </div>
-  <div class="crm-section">
-    <div class="crm-section-header"><span class="dot" style="background:var(--green)"></span>This Month <span class="crm-section-count" id="crm-month-count"></span></div>
-    <div id="crm-month-list"></div>
+
+  <!-- CATEGORY -->
+  <div class="crm-subview" id="crm-category-view">
+    <div id="crm-category-container"></div>
   </div>
-  <div class="crm-section">
-    <div class="crm-section-header"><span class="dot" style="background:var(--text-muted)"></span>Someday <span class="crm-section-count" id="crm-someday-count"></span></div>
-    <div id="crm-someday-list"></div>
+
+  <!-- ARCHIVE -->
+  <div class="crm-subview" id="crm-archive-view">
+    <div id="crm-archive-container"></div>
   </div>
+
 </div>
 
 <!-- ── FINANCE VIEW ── -->
@@ -2268,89 +2350,210 @@ function renderTasks() {
     : `<div class="empty-state">No priorities yet — add one below.</div>`;
 }
 
+let crmActiveTab = 'list';
+
+function switchCRMTab(tab, btn) {
+  crmActiveTab = tab;
+  document.querySelectorAll('.crm-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.crm-subview').forEach(v => v.classList.remove('active'));
+  document.getElementById(`crm-${tab}-view`).classList.add('active');
+  document.getElementById('crm-add-bar').style.display = tab === 'archive' ? 'none' : '';
+  if (tab === 'list')     renderCRM();
+  if (tab === 'kanban')   { renderKanban(); initKanbanDrag(); }
+  if (tab === 'category') renderCategory();
+  if (tab === 'archive')  renderArchive();
+}
+
+function dueBucket(t) {
+  return ['today','week','month','someday'].includes(t.due) ? t.due : 'someday';
+}
+
 function renderCRM() {
   const groups = { today: [], week: [], month: [], someday: [] };
-  tasks.forEach(t => {
-    const key = ['today','week','month','someday'].includes(t.due) ? t.due : 'someday';
-    groups[key].push(t);
-  });
+  tasks.filter(t => !t.done).forEach(t => groups[dueBucket(t)].push(t));
+  // also show done tasks at bottom of each section
+  tasks.filter(t => t.done).forEach(t => groups[dueBucket(t)].push(t));
+
   [['today',   'crm-today-list',   'crm-today-count'],
    ['week',    'crm-week-list',    'crm-week-count'],
    ['month',   'crm-month-list',   'crm-month-count'],
    ['someday', 'crm-someday-list', 'crm-someday-count']].forEach(([key, listId, countId]) => {
-    // respect manual drag order; only push done tasks to bottom
-    const active = groups[key].filter(t => !t.done);
-    const done   = groups[key].filter(t => t.done);
-    const list   = [...active, ...done];
-    const total  = list.length, doneCount = done.length;
-    document.getElementById(countId).textContent = total ? `${doneCount}/${total}` : '';
+    const list     = groups[key];
+    const doneCount = list.filter(t => t.done).length;
+    document.getElementById(countId).textContent = list.length ? `${doneCount}/${list.length}` : '';
     document.getElementById(listId).innerHTML = list.length
       ? list.map(t => taskItemHTML(t, false, true)).join('')
       : `<div class="empty-state" style="padding:10px 0;font-size:11px">No tasks here.</div>`;
   });
 }
 
+function kanbanCardHTML(t) {
+  return `<div class="kanban-card" draggable="true" data-id="${t.id}">
+    <div class="kanban-card-title ${t.done ? 'done' : ''}">${esc(t.text)}</div>
+    <div class="kanban-card-meta">
+      <span class="badge ${TAG_CLS[t.tag] || 'badge-gray'}" style="font-size:8px">${esc(t.tag)}</span>
+      <div class="kanban-card-actions">
+        <span style="font-size:13px;cursor:pointer;opacity:${t.starred?1:0.3}" onclick="starTask(${t.id})" title="Star">★</span>
+        <div class="p-checkbox ${t.done?'checked':''}" style="width:13px;height:13px;margin:0" onclick="toggleTask(${t.id})"></div>
+        <button class="del-btn" style="opacity:0.5" onclick="deleteTask(${t.id})">✕</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderKanban() {
+  const groups = { today: [], week: [], month: [], someday: [] };
+  tasks.filter(t => !t.done).forEach(t => groups[dueBucket(t)].push(t));
+  [['today','kb-today-body','kb-today-count'],
+   ['week', 'kb-week-body', 'kb-week-count'],
+   ['month','kb-month-body','kb-month-count'],
+   ['someday','kb-someday-body','kb-someday-count']].forEach(([key, bodyId, countId]) => {
+    const list = groups[key];
+    document.getElementById(countId).textContent = list.length ? list.length : '';
+    document.getElementById(bodyId).innerHTML = list.length
+      ? list.map(kanbanCardHTML).join('')
+      : `<div style="font-size:10px;color:var(--text-dim);padding:8px 0;text-align:center">Empty</div>`;
+  });
+}
+
+function renderCategory() {
+  const cats = ['PERSONAL','WORK','URGENT','HEALTH','FINANCE'];
+  const TAG_COLORS = { PERSONAL:'var(--pink)', WORK:'var(--blue)', URGENT:'var(--red)', HEALTH:'var(--green)', FINANCE:'#c9a030' };
+  const groups = {};
+  cats.forEach(c => groups[c] = []);
+  tasks.filter(t => !t.done).forEach(t => { if (groups[t.tag]) groups[t.tag].push(t); });
+  tasks.filter(t => t.done).forEach(t => { if (groups[t.tag]) groups[t.tag].push(t); });
+
+  document.getElementById('crm-category-container').innerHTML = cats.map(cat => {
+    const list = groups[cat];
+    const doneCount = list.filter(t => t.done).length;
+    return `<div class="crm-section">
+      <div class="crm-section-header">
+        <span class="dot" style="background:${TAG_COLORS[cat]}"></span>${cat}
+        <span class="crm-section-count">${list.length ? `${doneCount}/${list.length}` : ''}</span>
+      </div>
+      <div>${list.length
+        ? list.map(t => taskItemHTML(t, true, true)).join('')
+        : `<div class="empty-state" style="padding:10px 0;font-size:11px">No tasks.</div>`}
+      </div>
+    </div>`;
+  }).join('');
+  initListDragOn(document.getElementById('crm-category-container'));
+}
+
+function renderArchive() {
+  const done = [...tasks].filter(t => t.done).reverse();
+  const container = document.getElementById('crm-archive-container');
+  if (!done.length) {
+    container.innerHTML = `<div class="empty-state" style="padding:20px 0">No completed tasks yet.</div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div style="font-size:9px;color:var(--text-dim);margin-bottom:12px;letter-spacing:0.06em">${done.length} COMPLETED TASK${done.length===1?'':'S'}</div>
+    ${done.map(t => `
+      <div class="archive-item">
+        <span class="archive-text">${esc(t.text)}</span>
+        <span class="badge ${TAG_CLS[t.tag]||'badge-gray'}" style="font-size:8px;flex-shrink:0">${esc(t.tag)}</span>
+        <span class="archive-meta">${t.time || ''}</span>
+        <button class="del-btn" style="opacity:0.5;flex-shrink:0" onclick="deleteTask(${t.id})" title="Remove">✕</button>
+      </div>`).join('')}`;
+}
+
 let dragSrcId = null;
 
-function initCRMDrag() {
-  ['crm-today-list','crm-week-list','crm-month-list','crm-someday-list'].forEach(containerId => {
-    const el = document.getElementById(containerId);
-    if (!el || el._dragInit) return;
-    el._dragInit = true;
+function attachDragHandlers(el, isKanban = false) {
+  if (el._dragInit) return;
+  el._dragInit = true;
 
-    el.addEventListener('dragstart', e => {
-      const item = e.target.closest('[draggable="true"]');
-      if (!item) return;
-      dragSrcId = parseInt(item.dataset.id);
-      e.dataTransfer.effectAllowed = 'move';
-      setTimeout(() => item.classList.add('dragging'), 0);
-    });
-
-    el.addEventListener('dragend', () => {
-      el.querySelectorAll('.priority-item').forEach(i =>
-        i.classList.remove('dragging', 'drag-over-top', 'drag-over-bot'));
-      dragSrcId = null;
-    });
-
-    el.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      const item = e.target.closest('[draggable="true"]');
-      el.querySelectorAll('.priority-item').forEach(i =>
-        i.classList.remove('drag-over-top', 'drag-over-bot'));
-      if (!item || parseInt(item.dataset.id) === dragSrcId) return;
-      const rect = item.getBoundingClientRect();
-      const mid  = rect.top + rect.height / 2;
-      item.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bot');
-    });
-
-    el.addEventListener('dragleave', e => {
-      if (!el.contains(e.relatedTarget))
-        el.querySelectorAll('.priority-item').forEach(i =>
-          i.classList.remove('drag-over-top', 'drag-over-bot'));
-    });
-
-    el.addEventListener('drop', e => {
-      e.preventDefault();
-      const item = e.target.closest('[draggable="true"]');
-      if (!item || dragSrcId == null) return;
-      const targetId = parseInt(item.dataset.id);
-      if (targetId === dragSrcId) return;
-
-      const rect    = item.getBoundingClientRect();
-      const before  = e.clientY < rect.top + rect.height / 2;
-      const srcIdx  = tasks.findIndex(t => t.id === dragSrcId);
-      let   tgtIdx  = tasks.findIndex(t => t.id === targetId);
-      if (srcIdx === -1 || tgtIdx === -1) return;
-
-      const [removed] = tasks.splice(srcIdx, 1);
-      tgtIdx = tasks.findIndex(t => t.id === targetId);
-      tasks.splice(before ? tgtIdx : tgtIdx + 1, 0, removed);
-      save('meridian_tasks', tasks);
-      renderCRM();
-      renderTasks();
-    });
+  el.addEventListener('dragstart', e => {
+    const item = e.target.closest('[draggable="true"]');
+    if (!item) return;
+    dragSrcId = parseInt(item.dataset.id);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => item.classList.add('dragging'), 0);
   });
+
+  el.addEventListener('dragend', () => {
+    document.querySelectorAll('.dragging,.drag-over-top,.drag-over-bot')
+      .forEach(i => i.classList.remove('dragging','drag-over-top','drag-over-bot'));
+    document.querySelectorAll('.kanban-col-body.drag-over')
+      .forEach(i => i.classList.remove('drag-over'));
+    dragSrcId = null;
+  });
+
+  el.addEventListener('dragover', e => {
+    e.preventDefault();
+    const card = e.target.closest('[draggable="true"]');
+    const col  = e.target.closest('.kanban-col-body');
+    // clear indicators
+    document.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(i =>
+      i.classList.remove('drag-over-top','drag-over-bot'));
+    if (isKanban && col) col.classList.add('drag-over');
+    if (card && parseInt(card.dataset.id) !== dragSrcId) {
+      const rect = card.getBoundingClientRect();
+      card.classList.add(e.clientY < rect.top + rect.height / 2 ? 'drag-over-top' : 'drag-over-bot');
+    }
+  });
+
+  el.addEventListener('dragleave', e => {
+    const col = e.target.closest('.kanban-col-body');
+    if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+  });
+
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    if (dragSrcId == null) return;
+    const card    = e.target.closest('[draggable="true"]');
+    const col     = e.target.closest('.kanban-col-body');
+    const targetId = card ? parseInt(card.dataset.id) : null;
+
+    // Change due bucket if dropped on a kanban column
+    if (isKanban && col) {
+      const newDue = col.closest('.kanban-col').dataset.due;
+      tasks = tasks.map(t => t.id === dragSrcId ? { ...t, due: newDue } : t);
+    }
+
+    // Reorder within the list
+    if (card && targetId !== dragSrcId) {
+      const rect   = card.getBoundingClientRect();
+      const before = e.clientY < rect.top + rect.height / 2;
+      const srcIdx = tasks.findIndex(t => t.id === dragSrcId);
+      if (srcIdx !== -1) {
+        const [moved] = tasks.splice(srcIdx, 1);
+        const tgtIdx  = tasks.findIndex(t => t.id === targetId);
+        if (tgtIdx !== -1) tasks.splice(before ? tgtIdx : tgtIdx + 1, 0, moved);
+        else tasks.push(moved);
+      }
+    }
+
+    save('meridian_tasks', tasks);
+    renderAll();
+  });
+}
+
+function renderAll() {
+  renderTasks();
+  if (crmActiveTab === 'list')     renderCRM();
+  if (crmActiveTab === 'kanban')   renderKanban();
+  if (crmActiveTab === 'category') renderCategory();
+  if (crmActiveTab === 'archive')  renderArchive();
+}
+
+function initCRMDrag() {
+  ['crm-today-list','crm-week-list','crm-month-list','crm-someday-list'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) attachDragHandlers(el, false);
+  });
+}
+
+function initKanbanDrag() {
+  const board = document.getElementById('crm-kanban-view');
+  if (board) attachDragHandlers(board, true);
+}
+
+function initListDragOn(container) {
+  if (container) attachDragHandlers(container, false);
 }
 
 function toggleTask(id) {
@@ -2359,19 +2562,19 @@ function toggleTask(id) {
     ? { ...t, done: !t.done, time: !t.done ? `done ${pad(now.getHours())}:${pad(now.getMinutes())}` : '' }
     : t);
   save('meridian_tasks', tasks);
-  renderTasks(); renderCRM();
+  renderAll();
 }
 
 function starTask(id) {
   tasks = tasks.map(t => t.id === id ? { ...t, starred: !t.starred } : t);
   save('meridian_tasks', tasks);
-  renderTasks(); renderCRM();
+  renderAll();
 }
 
 function deleteTask(id) {
   tasks = tasks.filter(t => t.id !== id);
   save('meridian_tasks', tasks);
-  renderTasks(); renderCRM();
+  renderAll();
 }
 
 function addTask(fromCRM = false) {
@@ -2384,11 +2587,11 @@ function addTask(fromCRM = false) {
                due: document.getElementById(dueId).value, done: false, starred: false, time: '' });
   save('meridian_tasks', tasks);
   document.getElementById(inputId).value = '';
-  renderTasks(); renderCRM();
+  renderAll();
 }
 
-renderTasks(); renderCRM();
-document.addEventListener('DOMContentLoaded', initCRMDrag);
+renderAll();
+document.addEventListener('DOMContentLoaded', () => { initCRMDrag(); initKanbanDrag(); });
 
 // ── NUTRITION ─────────────────────────────────────────────────────
 let mealsData = load('meridian_meals', { date: null, meals: [] });
@@ -3115,8 +3318,8 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
 
     if (label === 'CRM') {
       crmView.classList.add('active');
-      renderCRM();
-      initCRMDrag();
+      renderAll();
+      initCRMDrag(); initKanbanDrag();
     } else if (label === 'Journal') {
       journalView.classList.add('active');
       openTodayEntry();
