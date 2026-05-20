@@ -1438,19 +1438,25 @@ function renderSbState() {
   }
 }
 
-// pull on load if configured
+// pull on load if configured — reload if cloud has data we don't
 if (sbReady()) {
   (async () => {
     try {
-      const res = await fetch(`${sbUrl()}/rest/v1/dashboard_data?select=key,value`, {
+      const res = await fetch(`${sbUrl()}/rest/v1/dashboard_data?select=key,value,updated_at`, {
         headers: { 'apikey': sbKey(), 'Authorization': `Bearer ${sbKey()}` },
       });
       if (res.ok) {
         const rows = await res.json();
+        let changed = false;
         rows.forEach(r => {
-          if (r.key.startsWith('meridian_') && !SB_SKIP.has(r.key))
-            localStorage.setItem(r.key, typeof r.value === 'string' ? r.value : JSON.stringify(r.value));
+          if (!r.key.startsWith('meridian_') || SB_SKIP.has(r.key)) return;
+          const incoming = typeof r.value === 'string' ? r.value : JSON.stringify(r.value);
+          if (localStorage.getItem(r.key) !== incoming) {
+            localStorage.setItem(r.key, incoming);
+            changed = true;
+          }
         });
+        if (changed) location.reload();
       }
     } catch {}
   })();
