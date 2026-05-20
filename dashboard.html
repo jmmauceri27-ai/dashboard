@@ -1183,6 +1183,14 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       <button class="btn btn-cancel" onclick="closeProfileModal()">Cancel</button>
       <button class="btn btn-green" onclick="saveProfile()">Save</button>
     </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 14px">
+    <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase">Data Backup</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" style="flex:1;min-width:120px" onclick="exportData()">Export Data</button>
+      <button class="btn" style="flex:1;min-width:120px" onclick="document.getElementById('import-file').click()">Import Data</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+    <div id="import-status" style="font-size:0.8rem;margin-top:8px;color:var(--green);display:none"></div>
   </div>
 </div>
 
@@ -1320,6 +1328,54 @@ function saveProfile() {
 document.getElementById('profile-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('profile-modal')) closeProfileModal();
 });
+
+function exportData() {
+  const SKIP = new Set(['meridian_pw_hash', 'meridian_oura_token']);
+  const out = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith('meridian_') && !SKIP.has(k)) {
+      try { out[k] = JSON.parse(localStorage.getItem(k)); }
+      catch { out[k] = localStorage.getItem(k); }
+    }
+  }
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `meridian-backup-${TODAY}.json`,
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      let count = 0;
+      for (const [k, v] of Object.entries(data)) {
+        if (k.startsWith('meridian_')) {
+          localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+          count++;
+        }
+      }
+      const el = document.getElementById('import-status');
+      el.textContent = `Imported ${count} keys. Reloading…`;
+      el.style.display = 'block';
+      setTimeout(() => location.reload(), 1200);
+    } catch {
+      const el = document.getElementById('import-status');
+      el.textContent = 'Import failed — invalid file.';
+      el.style.color = 'var(--red)';
+      el.style.display = 'block';
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
 
 applyProfile();
 
