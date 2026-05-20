@@ -1724,17 +1724,15 @@ document.getElementById('week-badge').textContent = `WEEK ${weekNum(new Date())}
 // ── PROFILE ────────────────────────────────────────────────────────
 let profile = load('meridian_profile', { name: '', initials: '', goalProtein: 150, goalCarbs: 200, goalFat: 65 });
 
-function masterGreeting() {
-  const h = new Date().getHours();
-  const salutation = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
-  return `${salutation}, ${profile.name || 'friend'}`;
-}
-
 function applyProfile() {
   document.getElementById('brand-name').textContent = profile.name || 'Meridian';
   document.getElementById('avatar-initials').textContent = profile.initials || '?';
   const el = document.getElementById('master-greeting');
-  if (el) el.textContent = masterGreeting();
+  if (el) {
+    const h = new Date().getHours();
+    const salutation = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
+    el.innerHTML = `<span style="font-size:10px;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase">${salutation}</span><br><span style="font-size:18px;font-weight:300;color:var(--gold);letter-spacing:0.05em">${profile.name || 'friend'}</span>`;
+  }
 }
 
 function openProfileModal() {
