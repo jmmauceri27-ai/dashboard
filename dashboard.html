@@ -1190,6 +1190,34 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       <button class="btn btn-green" onclick="saveProfile()">Save</button>
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 14px">
+    <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase">Cloud Sync</div>
+    <div id="sb-setup-wrap">
+      <div class="modal-row">
+        <label>Supabase Project URL</label>
+        <input class="fi" id="sb-url-input" style="width:100%" placeholder="https://xxxx.supabase.co" />
+      </div>
+      <div class="modal-row">
+        <label>Anon Key</label>
+        <input class="fi" id="sb-key-input" style="width:100%" type="password" placeholder="eyJ…" />
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn btn-green" style="flex:1" onclick="saveSupabaseConfig()">Connect</button>
+        <button class="btn" style="flex:1" onclick="sbPullNow()">Pull from Cloud</button>
+      </div>
+    </div>
+    <div id="sb-status" style="font-size:0.8rem;margin-top:8px;color:var(--text-muted);display:none"></div>
+    <div id="sb-connected-wrap" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--green)">● Connected</span>
+        <span id="sb-last-sync" style="font-size:9px;color:var(--text-dim)"></span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" style="flex:1" onclick="sbPushNow()">Push All</button>
+        <button class="btn" style="flex:1" onclick="sbPullNow()">Pull from Cloud</button>
+        <button class="btn btn-cancel" style="flex:1" onclick="disconnectSupabase()">Disconnect</button>
+      </div>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 14px">
     <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase">Data Backup</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" style="flex:1;min-width:120px" onclick="exportData()">Export Data</button>
@@ -1271,7 +1299,160 @@ lockInit();
 // ── UTILS ──────────────────────────────────────────────────────────
 const TODAY = new Date().toISOString().split('T')[0];
 function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }
-function save(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
+// ── SUPABASE SYNC ──────────────────────────────────────────────────
+const SB_SKIP = new Set(['meridian_pw_hash','meridian_oura_token','meridian_supabase_url','meridian_supabase_key','meridian_usda_key']);
+
+function sbUrl()  { return localStorage.getItem('meridian_supabase_url') || ''; }
+function sbKey()  { return localStorage.getItem('meridian_supabase_key') || ''; }
+function sbReady(){ return !!(sbUrl() && sbKey()); }
+
+function sbHeaders() {
+  return { 'apikey': sbKey(), 'Authorization': `Bearer ${sbKey()}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' };
+}
+
+let sbDebounceTimer = null;
+const sbPendingKeys = new Set();
+
+function save(k, v) {
+  localStorage.setItem(k, JSON.stringify(v));
+  if (sbReady() && !SB_SKIP.has(k)) {
+    sbPendingKeys.add(k);
+    clearTimeout(sbDebounceTimer);
+    sbDebounceTimer = setTimeout(sbFlush, 1500);
+  }
+}
+
+async function sbFlush() {
+  if (!sbReady() || !sbPendingKeys.size) return;
+  const rows = [];
+  for (const k of sbPendingKeys) {
+    const raw = localStorage.getItem(k);
+    if (raw !== null) {
+      try { rows.push({ key: k, value: JSON.parse(raw), updated_at: new Date().toISOString() }); }
+      catch { rows.push({ key: k, value: raw, updated_at: new Date().toISOString() }); }
+    }
+  }
+  sbPendingKeys.clear();
+  if (!rows.length) return;
+  try {
+    await fetch(`${sbUrl()}/rest/v1/dashboard_data`, {
+      method: 'POST', headers: sbHeaders(), body: JSON.stringify(rows),
+    });
+    sbSetLastSync();
+  } catch {}
+}
+
+async function sbPushNow() {
+  if (!sbReady()) return;
+  setSbStatus('Pushing…', 'var(--text-muted)');
+  const rows = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k.startsWith('meridian_') || SB_SKIP.has(k)) continue;
+    const raw = localStorage.getItem(k);
+    try { rows.push({ key: k, value: JSON.parse(raw), updated_at: new Date().toISOString() }); }
+    catch { rows.push({ key: k, value: raw, updated_at: new Date().toISOString() }); }
+  }
+  try {
+    const res = await fetch(`${sbUrl()}/rest/v1/dashboard_data`, {
+      method: 'POST', headers: sbHeaders(), body: JSON.stringify(rows),
+    });
+    if (!res.ok) throw new Error(res.status);
+    sbSetLastSync();
+    setSbStatus(`Pushed ${rows.length} keys ✓`, 'var(--green)');
+  } catch(e) {
+    setSbStatus(`Push failed: ${e.message}`, 'var(--red)');
+  }
+}
+
+async function sbPullNow() {
+  const url  = (document.getElementById('sb-url-input')?.value.trim()) || sbUrl();
+  const key  = (document.getElementById('sb-key-input')?.value.trim()) || sbKey();
+  if (!url || !key) { setSbStatus('Enter URL and key first.', 'var(--red)'); return; }
+  setSbStatus('Pulling from cloud…', 'var(--text-muted)');
+  try {
+    const res = await fetch(`${url}/rest/v1/dashboard_data?select=key,value`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` },
+    });
+    if (!res.ok) throw new Error(res.status);
+    const rows = await res.json();
+    rows.forEach(r => {
+      if (r.key.startsWith('meridian_') && !SB_SKIP.has(r.key))
+        localStorage.setItem(r.key, typeof r.value === 'string' ? r.value : JSON.stringify(r.value));
+    });
+    setSbStatus(`Pulled ${rows.length} keys. Reloading…`, 'var(--green)');
+    setTimeout(() => location.reload(), 1200);
+  } catch(e) {
+    setSbStatus(`Pull failed: ${e.message}`, 'var(--red)');
+  }
+}
+
+function saveSupabaseConfig() {
+  const url = document.getElementById('sb-url-input').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('sb-key-input').value.trim();
+  if (!url || !key) { setSbStatus('Both fields required.', 'var(--red)'); return; }
+  localStorage.setItem('meridian_supabase_url', url);
+  localStorage.setItem('meridian_supabase_key', key);
+  renderSbState();
+  sbPushNow();
+}
+
+function disconnectSupabase() {
+  localStorage.removeItem('meridian_supabase_url');
+  localStorage.removeItem('meridian_supabase_key');
+  renderSbState();
+  setSbStatus('Disconnected.', 'var(--text-muted)');
+}
+
+function setSbStatus(msg, color) {
+  const el = document.getElementById('sb-status');
+  if (!el) return;
+  el.textContent = msg; el.style.color = color; el.style.display = 'block';
+}
+
+function sbSetLastSync() {
+  const el = document.getElementById('sb-last-sync');
+  if (el) el.textContent = 'Last sync ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+
+function renderSbState() {
+  const connected = sbReady();
+  const setupWrap = document.getElementById('sb-setup-wrap');
+  const connWrap  = document.getElementById('sb-connected-wrap');
+  if (!setupWrap || !connWrap) return;
+  if (connected) {
+    setupWrap.style.display = 'none';
+    connWrap.style.display  = 'block';
+  } else {
+    setupWrap.style.display = 'block';
+    connWrap.style.display  = 'none';
+    const urlEl = document.getElementById('sb-url-input');
+    const keyEl = document.getElementById('sb-key-input');
+    if (urlEl) urlEl.value = sbUrl();
+    if (keyEl) keyEl.value = sbKey();
+  }
+}
+
+// pull on load if configured
+if (sbReady()) {
+  (async () => {
+    try {
+      const res = await fetch(`${sbUrl()}/rest/v1/dashboard_data?select=key,value`, {
+        headers: { 'apikey': sbKey(), 'Authorization': `Bearer ${sbKey()}` },
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        rows.forEach(r => {
+          if (r.key.startsWith('meridian_') && !SB_SKIP.has(r.key))
+            localStorage.setItem(r.key, typeof r.value === 'string' ? r.value : JSON.stringify(r.value));
+        });
+      }
+    } catch {}
+  })();
+}
+// ── END SUPABASE ───────────────────────────────────────────────────
+
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -1312,6 +1493,8 @@ function openProfileModal() {
   document.getElementById('goal-protein').value     = profile.goalProtein;
   document.getElementById('goal-carbs-in').value    = profile.goalCarbs;
   document.getElementById('goal-fat-in').value      = profile.goalFat;
+  renderSbState();
+  document.getElementById('sb-status').style.display = 'none';
   document.getElementById('profile-modal').classList.add('open');
 }
 
