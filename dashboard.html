@@ -319,6 +319,11 @@ body > * { position: relative; z-index: 1; }
 .p-due { font-size: 9px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; }
 .p-due.today { color: var(--gold); }
 .p-due.week  { color: var(--text-muted); }
+.priority-item[draggable="true"] { cursor: grab; }
+.priority-item[draggable="true"]:active { cursor: grabbing; }
+.priority-item.dragging { opacity: 0.35; }
+.priority-item.drag-over-top { border-top: 2px solid var(--gold) !important; padding-top: 6px; }
+.priority-item.drag-over-bot { border-bottom: 2px solid var(--gold) !important; padding-bottom: 6px; }
 
 /* ── CRM VIEW ── */
 .crm-view { display: none; max-width: 860px; margin: 0 auto; padding: 12px; min-height: calc(100vh - 54px); }
@@ -2210,12 +2215,12 @@ const TAG_CLS = {
   HEALTH:'badge-teal', FINANCE:'badge-yellow',
 };
 
-function taskItemHTML(t, showDue = false) {
+function taskItemHTML(t, showDue = false, draggable = false) {
   const dueLabel = showDue && t.due === 'today' ? `<span class="p-due today">Today</span>`
                  : showDue && t.due === 'week'  ? `<span class="p-due week">This Week</span>`
                  : '';
   return `
-    <div class="priority-item">
+    <div class="priority-item" ${draggable ? `draggable="true" data-id="${t.id}"` : ''}>
       <div class="p-star ${t.starred ? 'on' : ''}" onclick="starTask(${t.id})" title="Star">★</div>
       <div class="p-checkbox ${t.done ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
       <div class="p-content">
@@ -2265,12 +2270,78 @@ function renderCRM() {
   [['today', 'crm-today-list', 'crm-today-count'],
    ['week',  'crm-week-list',  'crm-week-count'],
    ['backlog','crm-backlog-list','crm-backlog-count']].forEach(([key, listId, countId]) => {
-    const sorted = sortTasks(groups[key]);
-    const total  = sorted.length, done = sorted.filter(t => t.done).length;
-    document.getElementById(countId).textContent = total ? `${done}/${total}` : '';
-    document.getElementById(listId).innerHTML = sorted.length
-      ? sorted.map(t => taskItemHTML(t, false)).join('')
+    // respect manual drag order; only push done tasks to bottom
+    const active = groups[key].filter(t => !t.done);
+    const done   = groups[key].filter(t => t.done);
+    const list   = [...active, ...done];
+    const total  = list.length, doneCount = done.length;
+    document.getElementById(countId).textContent = total ? `${doneCount}/${total}` : '';
+    document.getElementById(listId).innerHTML = list.length
+      ? list.map(t => taskItemHTML(t, false, true)).join('')
       : `<div class="empty-state" style="padding:10px 0;font-size:11px">No tasks here.</div>`;
+  });
+}
+
+let dragSrcId = null;
+
+function initCRMDrag() {
+  ['crm-today-list','crm-week-list','crm-backlog-list'].forEach(containerId => {
+    const el = document.getElementById(containerId);
+    if (!el || el._dragInit) return;
+    el._dragInit = true;
+
+    el.addEventListener('dragstart', e => {
+      const item = e.target.closest('[draggable="true"]');
+      if (!item) return;
+      dragSrcId = parseInt(item.dataset.id);
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => item.classList.add('dragging'), 0);
+    });
+
+    el.addEventListener('dragend', () => {
+      el.querySelectorAll('.priority-item').forEach(i =>
+        i.classList.remove('dragging', 'drag-over-top', 'drag-over-bot'));
+      dragSrcId = null;
+    });
+
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const item = e.target.closest('[draggable="true"]');
+      el.querySelectorAll('.priority-item').forEach(i =>
+        i.classList.remove('drag-over-top', 'drag-over-bot'));
+      if (!item || parseInt(item.dataset.id) === dragSrcId) return;
+      const rect = item.getBoundingClientRect();
+      const mid  = rect.top + rect.height / 2;
+      item.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bot');
+    });
+
+    el.addEventListener('dragleave', e => {
+      if (!el.contains(e.relatedTarget))
+        el.querySelectorAll('.priority-item').forEach(i =>
+          i.classList.remove('drag-over-top', 'drag-over-bot'));
+    });
+
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const item = e.target.closest('[draggable="true"]');
+      if (!item || dragSrcId == null) return;
+      const targetId = parseInt(item.dataset.id);
+      if (targetId === dragSrcId) return;
+
+      const rect    = item.getBoundingClientRect();
+      const before  = e.clientY < rect.top + rect.height / 2;
+      const srcIdx  = tasks.findIndex(t => t.id === dragSrcId);
+      let   tgtIdx  = tasks.findIndex(t => t.id === targetId);
+      if (srcIdx === -1 || tgtIdx === -1) return;
+
+      const [removed] = tasks.splice(srcIdx, 1);
+      tgtIdx = tasks.findIndex(t => t.id === targetId);
+      tasks.splice(before ? tgtIdx : tgtIdx + 1, 0, removed);
+      save('meridian_tasks', tasks);
+      renderCRM();
+      renderTasks();
+    });
   });
 }
 
@@ -2309,6 +2380,7 @@ function addTask(fromCRM = false) {
 }
 
 renderTasks(); renderCRM();
+document.addEventListener('DOMContentLoaded', initCRMDrag);
 
 // ── NUTRITION ─────────────────────────────────────────────────────
 let mealsData = load('meridian_meals', { date: null, meals: [] });
@@ -3036,6 +3108,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     if (label === 'CRM') {
       crmView.classList.add('active');
       renderCRM();
+      initCRMDrag();
     } else if (label === 'Journal') {
       journalView.classList.add('active');
       openTodayEntry();
