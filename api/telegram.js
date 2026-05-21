@@ -109,17 +109,13 @@ async function routeEntry(type, transcription) {
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
-  // Always return 200 so Telegram doesn't retry endlessly
-  res.status(200).json({ ok: true });
-
-  if (req.method !== 'POST') return;
+  if (req.method !== 'POST') return res.status(405).end();
 
   let update = req.body;
-  // Manually parse body if Vercel didn't do it
   if (typeof update === 'string') {
-    try { update = JSON.parse(update); } catch { return; }
+    try { update = JSON.parse(update); } catch { return res.status(200).end(); }
   }
-  if (!update) return;
+  if (!update) return res.status(200).end();
 
   try {
     // ── Button press ──
@@ -136,7 +132,7 @@ export default async function handler(req, res) {
 
       if (!transcription) {
         await sendMessage(chatId, '⚠️ Could not read the transcription. Please try again.');
-        return;
+        return res.status(200).end();
       }
 
       const confirmation = await routeEntry(type, transcription);
@@ -144,18 +140,18 @@ export default async function handler(req, res) {
         chat_id: chatId, message_id: cq.message.message_id,
         text: `✅ ${confirmation}\n\n"${transcription}"`,
       });
-      return;
+      return res.status(200).end();
     }
 
     // ── Voice message ──
     const msg = update.message;
-    if (!msg) return;
+    if (!msg) return res.status(200).end();
 
     if (msg.voice || msg.audio) {
       const chatId = msg.chat.id;
       const fileId = (msg.voice || msg.audio).file_id;
 
-      const sentMsg = await sendMessage(chatId, '🎙 Transcribing…');
+      const sentMsg  = await sendMessage(chatId, '🎙 Transcribing…');
       const botMsgId = sentMsg?.result?.message_id;
 
       let transcription;
@@ -163,7 +159,7 @@ export default async function handler(req, res) {
         transcription = await transcribe(fileId);
       } catch (e) {
         await sendMessage(chatId, `❌ Transcription failed: ${e.message}`);
-        return;
+        return res.status(200).end();
       }
 
       const replyBody = {
@@ -183,7 +179,7 @@ export default async function handler(req, res) {
       } else {
         await tgPost('sendMessage', replyBody);
       }
-      return;
+      return res.status(200).end();
     }
 
     // ── Any other message ──
@@ -192,7 +188,8 @@ export default async function handler(req, res) {
     }
 
   } catch (e) {
-    // Swallow errors — 200 already sent
     console.error('Telegram handler error:', e.message);
   }
+
+  return res.status(200).end();
 }
