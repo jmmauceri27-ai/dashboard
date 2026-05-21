@@ -97,6 +97,9 @@ async function transcribe(fileId) {
     body: form,
   });
   const whisperData = await whisperRes.json();
+  if (!whisperData.text) {
+    throw new Error(whisperData.error?.message || `Whisper returned no text (status ${whisperRes.status})`);
+  }
   return whisperData.text;
 }
 
