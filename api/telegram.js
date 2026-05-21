@@ -146,28 +146,30 @@ export default async function handler(req, res) {
 
   // Button press — route the transcription
   if (update.callback_query) {
-    const cq     = update.callback_query;
-    const [type, msgId] = cq.data.split(':');
-    const chatId = cq.message.chat.id;
+    const cq      = update.callback_query;
+    const type    = cq.data;
+    const chatId  = cq.message.chat.id;
+    const msgText = cq.message.text || '';
 
     await answerCallback(cq.id, 'Saving…');
 
-    const transcription = await getPending(parseInt(msgId), chatId);
+    // Extract transcription from the bot's own message text (between the quotes)
+    const match = msgText.match(/“([^”]+)”/) || msgText.match(/"([^"]+)"/);
+    const transcription = match ? match[1] : null;
+
     if (!transcription) {
       await tgPost('editMessageText', {
         chat_id: chatId, message_id: cq.message.message_id,
-        text: '⚠️ Could not find the transcription. Please try again.',
+        text: '⚠️ Could not read the transcription. Please try again.',
       });
       return res.status(200).json({ ok: true });
     }
 
     const confirmation = await routeEntry(type, transcription);
-    await deletePending(parseInt(msgId), chatId);
 
     await tgPost('editMessageText', {
       chat_id: chatId, message_id: cq.message.message_id,
-      text: `✅ ${confirmation}\n\n_"${transcription}"_`,
-      parse_mode: 'Markdown',
+      text: `✅ ${confirmation}\n\n"${transcription}"`,
     });
 
     return res.status(200).json({ ok: true });
@@ -191,20 +193,16 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    // Store pending transcription
-    await savePending(msg.message_id, chatId, transcription);
-
     // Send transcription with routing buttons
     await tgPost('editMessageText', {
       chat_id: chatId,
       message_id: thinking.result.message_id,
-      text: `📝 *Transcription:*\n_"${transcription}"_\n\nWhere should I save this?`,
-      parse_mode: 'Markdown',
+      text: `📝 Transcription:\n"${transcription}"\n\nWhere should I save this?`,
       reply_markup: {
         inline_keyboard: [[
-          { text: '📋 Task',    callback_data: `task:${msg.message_id}` },
-          { text: '📓 Journal', callback_data: `journal:${msg.message_id}` },
-          { text: '🗒 Note',   callback_data: `note:${msg.message_id}` },
+          { text: '📋 Task',    callback_data: 'task' },
+          { text: '📓 Journal', callback_data: 'journal' },
+          { text: '🗒 Note',   callback_data: 'note' },
         ]],
       },
     });
