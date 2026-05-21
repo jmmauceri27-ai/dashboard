@@ -1080,6 +1080,15 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       </div>
     </div>
 
+    <!-- VOICE NOTES -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot" style="background:var(--pink)"></span>Voice Notes</div>
+        <span class="badge" style="background:rgba(196,120,152,0.15);color:var(--pink);border-color:rgba(196,120,152,0.3)">TELEGRAM</span>
+      </div>
+      <div id="voice-notes-list"><div class="empty-state">No voice notes yet — send a voice message to your Telegram bot.</div></div>
+    </div>
+
   </div><!-- /col right -->
 
 </div><!-- /dashboard -->
@@ -2650,6 +2659,39 @@ document.addEventListener('click', e => {
 });
 
 renderNutrition();
+
+// ── VOICE NOTES ───────────────────────────────────────────────────
+function renderVoiceNotes() {
+  const notes = load('meridian_voice_notes', []);
+  const el = document.getElementById('voice-notes-list');
+  if (!notes.length) {
+    el.innerHTML = `<div class="empty-state">No voice notes yet — send a voice message to your Telegram bot.</div>`;
+    return;
+  }
+  el.innerHTML = notes.map(n => `
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);last-child:border-none">
+      <div style="font-size:11px;color:var(--text);font-weight:300;line-height:1.5">${esc(n.text)}</div>
+      <div style="font-size:9px;color:var(--text-dim);margin-top:3px">${n.date || ''}</div>
+    </div>`).join('');
+}
+
+async function refreshVoiceNotes() {
+  if (!sbReady()) return;
+  try {
+    const r = await fetch(`${sbUrl()}/rest/v1/dashboard_data?key=eq.meridian_voice_notes&select=value`, {
+      headers: { apikey: sbKey(), Authorization: `Bearer ${sbKey()}` },
+    });
+    const rows = await r.json();
+    if (rows?.[0]?.value) {
+      localStorage.setItem('meridian_voice_notes', JSON.stringify(rows[0].value));
+      renderVoiceNotes();
+    }
+  } catch {}
+}
+
+renderVoiceNotes();
+setInterval(refreshVoiceNotes, 60000); // poll every 60s
+refreshVoiceNotes();
 
 // ── GRATITUDE ─────────────────────────────────────────────────────
 let gratData = load('meridian_gratitude', {});
