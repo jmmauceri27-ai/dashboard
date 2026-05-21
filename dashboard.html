@@ -2090,7 +2090,7 @@ function renderHabits() {
 
   let html = `<div class="habit-day-labels"><div style="width:18px;flex-shrink:0"></div><div style="flex:1"></div><div style="width:26px;flex-shrink:0"></div><div style="display:flex;gap:3px">`;
   labels.forEach(l => html += `<div class="habit-day-lbl">${l}</div>`);
-  html += `</div></div>`;
+  html += `</div><button class="del-btn" style="visibility:hidden;pointer-events:none">✕</button></div>`;
 
   habits.forEach(h => {
     const streak = calcHabitStreak(h.id);
