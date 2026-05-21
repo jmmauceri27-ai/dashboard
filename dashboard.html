@@ -282,8 +282,8 @@ body > * { position: relative; z-index: 1; }
 .stat-lbl { font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 5px; }
 
 /* ── HABITS ── */
-.habit-day-labels { display: flex; justify-content: flex-end; gap: 3px; margin-bottom: 3px; }
-.habit-day-lbl { width: 12px; text-align: center; font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.habit-day-labels { display: flex; gap: 8px; margin-bottom: 3px; }
+.habit-day-lbl { width: 11px; text-align: center; font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
 .habit-row {
   display: flex; align-items: center; gap: 8px;
   padding: 7px 0; border-bottom: 1px solid var(--border);
@@ -2088,9 +2088,9 @@ function renderHabits() {
   const c = document.getElementById('habits-container');
   if (!habits.length) { c.innerHTML = `<div class="empty-state">No habits yet — add one below.</div>`; return; }
 
-  let html = `<div class="habit-day-labels"><div style="flex:1"></div><div style="width:26px"></div>`;
+  let html = `<div class="habit-day-labels"><div style="width:18px;flex-shrink:0"></div><div style="flex:1"></div><div style="width:26px;flex-shrink:0"></div><div style="display:flex;gap:3px">`;
   labels.forEach(l => html += `<div class="habit-day-lbl">${l}</div>`);
-  html += `</div>`;
+  html += `</div></div>`;
 
   habits.forEach(h => {
     const streak = calcHabitStreak(h.id);
