@@ -1,5 +1,3 @@
-export const config = { api: { bodyParser: true } };
-
 const TG   = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 const SB   = process.env.SUPABASE_URL;
 const SKEY = process.env.SUPABASE_ANON_KEY;
@@ -20,8 +18,8 @@ function sendMessage(chatId, text, extra = {}) {
   return tgPost('sendMessage', { chat_id: chatId, text, ...extra });
 }
 
-function answerCallback(callbackQueryId, text = '') {
-  return tgPost('answerCallbackQuery', { callback_query_id: callbackQueryId, text });
+function answerCallback(id, text = '') {
+  return tgPost('answerCallbackQuery', { callback_query_id: id, text });
 }
 
 // ── Supabase helpers ──────────────────────────────────────────────────────────
@@ -51,54 +49,28 @@ async function sbSet(key, value) {
   });
 }
 
-async function savePending(messageId, chatId, transcription) {
-  await fetch(`${SB}/rest/v1/voice_pending`, {
-    method: 'POST',
-    headers: sbHeaders(),
-    body: JSON.stringify({ message_id: messageId, chat_id: chatId, transcription }),
-  });
-}
-
-async function getPending(messageId, chatId) {
-  const r = await fetch(
-    `${SB}/rest/v1/voice_pending?message_id=eq.${messageId}&chat_id=eq.${chatId}&select=transcription`,
-    { headers: { apikey: SKEY, Authorization: `Bearer ${SKEY}` } }
-  );
-  const rows = await r.json();
-  return rows?.[0]?.transcription ?? null;
-}
-
-async function deletePending(messageId, chatId) {
-  await fetch(`${SB}/rest/v1/voice_pending?message_id=eq.${messageId}&chat_id=eq.${chatId}`, {
-    method: 'DELETE',
-    headers: { apikey: SKEY, Authorization: `Bearer ${SKEY}` },
-  });
-}
-
 // ── Whisper transcription ─────────────────────────────────────────────────────
 
 async function transcribe(fileId) {
-  // Get file path from Telegram
-  const fileRes = await fetch(`${TG}/getFile?file_id=${fileId}`);
+  const fileRes  = await fetch(`${TG}/getFile?file_id=${fileId}`);
   const fileData = await fileRes.json();
-  const audioRes = await fetch(
-    `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileData.result.file_path}`
-  );
+  if (!fileData.result?.file_path) throw new Error('Could not get file from Telegram');
+
+  const audioRes    = await fetch(`https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileData.result.file_path}`);
   const audioBuffer = await audioRes.arrayBuffer();
 
-  // Send to Whisper
   const form = new FormData();
   form.append('file', new Blob([audioBuffer], { type: 'audio/ogg' }), 'voice.ogg');
   form.append('model', 'whisper-1');
 
-  const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+  const whisperRes  = await fetch('https://api.openai.com/v1/audio/transcriptions', {
     method: 'POST',
     headers: { Authorization: `Bearer ${OKEY}` },
     body: form,
   });
   const whisperData = await whisperRes.json();
   if (!whisperData.text) {
-    throw new Error(whisperData.error?.message || `Whisper returned no text (status ${whisperRes.status})`);
+    throw new Error(whisperData.error?.message || `Whisper error (HTTP ${whisperRes.status})`);
   }
   return whisperData.text;
 }
@@ -111,21 +83,13 @@ async function routeEntry(type, transcription) {
   if (type === 'task') {
     const tasks = (await sbGet('meridian_tasks')) || [];
     const maxId = tasks.length ? Math.max(...tasks.map(t => t.id || 0)) : 0;
-    tasks.push({
-      id: maxId + 1,
-      text: transcription,
-      tag: 'PERSONAL',
-      due: 'someday',
-      done: false,
-      starred: false,
-      time: '',
-    });
+    tasks.push({ id: maxId + 1, text: transcription, tag: 'PERSONAL', due: 'someday', done: false, starred: false, time: '' });
     await sbSet('meridian_tasks', tasks);
     return 'Added to your task list.';
   }
 
   if (type === 'journal') {
-    const journal = (await sbGet('meridian_journal')) || {};
+    const journal  = (await sbGet('meridian_journal')) || {};
     const existing = journal[today] || '';
     journal[today] = existing ? `${existing}\n\n${transcription}` : transcription;
     await sbSet('meridian_journal', journal);
@@ -135,85 +99,100 @@ async function routeEntry(type, transcription) {
   if (type === 'note') {
     const notes = (await sbGet('meridian_voice_notes')) || [];
     notes.unshift({ text: transcription, date: today, ts: Date.now() });
-    await sbSet('meridian_voice_notes', notes.slice(0, 50)); // keep last 50
+    await sbSet('meridian_voice_notes', notes.slice(0, 50));
     return 'Saved as a voice note.';
   }
+
+  return 'Saved.';
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
+  // Always return 200 so Telegram doesn't retry endlessly
+  res.status(200).json({ ok: true });
 
-  const update = req.body;
+  if (req.method !== 'POST') return;
 
-  // Button press — route the transcription
-  if (update.callback_query) {
-    const cq      = update.callback_query;
-    const type    = cq.data;
-    const chatId  = cq.message.chat.id;
-    const msgText = cq.message.text || '';
+  let update = req.body;
+  // Manually parse body if Vercel didn't do it
+  if (typeof update === 'string') {
+    try { update = JSON.parse(update); } catch { return; }
+  }
+  if (!update) return;
 
-    await answerCallback(cq.id, 'Saving…');
+  try {
+    // ── Button press ──
+    if (update.callback_query) {
+      const cq      = update.callback_query;
+      const type    = cq.data;
+      const chatId  = cq.message.chat.id;
+      const msgText = cq.message.text || '';
 
-    // Extract transcription from the bot's own message text (between the quotes)
-    const match = msgText.match(/“([^”]+)”/) || msgText.match(/"([^"]+)"/);
-    const transcription = match ? match[1] : null;
+      await answerCallback(cq.id, 'Saving…');
 
-    if (!transcription) {
+      const match        = msgText.match(/"([^"]+)"/);
+      const transcription = match ? match[1] : null;
+
+      if (!transcription) {
+        await sendMessage(chatId, '⚠️ Could not read the transcription. Please try again.');
+        return;
+      }
+
+      const confirmation = await routeEntry(type, transcription);
       await tgPost('editMessageText', {
         chat_id: chatId, message_id: cq.message.message_id,
-        text: '⚠️ Could not read the transcription. Please try again.',
+        text: `✅ ${confirmation}\n\n"${transcription}"`,
       });
-      return res.status(200).json({ ok: true });
+      return;
     }
 
-    const confirmation = await routeEntry(type, transcription);
+    // ── Voice message ──
+    const msg = update.message;
+    if (!msg) return;
 
-    await tgPost('editMessageText', {
-      chat_id: chatId, message_id: cq.message.message_id,
-      text: `✅ ${confirmation}\n\n"${transcription}"`,
-    });
+    if (msg.voice || msg.audio) {
+      const chatId = msg.chat.id;
+      const fileId = (msg.voice || msg.audio).file_id;
 
-    return res.status(200).json({ ok: true });
-  }
+      const sentMsg = await sendMessage(chatId, '🎙 Transcribing…');
+      const botMsgId = sentMsg?.result?.message_id;
 
-  // Voice message
-  const msg = update.message;
-  if (!msg) return res.status(200).json({ ok: true });
+      let transcription;
+      try {
+        transcription = await transcribe(fileId);
+      } catch (e) {
+        await sendMessage(chatId, `❌ Transcription failed: ${e.message}`);
+        return;
+      }
 
-  if (msg.voice || msg.audio) {
-    const chatId = msg.chat.id;
-    const fileId = (msg.voice || msg.audio).file_id;
+      const replyBody = {
+        chat_id: chatId,
+        text: `📝 Transcription:\n"${transcription}"\n\nWhere should I save this?`,
+        reply_markup: {
+          inline_keyboard: [[
+            { text: '📋 Task',    callback_data: 'task' },
+            { text: '📓 Journal', callback_data: 'journal' },
+            { text: '🗒 Note',   callback_data: 'note' },
+          ]],
+        },
+      };
 
-    const thinking = await sendMessage(chatId, '🎙 Transcribing…');
-
-    let transcription;
-    try {
-      transcription = await transcribe(fileId);
-    } catch (e) {
-      await sendMessage(chatId, `❌ Transcription failed: ${e.message}`);
-      return res.status(200).json({ ok: true });
+      if (botMsgId) {
+        await tgPost('editMessageText', { ...replyBody, message_id: botMsgId });
+      } else {
+        await tgPost('sendMessage', replyBody);
+      }
+      return;
     }
 
-    // Send transcription with routing buttons
-    await tgPost('editMessageText', {
-      chat_id: chatId,
-      message_id: thinking.result.message_id,
-      text: `📝 Transcription:\n"${transcription}"\n\nWhere should I save this?`,
-      reply_markup: {
-        inline_keyboard: [[
-          { text: '📋 Task',    callback_data: 'task' },
-          { text: '📓 Journal', callback_data: 'journal' },
-          { text: '🗒 Note',   callback_data: 'note' },
-        ]],
-      },
-    });
+    // ── Any other message ──
+    if (msg.chat?.id) {
+      await sendMessage(msg.chat.id, '🎙 Send me a voice message and I\'ll transcribe it to your dashboard.');
+    }
 
-    return res.status(200).json({ ok: true });
+  } catch (e) {
+    // Swallow errors — 200 already sent
+    console.error('Telegram handler error:', e.message);
   }
-
-  // Any other message
-  await sendMessage(msg.chat.id, '🎙 Send me a voice message and I\'ll transcribe it to your dashboard.');
-  return res.status(200).json({ ok: true });
 }
