@@ -2077,6 +2077,11 @@ function refreshFinanceView() {
 // ── HABITS ────────────────────────────────────────────────────────
 let habits   = load('meridian_habits', []);
 let habitLog = load('meridian_habit_log', {});
+if (!habits.find(h => h.name === 'Bible Study')) {
+  const maxId = habits.length ? Math.max(...habits.map(h => h.id)) : 0;
+  habits.push({ id: maxId + 1, name: 'Bible Study', icon: '📖' });
+  save('meridian_habits', habits);
+}
 let nextHid  = Math.max(0, ...habits.map(h => h.id)) + 1;
 
 function getWeekDates() {
