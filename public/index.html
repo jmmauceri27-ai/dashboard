@@ -2106,6 +2106,8 @@ function getWeekDates() {
 function calcHabitStreak(id) {
   let streak = 0;
   const d = new Date();
+  const todayKey = d.toISOString().split('T')[0];
+  if (!(habitLog[todayKey] || {})[id]) d.setDate(d.getDate() - 1);
   while (streak < 365) {
     const key = d.toISOString().split('T')[0];
     if ((habitLog[key] || {})[id]) { streak++; d.setDate(d.getDate() - 1); } else break;
