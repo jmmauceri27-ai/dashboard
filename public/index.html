@@ -1644,6 +1644,22 @@ if (sbReady()) {
             changed = true;
           }
         });
+        // Seed Bible Study after remote data is applied; push before any reload so loop can't form
+        try {
+          const habitsRaw = localStorage.getItem('meridian_habits');
+          if (habitsRaw) {
+            const h = JSON.parse(habitsRaw);
+            if (!h.find(x => x.name === 'Bible Study')) {
+              const maxId = h.length ? Math.max(...h.map(x => x.id || 0)) : 0;
+              h.push({ id: maxId + 1, name: 'Bible Study', icon: '📖' });
+              localStorage.setItem('meridian_habits', JSON.stringify(h));
+              await fetch(`${sbUrl()}/rest/v1/dashboard_data`, {
+                method: 'POST', headers: sbHeaders(),
+                body: JSON.stringify([{ key: 'meridian_habits', value: h, updated_at: new Date().toISOString() }]),
+              });
+            }
+          }
+        } catch {}
         if (changed) location.reload();
       }
     } catch {}
@@ -2077,11 +2093,6 @@ function refreshFinanceView() {
 // ── HABITS ────────────────────────────────────────────────────────
 let habits   = load('meridian_habits', []);
 let habitLog = load('meridian_habit_log', {});
-if (!habits.find(h => h.name === 'Bible Study')) {
-  const maxId = habits.length ? Math.max(...habits.map(h => h.id)) : 0;
-  habits.push({ id: maxId + 1, name: 'Bible Study', icon: '📖' });
-  save('meridian_habits', habits);
-}
 let nextHid  = Math.max(0, ...habits.map(h => h.id)) + 1;
 
 function getWeekDates() {
