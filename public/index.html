@@ -1095,6 +1095,19 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       <div id="voice-notes-list"><div class="empty-state">No voice notes yet — send a voice message to your Telegram bot.</div></div>
     </div>
 
+    <!-- MENTAL -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot" style="background:var(--purple)"></span>Mental</div>
+        <span class="badge" style="background:var(--purple-bg);color:var(--purple);border-color:rgba(157,133,192,0.3)">MIND</span>
+      </div>
+      <div id="mental-list"></div>
+      <div class="row-add" style="margin-top:8px">
+        <input class="fi fi-grow" id="mental-input" placeholder="Add a thought, affirmation, or intention…" onkeydown="if(event.key==='Enter')addMental()" />
+        <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid rgba(157,133,192,0.3)" onclick="addMental()">Add</button>
+      </div>
+    </div>
+
   </div><!-- /col right -->
 
 </div><!-- /dashboard -->
@@ -2698,6 +2711,39 @@ async function refreshVoiceNotes() {
 renderVoiceNotes();
 setInterval(refreshVoiceNotes, 60000); // poll every 60s
 refreshVoiceNotes();
+
+// ── MENTAL ────────────────────────────────────────────────────────
+let mentalItems = load('meridian_mental', []);
+
+function renderMental() {
+  const c = document.getElementById('mental-list');
+  if (!c) return;
+  if (!mentalItems.length) { c.innerHTML = '<div class="empty-state">Nothing added yet.</div>'; return; }
+  c.innerHTML = mentalItems.map((item, i) => `
+    <div class="grat-entry" style="display:flex;align-items:flex-start;gap:6px">
+      <span style="flex:1;font-size:12px;color:var(--text);line-height:1.5">${esc(item.text)}</span>
+      <span style="font-size:9px;color:var(--text-dim);white-space:nowrap;padding-top:2px">${item.date || ''}</span>
+      <button class="del-btn" style="opacity:1" onclick="deleteMental(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addMental() {
+  const input = document.getElementById('mental-input');
+  const text = input.value.trim();
+  if (!text) return;
+  mentalItems.unshift({ text, date: TODAY });
+  save('meridian_mental', mentalItems);
+  input.value = '';
+  renderMental();
+}
+
+function deleteMental(i) {
+  mentalItems.splice(i, 1);
+  save('meridian_mental', mentalItems);
+  renderMental();
+}
+
+renderMental();
 
 // ── GRATITUDE ─────────────────────────────────────────────────────
 let gratData = load('meridian_gratitude', {});
