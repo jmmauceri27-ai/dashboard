@@ -473,6 +473,10 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 /* ── HEALTH VIEW ── */
 .health-view { display: none; max-width: 900px; margin: 0 auto; padding: 12px; height: calc(100vh - 54px); flex-direction: column; gap: 12px; overflow-y: auto; }
 .health-view.active { display: flex; }
+.mental-view { display: none; height: calc(100vh - 54px); overflow-y: auto; }
+.mental-view.active { display: block; }
+.mental-view-inner { max-width: 680px; margin: 0 auto; padding: 20px 16px; }
+.mental-view-header { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
 .health-header { font-size: 8px; font-weight: 500; letter-spacing: 2.2px; text-transform: uppercase; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
 .health-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; position: relative; }
 .health-card::before { content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-border), transparent); }
@@ -800,6 +804,7 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
     <button class="nav-tab">Journal</button>
     <button class="nav-tab">Calendar</button>
     <button class="nav-tab">Health</button>
+    <button class="nav-tab">Mental</button>
   </nav>
   <div class="nav-right">
     <div class="clock">
@@ -1095,22 +1100,25 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       <div id="voice-notes-list"><div class="empty-state">No voice notes yet — send a voice message to your Telegram bot.</div></div>
     </div>
 
-    <!-- MENTAL -->
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title"><span class="dot" style="background:var(--purple)"></span>Mental</div>
-        <span class="badge" style="background:var(--purple-bg);color:var(--purple);border-color:rgba(157,133,192,0.3)">MIND</span>
-      </div>
-      <div id="mental-list"></div>
-      <div class="row-add" style="margin-top:8px">
-        <input class="fi fi-grow" id="mental-input" placeholder="Add a thought, affirmation, or intention…" onkeydown="if(event.key==='Enter')addMental()" />
-        <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid rgba(157,133,192,0.3)" onclick="addMental()">Add</button>
-      </div>
-    </div>
-
   </div><!-- /col right -->
 
 </div><!-- /dashboard -->
+
+<!-- ── MENTAL VIEW ── -->
+<div class="mental-view" id="mental-view">
+  <div class="mental-view-inner">
+    <div class="mental-view-header">
+      <span class="dot" style="background:var(--purple)"></span>
+      <span style="font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--text)">Mental</span>
+      <span class="badge" style="background:var(--purple-bg);color:var(--purple);border-color:rgba(157,133,192,0.3);margin-left:6px">MIND</span>
+    </div>
+    <div class="row-add" style="margin-bottom:14px">
+      <input class="fi fi-grow" id="mental-input" placeholder="Add a thought, affirmation, or intention…" onkeydown="if(event.key==='Enter')addMental()" />
+      <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid rgba(157,133,192,0.3)" onclick="addMental()">Add</button>
+    </div>
+    <div id="mental-list"></div>
+  </div>
+</div>
 
 <!-- ── CALENDAR VIEW ── -->
 <div class="calendar-view" id="calendar-view">
@@ -3469,6 +3477,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     const calendarView = document.getElementById('calendar-view');
     const healthView   = document.getElementById('health-view');
     const crmView      = document.getElementById('crm-view');
+    const mentalView   = document.getElementById('mental-view');
 
     dashboard.style.display = 'none';
     journalView.classList.remove('active');
@@ -3476,6 +3485,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     calendarView.classList.remove('active');
     healthView.classList.remove('active');
     crmView.classList.remove('active');
+    mentalView.classList.remove('active');
 
     if (label === 'CRM') {
       crmView.classList.add('active');
@@ -3499,6 +3509,10 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
       healthView.classList.add('active');
       renderHealthView();
       renderOuraSetup();
+    } else if (label === 'Mental') {
+      mentalView.classList.add('active');
+      renderMental();
+      document.getElementById('mental-input').focus();
     } else {
       dashboard.style.display = 'grid';
     }
