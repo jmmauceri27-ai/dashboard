@@ -1095,6 +1095,19 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       <div id="voice-notes-list"><div class="empty-state">No voice notes yet — send a voice message to your Telegram bot.</div></div>
     </div>
 
+    <!-- MENTAL -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot" style="background:var(--purple)"></span>Mental</div>
+        <span class="badge" style="background:var(--purple-bg);color:var(--purple);border-color:rgba(157,133,192,0.3)">MIND</span>
+      </div>
+      <div id="mental-list"></div>
+      <div class="row-add" style="margin-top:8px">
+        <input class="fi fi-grow" id="mental-input" placeholder="Add a thought, affirmation, or intention…" onkeydown="if(event.key==='Enter')addMental()" />
+        <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid rgba(157,133,192,0.3)" onclick="addMental()">Add</button>
+      </div>
+    </div>
+
   </div><!-- /col right -->
 
 </div><!-- /dashboard -->
@@ -1644,22 +1657,6 @@ if (sbReady()) {
             changed = true;
           }
         });
-        // Seed Bible Study after remote data is applied; push before any reload so loop can't form
-        try {
-          const habitsRaw = localStorage.getItem('meridian_habits');
-          if (habitsRaw) {
-            const h = JSON.parse(habitsRaw);
-            if (!h.find(x => x.name === 'Bible Study')) {
-              const maxId = h.length ? Math.max(...h.map(x => x.id || 0)) : 0;
-              h.push({ id: maxId + 1, name: 'Bible Study', icon: '📖' });
-              localStorage.setItem('meridian_habits', JSON.stringify(h));
-              await fetch(`${sbUrl()}/rest/v1/dashboard_data`, {
-                method: 'POST', headers: sbHeaders(),
-                body: JSON.stringify([{ key: 'meridian_habits', value: h, updated_at: new Date().toISOString() }]),
-              });
-            }
-          }
-        } catch {}
         if (changed) location.reload();
       }
     } catch {}
@@ -1807,7 +1804,7 @@ const SHEET_ID  = '14B-NpJPj8dN2wb5KA9hSj_omll4llBwnwJc6F9cgQHs';
 const GAPI_KEY  = 'AIzaSyBayQCbbYr2hzq9DNkQfF2uE6P2mhdr4Ws';
 const MONTH_TABS = [
   'November 2025','December 2025','January 2026','February 2026',
-  'March 2026','April 2026','May 2026','June 2026','July 2026','August 2026',
+  'March 2026','April 2026','May 2026',
 ];
 
 let finActiveMonth = '';
@@ -2106,8 +2103,6 @@ function getWeekDates() {
 function calcHabitStreak(id) {
   let streak = 0;
   const d = new Date();
-  const todayKey = d.toISOString().split('T')[0];
-  if (!(habitLog[todayKey] || {})[id]) d.setDate(d.getDate() - 1);
   while (streak < 365) {
     const key = d.toISOString().split('T')[0];
     if ((habitLog[key] || {})[id]) { streak++; d.setDate(d.getDate() - 1); } else break;
@@ -2716,6 +2711,39 @@ async function refreshVoiceNotes() {
 renderVoiceNotes();
 setInterval(refreshVoiceNotes, 60000); // poll every 60s
 refreshVoiceNotes();
+
+// ── MENTAL ────────────────────────────────────────────────────────
+let mentalItems = load('meridian_mental', []);
+
+function renderMental() {
+  const c = document.getElementById('mental-list');
+  if (!c) return;
+  if (!mentalItems.length) { c.innerHTML = '<div class="empty-state">Nothing added yet.</div>'; return; }
+  c.innerHTML = mentalItems.map((item, i) => `
+    <div class="grat-entry" style="display:flex;align-items:flex-start;gap:6px">
+      <span style="flex:1;font-size:12px;color:var(--text);line-height:1.5">${esc(item.text)}</span>
+      <span style="font-size:9px;color:var(--text-dim);white-space:nowrap;padding-top:2px">${item.date || ''}</span>
+      <button class="del-btn" style="opacity:1" onclick="deleteMental(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addMental() {
+  const input = document.getElementById('mental-input');
+  const text = input.value.trim();
+  if (!text) return;
+  mentalItems.unshift({ text, date: TODAY });
+  save('meridian_mental', mentalItems);
+  input.value = '';
+  renderMental();
+}
+
+function deleteMental(i) {
+  mentalItems.splice(i, 1);
+  save('meridian_mental', mentalItems);
+  renderMental();
+}
+
+renderMental();
 
 // ── GRATITUDE ─────────────────────────────────────────────────────
 let gratData = load('meridian_gratitude', {});
