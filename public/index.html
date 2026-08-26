@@ -475,8 +475,24 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .health-view.active { display: flex; }
 .mental-view { display: none; height: calc(100vh - 54px); overflow-y: auto; }
 .mental-view.active { display: block; }
-.mental-view-inner { max-width: 680px; margin: 0 auto; padding: 20px 16px; }
+.mental-view-inner { max-width: 720px; margin: 0 auto; padding: 20px 16px; }
 .mental-view-header { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
+.prog-section { margin-top: 28px; }
+.prog-section-title { font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
+.prog-week-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.prog-week-tab { padding: 5px 12px; border-radius: 4px; font-size: 11px; font-weight: 400; cursor: pointer; border: 1px solid var(--border); color: var(--text-dim); background: var(--surface); transition: all .15s; white-space: nowrap; }
+.prog-week-tab:hover { color: var(--text-muted); background: var(--surface2); }
+.prog-week-tab.active { background: var(--purple-bg); color: var(--purple); border-color: rgba(157,133,192,0.4); font-weight: 500; }
+.prog-week-tab.current { box-shadow: 0 0 0 1px rgba(157,133,192,0.5); }
+.prog-week-content { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; }
+.prog-week-label { font-size: 11px; font-weight: 600; color: var(--purple); margin-bottom: 4px; }
+.prog-week-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.prog-entry { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.prog-entry:last-child { border-bottom: none; }
+.prog-entry-text { flex: 1; font-size: 12px; color: var(--text); line-height: 1.55; }
+.prog-entry-date { font-size: 9px; color: var(--text-dim); white-space: nowrap; padding-top: 2px; }
+.prog-set-week { font-size: 10px; color: var(--purple); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; margin-left: auto; padding-top: 2px; }
+.prog-add-row { display: flex; gap: 8px; margin-top: 12px; }
 .health-header { font-size: 8px; font-weight: 500; letter-spacing: 2.2px; text-transform: uppercase; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
 .health-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; position: relative; }
 .health-card::before { content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-border), transparent); }
@@ -1107,6 +1123,8 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 <!-- ── MENTAL VIEW ── -->
 <div class="mental-view" id="mental-view">
   <div class="mental-view-inner">
+
+    <!-- Thoughts / affirmations -->
     <div class="mental-view-header">
       <span class="dot" style="background:var(--purple)"></span>
       <span style="font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--text)">Mental</span>
@@ -1117,6 +1135,14 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
       <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid rgba(157,133,192,0.3)" onclick="addMental()">Add</button>
     </div>
     <div id="mental-list"></div>
+
+    <!-- 7-Week Program -->
+    <div class="prog-section">
+      <div class="prog-section-title">7-Week Positivity &amp; Resilience Program</div>
+      <div class="prog-week-tabs" id="prog-week-tabs"></div>
+      <div class="prog-week-content" id="prog-week-content"></div>
+    </div>
+
   </div>
 </div>
 
@@ -2770,6 +2796,89 @@ function deleteMental(i) {
 
 renderMental();
 
+// ── 7-WEEK PROGRAM ────────────────────────────────────────────────
+const PROG_WEEKS = [
+  { week: 1, title: 'Week 1', label: 'Positive Events' },
+  { week: 2, title: 'Week 2', label: 'Strengths & Successes' },
+  { week: 3, title: 'Week 3', label: 'Gratitude' },
+  { week: 4, title: 'Week 4', label: 'Laughter & Playfulness' },
+  { week: 5, title: 'Week 5', label: 'Enjoyable & Meaningful Activities' },
+  { week: 6, title: 'Week 6', label: 'Kindness' },
+  { week: 7, title: 'Week 7', label: 'Love' },
+];
+
+let progData = load('meridian_prog7', { currentWeek: 1, weeks: {} });
+let progActiveWeek = progData.currentWeek || 1;
+
+function renderProgTabs() {
+  const el = document.getElementById('prog-week-tabs');
+  if (!el) return;
+  el.innerHTML = PROG_WEEKS.map(w => `
+    <button class="prog-week-tab${w.week === progActiveWeek ? ' active' : ''}${w.week === (progData.currentWeek||1) ? ' current' : ''}"
+      onclick="selectProgWeek(${w.week})">${w.title}</button>`).join('');
+}
+
+function renderProgContent() {
+  const el = document.getElementById('prog-week-content');
+  if (!el) return;
+  const w = PROG_WEEKS[progActiveWeek - 1];
+  const entries = (progData.weeks[progActiveWeek] || []);
+  const isCurrent = progActiveWeek === (progData.currentWeek || 1);
+  el.innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+      <div class="prog-week-label">${w.title}: ${w.label}</div>
+      ${!isCurrent ? `<span class="prog-set-week" onclick="setCurrentProgWeek(${w.week})">Set as current week</span>` : '<span style="font-size:9px;color:var(--purple);opacity:.7">● current</span>'}
+    </div>
+    <div class="prog-add-row">
+      <input class="fi fi-grow" id="prog-input" placeholder="Log a learning, insight, or reflection…" onkeydown="if(event.key==='Enter')addProgEntry()" />
+      <button class="btn" style="background:var(--purple-bg);color:var(--purple);border:1px solid rgba(157,133,192,0.3)" onclick="addProgEntry()">Add</button>
+    </div>
+    <div id="prog-entries" style="margin-top:10px">
+      ${entries.length ? entries.map((e,i) => `
+        <div class="prog-entry">
+          <div class="prog-entry-text">${esc(e.text)}</div>
+          <div class="prog-entry-date">${e.date||''}</div>
+          <button class="del-btn" style="opacity:1" onclick="deleteProgEntry(${i})">✕</button>
+        </div>`).join('') : '<div class="empty-state">No entries yet for this week.</div>'}
+    </div>`;
+}
+
+function renderProg() {
+  renderProgTabs();
+  renderProgContent();
+}
+
+function selectProgWeek(w) {
+  progActiveWeek = w;
+  renderProg();
+}
+
+function setCurrentProgWeek(w) {
+  progData.currentWeek = w;
+  progActiveWeek = w;
+  save('meridian_prog7', progData);
+  renderProg();
+}
+
+function addProgEntry() {
+  const input = document.getElementById('prog-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  if (!progData.weeks[progActiveWeek]) progData.weeks[progActiveWeek] = [];
+  progData.weeks[progActiveWeek].unshift({ text, date: TODAY });
+  save('meridian_prog7', progData);
+  input.value = '';
+  renderProgContent();
+}
+
+function deleteProgEntry(i) {
+  if (!progData.weeks[progActiveWeek]) return;
+  progData.weeks[progActiveWeek].splice(i, 1);
+  save('meridian_prog7', progData);
+  renderProgContent();
+}
+
 // ── GRATITUDE ─────────────────────────────────────────────────────
 let gratData = load('meridian_gratitude', {});
 
@@ -3512,6 +3621,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     } else if (label === 'Mental') {
       mentalView.classList.add('active');
       renderMental();
+      renderProg();
       document.getElementById('mental-input').focus();
     } else {
       dashboard.style.display = 'grid';
