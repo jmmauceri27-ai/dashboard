@@ -1,0 +1,13 @@
+{
+  "appId": "com.meridian.dashboard",
+  "appName": "Meridian",
+  "webDir": "public",
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false,
+    "scrollEnabled": true
+  },
+  "server": {
+    "allowNavigation": ["*.supabase.co", "*.finnhub.io", "*.oura.com", "calendar.google.com"]
+  }
+}
