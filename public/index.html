@@ -1907,27 +1907,23 @@ applyProfile();
 
 
 // ── FINANCE (Google Sheets) ───────────────────────────────────────
-const SHEET_ID  = '14B-NpJPj8dN2wb5KA9hSj_omll4llBwnwJc6F9cgQHs';
-const GAPI_KEY  = 'AIzaSyBayQCbbYr2hzq9DNkQfF2uE6P2mhdr4Ws';
+// ── FINANCE — NATIVE DATA ─────────────────────────────────────────
 const MONTH_TABS = [
   'November 2025','December 2025','January 2026','February 2026',
-  'March 2026','April 2026','May 2026',
+  'March 2026','April 2026','May 2026','June 2026','July 2026','August 2026',
+  'September 2026','October 2026','November 2026','December 2026',
 ];
 
 let finActiveMonth = '';
-let finCache = {};
+let finTransactions  = load('meridian_fin_transactions', []);
+let finMonthlySummary = load('meridian_fin_monthly', {});
+let finNetWorth      = load('meridian_fin_networth', { assets: [], liabilities: [] });
+let finYearly        = load('meridian_fin_yearly', []);
 
 function getCurrentMonthSheet() {
   const n = new Date();
   const m = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   return `${m[n.getMonth()]} ${n.getFullYear()}`;
-}
-
-async function fetchSheetRange(sheetName, range) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(sheetName)}!${range}?key=${GAPI_KEY}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Sheets API error ${res.status}`);
-  return (await res.json()).values || [];
 }
 
 function parseCurrency(str) {
@@ -1940,121 +1936,46 @@ function fmtDollar(n) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function findLabelValue(data, label) {
-  const lc = label.toLowerCase();
-  for (let r = 0; r < data.length; r++) {
-    const row = data[r] || [];
-    for (let c = 0; c < row.length; c++) {
-      if (String(row[c] || '').trim().toLowerCase() === lc) {
-        // Check same row: up to 3 cells to the right
-        for (let nc = c + 1; nc <= c + 3 && nc < row.length; nc++) {
-          const v = String(row[nc] || '').trim();
-          if (v && v !== '—') return v;
-        }
-        // Check next two rows at same column and ±1
-        for (let nr = r + 1; nr <= r + 2 && nr < data.length; nr++) {
-          const nextRow = data[nr] || [];
-          for (let nc = c; nc <= c + 2 && nc < nextRow.length; nc++) {
-            const v = String(nextRow[nc] || '').trim();
-            if (v && v !== '—' && !v.toLowerCase().includes('savings') && !v.toLowerCase().includes('income')) return v;
-          }
-        }
-      }
-    }
-  }
-  return null;
+function getMonthTxns(month) {
+  return finTransactions.filter(t => t.month === month);
 }
 
-function findTransactions(data) {
-  for (let r = 0; r < data.length; r++) {
-    const row = data[r] || [];
-    const di = row.findIndex(c => String(c || '').trim() === 'Date');
-    if (di < 0) continue;
-    const txns = [];
-    for (let tr = r + 1; tr < data.length; tr++) {
-      const t = data[tr] || [];
-      if (t[di] && t[di + 4]) {
-        txns.push({
-          date:     String(t[di]     || '').trim(),
-          method:   String(t[di + 1] || '').trim(),
-          expense:  String(t[di + 2] || '').trim(),
-          category: String(t[di + 3] || '').trim(),
-          amount:   parseCurrency(t[di + 4]),
-        });
-      }
-    }
-    if (txns.length) return txns;
-  }
-  return [];
-}
-
-function findCategories(data) {
-  for (let r = 0; r < data.length; r++) {
-    const row = data[r] || [];
-    const ci = row.findIndex(c => String(c || '').trim() === 'Category');
-    if (ci < 0) continue;
-    const cats = [];
-    for (let cr = r + 1; cr < data.length; cr++) {
-      const crow = data[cr] || [];
-      const name = String(crow[ci]     || '').trim();
-      const amt  = String(crow[ci + 1] || '').trim();
-      if (name && amt && name !== 'Grand Total' && !amt.includes('—') && !amt.includes('SUM')) {
-        const n = parseCurrency(amt);
-        if (n > 0) cats.push({ name, amount: n });
-      }
-    }
-    if (cats.length) return cats;
-  }
-  return [];
-}
-
-async function loadMonthData(month) {
-  if (finCache[month]) return finCache[month];
-  const data = await fetchSheetRange(month, 'A1:N120');
-  const result = {
-    totalSavings:  parseCurrency(data[6]?.[12]),  // M7  = Total savings for the month
-    expenses:      parseCurrency(data[69]?.[7]),  // H70 = Grand Total spent
-    income:        parseCurrency(data[1]?.[11]),  // L2  = Monthly Income
-    fixedExpenses: parseCurrency(data[5]?.[1]),   // B6  = Fixed Expenses Total
-    targetSav:     parseCurrency(data[6]?.[10]),  // K7  = Target Total Savings
-    available:     parseCurrency(findLabelValue(data, 'Available Savings')),
-    funLeft:       parseCurrency(findLabelValue(data, 'Fun Budget Remaining')),
-    actualSav:     parseCurrency(findLabelValue(data, 'Actual Savings')),
-    transactions: findTransactions(data),
-    categories:   findCategories(data),
+function getMonthSummary(month) {
+  const s = finMonthlySummary[month] || {};
+  const txns = getMonthTxns(month);
+  const totalSpent = txns.reduce((sum, t) => sum + (t.amount || 0), 0);
+  const fixedTotal = (s.fixedExpenses || []).reduce((sum, f) => sum + (f.amount || 0), 0);
+  const nwAssets = (finNetWorth.assets || []).reduce((sum, a) => sum + (a.value || 0), 0);
+  const nwLiab   = (finNetWorth.liabilities || []).reduce((sum, l) => sum + (l.amount || 0), 0);
+  return {
+    income:        s.income || 0,
+    totalSpent,
+    fixedExpenses: fixedTotal,
+    actualSav:     s.actualSavings || 0,
+    targetSav:     s.targetSavings || 0,
+    funLeft:       s.funBudgetRemaining || 0,
+    availableSav:  s.availableSavings || 0,
+    netWorth:      nwAssets - nwLiab,
+    transactions:  txns,
   };
-  finCache[month] = result;
-  return result;
 }
 
-// ── Finance Pulse (home panel) ────────────────────────────────────
-async function loadFinancePanel() {
+// Finance home panel
+function loadFinancePanel() {
   const loading = document.getElementById('fin-panel-loading');
   const content = document.getElementById('fin-panel-content');
   const errEl   = document.getElementById('fin-panel-error');
-  loading.style.display = 'block';
-  content.style.display = 'none';
-  errEl.style.display   = 'none';
-  try {
-    const month = getCurrentMonthSheet();
-    const d     = await loadMonthData(month);
-    document.getElementById('fin-income-val').textContent    = fmtDollar(d.totalSavings);
-    document.getElementById('fin-expenses-val').textContent  = fmtDollar(d.expenses);
-    document.getElementById('fin-available-val').textContent = fmtDollar(d.available);
-    document.getElementById('fin-fun-val').textContent       = fmtDollar(d.funLeft);
-
-    const nwData = await fetchSheetRange('Net Worth', 'A1:G15');
-    const nw     = parseCurrency(findLabelValue(nwData, 'Net Worth'));
-    document.getElementById('fin-networth-val').textContent  = fmtDollar(nw);
-
-    loading.style.display = 'none';
-    content.style.display = 'block';
-  } catch(e) {
-    loading.style.display = 'none';
-    errEl.style.display   = 'block';
-    errEl.textContent     = 'Could not load sheet — check sharing is set to "Anyone with the link".';
-    console.error(e);
-  }
+  const month   = getCurrentMonthSheet();
+  const d       = getMonthSummary(month);
+  if (loading) loading.style.display = 'none';
+  if (errEl)   errEl.style.display   = 'none';
+  if (content) content.style.display = 'block';
+  const el = id => document.getElementById(id);
+  if (el('fin-income-val'))    el('fin-income-val').textContent    = fmtDollar(d.actualSav);
+  if (el('fin-expenses-val'))  el('fin-expenses-val').textContent  = fmtDollar(d.totalSpent);
+  if (el('fin-available-val')) el('fin-available-val').textContent = fmtDollar(d.availableSav);
+  if (el('fin-fun-val'))       el('fin-fun-val').textContent       = fmtDollar(d.funLeft);
+  if (el('fin-networth-val'))  el('fin-networth-val').textContent  = fmtDollar(d.netWorth);
 }
 
 loadFinancePanel();
@@ -2074,121 +1995,145 @@ function renderFinMonthList() {
     </div>`).join('');
 }
 
-async function loadFinanceView(month) {
+function loadFinanceView(month) {
   finActiveMonth = month;
   renderFinMonthList();
-  document.getElementById('fin-main-title').textContent      = month;
-  document.getElementById('fin-view-loading').style.display  = 'block';
-  document.getElementById('fin-view-content').style.display  = 'none';
-  try {
-    const d      = await loadMonthData(month);
-    const savRaw = d.targetSav > 0 ? Math.round(d.actualSav / d.targetSav * 100) : 0;
-    const savPct = savRaw; // allow >100
-    const savBarW = Math.min(100, savRaw); // bar caps at full width
-    const savColor = savRaw >= 100 ? 'var(--green)' : savRaw >= 75 ? 'var(--yellow)' : 'var(--red)';
-    const funSpent = d.income - d.expenses - d.available;
+  document.getElementById('fin-main-title').textContent     = month;
+  document.getElementById('fin-view-loading').style.display = 'none';
+  document.getElementById('fin-view-content').style.display = 'block';
 
-    // Net Worth (separate sheet)
-    let netWorth = 0;
-    try {
-      const nwData = await fetchSheetRange('Net Worth', 'G1:G2');
-      netWorth = parseCurrency(nwData[1]?.[0]);  // G2
-    } catch(e) { /* non-fatal */ }
+  const d = getMonthSummary(month);
+  const savRaw  = d.targetSav > 0 ? Math.round(d.actualSav / d.targetSav * 100) : 0;
+  const savBarW = Math.min(100, savRaw);
+  const savColor = savRaw >= 100 ? 'var(--green)' : savRaw >= 75 ? 'var(--yellow)' : 'var(--red)';
 
-    // Cards
-    document.getElementById('fin-view-cards').innerHTML = `
-      <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.income)}</div>
-        <div class="fin-card-lbl">Monthly Income</div>
-      </div>
-      <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--red)">${fmtDollar(d.expenses)}</div>
-        <div class="fin-card-lbl">Total Spent</div>
-      </div>
-      <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--orange)">${fmtDollar(d.fixedExpenses)}</div>
-        <div class="fin-card-lbl">Fixed Expenses</div>
-      </div>
-      <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--yellow)">${fmtDollar(d.funLeft)}</div>
-        <div class="fin-card-lbl">Fun Budget Left</div>
-      </div>
-      <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.totalSavings)}</div>
-        <div class="fin-card-lbl">Total Savings</div>
-      </div>
-      <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--blue)">${fmtDollar(d.targetSav)}</div>
-        <div class="fin-card-lbl">Target Savings</div>
-      </div>
-      <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--cyan)">${fmtDollar(d.available)}</div>
-        <div class="fin-card-lbl">Available Savings</div>
-      </div>
-      <div class="fin-card">
-        <div class="fin-card-val" style="color:var(--pink)">${fmtDollar(netWorth)}</div>
-        <div class="fin-card-lbl">Net Worth</div>
-      </div>`;
+  document.getElementById('fin-view-cards').innerHTML = `
+    <div class="fin-card">
+      <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.income)}</div>
+      <div class="fin-card-lbl">Monthly Income</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-card-val" style="color:var(--red)">${fmtDollar(d.totalSpent)}</div>
+      <div class="fin-card-lbl">Total Spent</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-card-val" style="color:var(--orange)">${fmtDollar(d.fixedExpenses)}</div>
+      <div class="fin-card-lbl">Fixed Expenses</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-card-val" style="color:var(--yellow)">${fmtDollar(d.funLeft)}</div>
+      <div class="fin-card-lbl">Fun Budget Left</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-card-val" style="color:var(--green)">${fmtDollar(d.actualSav)}</div>
+      <div class="fin-card-lbl">Actual Savings</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-card-val" style="color:var(--blue)">${fmtDollar(d.targetSav)}</div>
+      <div class="fin-card-lbl">Target Savings</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-card-val" style="color:var(--cyan)">${fmtDollar(d.availableSav)}</div>
+      <div class="fin-card-lbl">Available Savings</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-card-val" style="color:var(--pink)">${fmtDollar(d.netWorth)}</div>
+      <div class="fin-card-lbl">Net Worth</div>
+    </div>`;
 
-    // Savings progress
-    document.getElementById('fin-view-savings').innerHTML = `
-      <div class="prog-meta" style="margin-top:4px">
-        <span class="prog-label">Savings — <strong style="color:var(--text)">${fmtDollar(d.actualSav)}</strong> of ${fmtDollar(d.targetSav)} target</span>
-        <span class="prog-pct" style="color:${savColor}">${savPct}%</span>
+  document.getElementById('fin-view-savings').innerHTML = `
+    <div class="prog-meta" style="margin-top:4px">
+      <span class="prog-label">Savings — <strong style="color:var(--text)">${fmtDollar(d.actualSav)}</strong> of ${fmtDollar(d.targetSav)} target</span>
+      <span class="prog-pct" style="color:${savColor}">${savRaw}%</span>
+    </div>
+    <div class="prog-bar" style="height:6px"><div class="prog-fill" style="width:${savBarW}%;background:${savColor};transition:width 0.4s ease"></div></div>`;
+
+  const catMap = {};
+  d.transactions.forEach(t => {
+    if (!t.category || !t.amount) return;
+    catMap[t.category] = (catMap[t.category] || 0) + t.amount;
+  });
+  const sorted = Object.entries(catMap).map(([name, amount]) => ({ name, amount })).sort((a, b) => b.amount - a.amount);
+  const maxAmt = sorted[0]?.amount || 1;
+  document.getElementById('fin-view-categories').innerHTML = sorted.length
+    ? sorted.map(c => `
+        <div class="cat-bar-row">
+          <div class="cat-bar-label">
+            <span>${esc(c.name)}</span>
+            <span style="font-weight:600;color:var(--text)">${fmtDollar(c.amount)}</span>
+          </div>
+          <div class="prog-bar">
+            <div class="prog-fill" style="width:${Math.round(c.amount / maxAmt * 100)}%;background:${CAT_COLORS[c.name] || 'var(--blue)'}"></div>
+          </div>
+        </div>`).join('')
+    : '<div class="empty-state">No transactions this month yet.</div>';
+
+  // Quick-add form + transaction table
+  const CATS = ['Dining Out','Groceries','Transportation','Fun Purchases','Entertainment',
+    'Hobbies/Recreation','Personal','Coffee/Snacks','Gifts & Donations','Healthcare','Vacation','Subscription','Other'];
+  const METHODS = ['Amex','Visa','Chase','Venmo','Zelle','Cash','Bank Transfer','Other'];
+
+  document.getElementById('fin-view-transactions').innerHTML = `
+    <div style="margin-bottom:12px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px">Add Transaction</div>
+      <div style="display:grid;grid-template-columns:110px 1fr 140px 110px 80px auto;gap:6px;align-items:end">
+        <div><div style="font-size:9px;color:var(--text-dim);margin-bottom:3px">Date</div>
+          <input class="fi" id="txn-date" type="date" value="${TODAY}" /></div>
+        <div><div style="font-size:9px;color:var(--text-dim);margin-bottom:3px">Expense</div>
+          <input class="fi" id="txn-expense" placeholder="e.g. DoorDash" /></div>
+        <div><div style="font-size:9px;color:var(--text-dim);margin-bottom:3px">Category</div>
+          <select class="fi" id="txn-category">${CATS.map(c => `<option>${c}</option>`).join('')}</select></div>
+        <div><div style="font-size:9px;color:var(--text-dim);margin-bottom:3px">Method</div>
+          <select class="fi" id="txn-method">${METHODS.map(m => `<option>${m}</option>`).join('')}</select></div>
+        <div><div style="font-size:9px;color:var(--text-dim);margin-bottom:3px">Amount</div>
+          <input class="fi" id="txn-amount" type="number" step="0.01" min="0" placeholder="0.00" /></div>
+        <button class="btn btn-blue" onclick="addFinTransaction('${month}')" style="height:30px">Add</button>
       </div>
-      <div class="prog-bar" style="height:6px"><div class="prog-fill" style="width:${savBarW}%;background:${savColor};transition:width 0.4s ease"></div></div>`;
-
-    // Group transactions by category
-    const catMap = {};
-    d.transactions.forEach(t => {
-      if (!t.category || !t.amount) return;
-      catMap[t.category] = (catMap[t.category] || 0) + t.amount;
-    });
-    const sorted = Object.entries(catMap)
-      .map(([name, amount]) => ({ name, amount }))
-      .sort((a, b) => b.amount - a.amount);
-    const maxAmt = sorted[0]?.amount || 1;
-    document.getElementById('fin-view-categories').innerHTML = sorted.length
-      ? sorted.map(c => `
-          <div class="cat-bar-row">
-            <div class="cat-bar-label">
-              <span>${esc(c.name)}</span>
-              <span style="font-weight:600;color:var(--text)">${fmtDollar(c.amount)}</span>
-            </div>
-            <div class="prog-bar">
-              <div class="prog-fill" style="width:${Math.round(c.amount / maxAmt * 100)}%;background:${CAT_COLORS[c.name] || 'var(--blue)'}"></div>
-            </div>
-          </div>`).join('')
-      : '<div class="empty-state">No category data found</div>';
-
-    // Transactions
-    document.getElementById('fin-view-transactions').innerHTML = d.transactions.length
+    </div>
+    ${d.transactions.length
       ? `<table class="txn-table">
-           <thead><tr>
-             <th>Date</th><th>Expense</th><th>Category</th><th>Method</th><th style="text-align:right">Amount</th>
-           </tr></thead>
-           <tbody>${d.transactions.map(t => `
+           <thead><tr><th>Date</th><th>Expense</th><th>Category</th><th>Method</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+           <tbody>${d.transactions.slice().sort((a,b) => b.date.localeCompare(a.date)).map(t => `
              <tr>
                <td class="txn-date">${esc(t.date)}</td>
                <td>${esc(t.expense)}</td>
                <td><span class="badge badge-gray" style="font-size:9px">${esc(t.category)}</span></td>
                <td style="color:var(--text-muted)">${esc(t.method)}</td>
                <td class="txn-amt">${fmtDollar(t.amount)}</td>
+               <td><button class="del-btn" onclick="deleteFinTransaction(${t.id})">✕</button></td>
              </tr>`).join('')}
            </tbody>
          </table>`
-      : '<div class="empty-state">No transactions found</div>';
+      : '<div class="empty-state">No transactions yet — add one above.</div>'}`;
+}
 
-    document.getElementById('fin-view-loading').style.display = 'none';
-    document.getElementById('fin-view-content').style.display = 'block';
-  } catch(e) {
-    document.getElementById('fin-view-loading').textContent = 'Could not load data. Check sharing settings.';
-    console.error(e);
-  }
+const FIN_CATS = ['Dining Out','Groceries','Transportation','Fun Purchases','Entertainment',
+  'Hobbies/Recreation','Personal','Coffee/Snacks','Gifts & Donations','Healthcare','Vacation','Subscription','Other'];
+
+function addFinTransaction(month) {
+  const date    = document.getElementById('txn-date')?.value || TODAY;
+  const expense = document.getElementById('txn-expense')?.value.trim();
+  const category= document.getElementById('txn-category')?.value || 'Other';
+  const method  = document.getElementById('txn-method')?.value || '';
+  const amount  = parseFloat(document.getElementById('txn-amount')?.value);
+  if (!expense || isNaN(amount) || amount <= 0) return;
+  const maxId = finTransactions.length ? Math.max(...finTransactions.map(t => t.id || 0)) : 0;
+  finTransactions.push({ id: maxId + 1, date, expense, category, amount, method, month });
+  save('meridian_fin_transactions', finTransactions);
+  document.getElementById('txn-expense').value = '';
+  document.getElementById('txn-amount').value  = '';
+  loadFinanceView(month);
+  loadFinancePanel();
+}
+
+function deleteFinTransaction(id) {
+  finTransactions = finTransactions.filter(t => t.id !== id);
+  save('meridian_fin_transactions', finTransactions);
+  loadFinanceView(finActiveMonth);
+  loadFinancePanel();
 }
 
 function refreshFinanceView() {
-  delete finCache[finActiveMonth];
   loadFinanceView(finActiveMonth);
 }
 
