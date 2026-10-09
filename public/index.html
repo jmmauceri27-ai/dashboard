@@ -493,6 +493,64 @@ select.fi { appearance: none; background-image: url("data:image/svg+xml,%3Csvg x
 .prog-entry-date { font-size: 9px; color: var(--text-dim); white-space: nowrap; padding-top: 2px; }
 .prog-set-week { font-size: 10px; color: var(--purple); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; margin-left: auto; padding-top: 2px; }
 .prog-add-row { display: flex; gap: 8px; margin-top: 12px; }
+
+/* ── MOBILE APP STYLES ─────────────────────────────────────────── */
+body.is-mobile .header { display: none; }
+body.is-mobile .ticker-bar { display: none; }
+body.is-mobile .nav-tabs { display: none; }
+body.is-mobile .dashboard,
+body.is-mobile .crm-view,
+body.is-mobile .finance-view,
+body.is-mobile .health-view,
+body.is-mobile .calendar-view,
+body.is-mobile .journal-view,
+body.is-mobile .mental-view { padding-bottom: 80px; }
+
+.mob-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 8px 0 max(12px, env(safe-area-inset-bottom)); }
+body.is-mobile .mob-nav { display: flex; }
+.mob-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; padding: 4px 0; border: none; background: none; color: var(--text-dim);
+  font-size: 9px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; transition: color .15s; }
+.mob-nav-item.active { color: var(--gold); }
+.mob-nav-icon { font-size: 20px; line-height: 1; }
+
+.mob-home { display: none; padding: 16px; overflow-y: auto; height: calc(100vh - 54px); padding-top: 20px; }
+body.is-mobile .mob-home.mob-active { display: block; }
+body.is-mobile .dashboard { display: none !important; }
+body.is-mobile .crm-view.active,
+body.is-mobile .finance-view.active,
+body.is-mobile .health-view.active,
+body.is-mobile .calendar-view.active,
+body.is-mobile .journal-view.active,
+body.is-mobile .mental-view.active { display: flex; }
+
+.mob-greeting { margin-bottom: 20px; }
+.mob-greeting-sub { font-size: 10px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; }
+.mob-greeting-name { font-size: 26px; font-weight: 400; color: var(--gold); letter-spacing: .04em; }
+.mob-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 12px; }
+.mob-card-title { font-size: 9px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.mob-task-item { display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); }
+.mob-task-item:last-child { border-bottom: none; }
+.mob-task-check { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.mob-task-check.done { background: var(--green); border-color: var(--green); }
+.mob-stock-row { display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--border); }
+.mob-stock-row:last-child { border-bottom: none; }
+.mob-stock-name { font-size: 12px; color: var(--text); font-weight: 400; }
+.mob-stock-price { font-size: 12px; color: var(--text); font-weight: 500; }
+.mob-stock-chg { font-size: 11px; }
+.mob-more-list { display: flex; flex-direction: column; gap: 2px; }
+.mob-more-item { display: flex; align-items: center; gap: 12px; padding: 14px 4px;
+  border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text); font-size: 14px; }
+.mob-more-item:last-child { border-bottom: none; }
+.mob-more-icon { font-size: 20px; width: 28px; text-align: center; }
+.mob-more-arrow { margin-left: auto; color: var(--text-dim); font-size: 12px; }
 .health-header { font-size: 8px; font-weight: 500; letter-spacing: 2.2px; text-transform: uppercase; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
 .health-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; position: relative; }
 .health-card::before { content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-border), transparent); }
@@ -3631,6 +3689,152 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
+}
+
+// ── MOBILE APP ────────────────────────────────────────────────────
+const IS_MOBILE = !!(window.Capacitor?.isNativePlatform?.());
+
+if (IS_MOBILE) {
+  document.body.classList.add('is-mobile');
+
+  // inject bottom nav
+  document.body.insertAdjacentHTML('beforeend', `
+  <nav class="mob-nav" id="mob-nav">
+    <button class="mob-nav-item active" onclick="mobTab('home',this)">
+      <span class="mob-nav-icon">🏠</span>Home
+    </button>
+    <button class="mob-nav-item" onclick="mobTab('crm',this)">
+      <span class="mob-nav-icon">👥</span>CRM
+    </button>
+    <button class="mob-nav-item" onclick="mobTab('finance',this)">
+      <span class="mob-nav-icon">💰</span>Finance
+    </button>
+    <button class="mob-nav-item" onclick="mobTab('health',this)">
+      <span class="mob-nav-icon">❤️</span>Health
+    </button>
+    <button class="mob-nav-item" onclick="mobTab('more',this)">
+      <span class="mob-nav-icon">•••</span>More
+    </button>
+  </nav>
+
+  <div class="mob-home mob-active" id="mob-home">
+    <div class="mob-greeting">
+      <div class="mob-greeting-sub" id="mob-salutation">Good Morning</div>
+      <div class="mob-greeting-name" id="mob-name">—</div>
+    </div>
+    <div class="mob-card">
+      <div class="mob-card-title"><span class="dot dot-blue"></span>Priorities &amp; Tasks</div>
+      <div id="mob-tasks"></div>
+    </div>
+    <div class="mob-card">
+      <div class="mob-card-title"><span class="dot" style="background:var(--gold)"></span>Markets</div>
+      <div id="mob-stocks"></div>
+    </div>
+  </div>
+
+  <div class="mob-more" id="mob-more" style="display:none;padding:20px 16px;overflow-y:auto;height:calc(100vh - 54px);padding-top:20px;padding-bottom:80px">
+    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:16px;letter-spacing:.04em">More</div>
+    <div class="mob-more-list">
+      <div class="mob-more-item" onclick="mobTab('calendar',document.querySelectorAll('.mob-nav-item')[4])">
+        <span class="mob-more-icon">📅</span>Calendar<span class="mob-more-arrow">›</span>
+      </div>
+      <div class="mob-more-item" onclick="mobTab('mental',document.querySelectorAll('.mob-nav-item')[4])">
+        <span class="mob-more-icon">🧠</span>Mental<span class="mob-more-arrow">›</span>
+      </div>
+      <div class="mob-more-item" onclick="mobTab('journal',document.querySelectorAll('.mob-nav-item')[4])">
+        <span class="mob-more-icon">📓</span>Journal<span class="mob-more-arrow">›</span>
+      </div>
+      <div class="mob-more-item" onclick="openProfileModal()">
+        <span class="mob-more-icon">⚙️</span>Settings<span class="mob-more-arrow">›</span>
+      </div>
+    </div>
+  </div>`);
+
+  function mobTab(tab, btn) {
+    // nav highlight (only for main 5 tabs)
+    document.querySelectorAll('.mob-nav-item').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    // hide everything
+    document.getElementById('mob-home').classList.remove('mob-active');
+    document.getElementById('mob-more').style.display = 'none';
+    ['crm-view','finance-view','health-view','calendar-view','journal-view','mental-view'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+
+    if (tab === 'home') {
+      document.getElementById('mob-home').classList.add('mob-active');
+      renderMobHome();
+    } else if (tab === 'crm') {
+      document.getElementById('crm-view').classList.add('active');
+      renderAll(); initCRMDrag(); initKanbanDrag();
+    } else if (tab === 'finance') {
+      document.getElementById('finance-view').classList.add('active');
+      const month = getCurrentMonthSheet();
+      finActiveMonth = finActiveMonth || month;
+      renderFinMonthList();
+      loadFinanceView(finActiveMonth);
+    } else if (tab === 'health') {
+      document.getElementById('health-view').classList.add('active');
+      renderHealthView(); renderOuraSetup();
+    } else if (tab === 'calendar') {
+      document.getElementById('calendar-view').classList.add('active');
+      setCalMode(calMode);
+    } else if (tab === 'mental') {
+      document.getElementById('mental-view').classList.add('active');
+      renderMental(); renderProg();
+    } else if (tab === 'journal') {
+      document.getElementById('journal-view').classList.add('active');
+      openTodayEntry(); renderJournalSidebar(); switchJournalSidebar('journal');
+    } else if (tab === 'more') {
+      document.getElementById('mob-more').style.display = 'block';
+    }
+  }
+
+  function renderMobHome() {
+    // greeting
+    const h = new Date().getHours();
+    document.getElementById('mob-salutation').textContent =
+      h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
+    document.getElementById('mob-name').textContent = profile.name || 'friend';
+
+    // tasks
+    const tc = document.getElementById('mob-tasks');
+    const active = tasks.filter(t => !t.done).slice(0, 5);
+    if (!active.length) {
+      tc.innerHTML = '<div class="empty-state">No open tasks.</div>';
+    } else {
+      tc.innerHTML = active.map(t => `
+        <div class="mob-task-item">
+          <div class="mob-task-check${t.done ? ' done' : ''}"></div>
+          <span style="${t.done ? 'text-decoration:line-through;color:var(--text-dim)' : ''}">${esc(t.text)}</span>
+          ${t.starred ? '<span style="color:var(--gold);margin-left:auto">★</span>' : ''}
+        </div>`).join('');
+    }
+
+    // stocks
+    const sc = document.getElementById('mob-stocks');
+    const cached = (() => { try { const d = JSON.parse(localStorage.getItem('meridian_stocks')||'null'); return d && (Date.now()-d.ts < 3600000) ? d : null; } catch { return null; } })();
+    if (cached?.quotes?.length) {
+      const show = cached.quotes.filter(q => ['SPY','QQQ','DIA'].includes(q.symbol));
+      sc.innerHTML = show.map(q => {
+        const up = q.change >= 0;
+        const price = q.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+        const pct = (up?'+':'')+q.changePercent.toFixed(2)+'%';
+        return `<div class="mob-stock-row">
+          <span class="mob-stock-name">${q.name||q.symbol}</span>
+          <span class="mob-stock-price">$${price}</span>
+          <span class="mob-stock-chg" style="color:${up?'var(--green)':'var(--red)'}">${pct}</span>
+        </div>`;
+      }).join('');
+    } else {
+      sc.innerHTML = '<div class="empty-state" style="font-size:11px">No stock data — open Finance to refresh.</div>';
+    }
+  }
+
+  // init home
+  renderMobHome();
 }
 </script>
 </body>
