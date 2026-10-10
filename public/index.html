@@ -632,6 +632,51 @@ body.is-mobile .mob-fin-fab { display: flex; }
 }
 .mob-fin-sheet-submit:active { opacity: .8; }
 
+/* ── MOBILE VIDEO CARD ── */
+.mob-video-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; margin-bottom: 12px; overflow: hidden; position: relative;
+}
+.mob-video-placeholder {
+  height: 160px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  background: var(--surface2); cursor: pointer;
+}
+.mob-video-placeholder-icon { font-size: 36px; opacity: .5; }
+.mob-video-placeholder-lbl { font-size: 11px; color: var(--text-dim); letter-spacing: .04em; }
+.mob-video-thumb-wrap { position: relative; cursor: pointer; }
+.mob-video-thumb-wrap video { width: 100%; max-height: 220px; object-fit: cover; display: block; border-radius: 14px 14px 0 0; }
+.mob-video-play-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.25); border-radius: 14px 14px 0 0;
+}
+.mob-video-play-btn {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(0,0,0,.55); border: 2px solid rgba(255,255,255,.7);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: #fff; padding-left: 4px;
+}
+.mob-video-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+}
+.mob-video-title { font-size: 11px; color: var(--text-dim); letter-spacing: .04em; text-transform: uppercase; }
+.mob-video-change { font-size: 10px; color: var(--gold); cursor: pointer; }
+
+/* fullscreen video overlay */
+.mob-video-fs {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: #000; align-items: center; justify-content: center;
+}
+.mob-video-fs.open { display: flex; }
+.mob-video-fs video { width: 100%; height: 100%; object-fit: contain; }
+.mob-video-fs-close {
+  position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px;
+  background: rgba(0,0,0,.5); border: none; color: #fff; font-size: 20px;
+  border-radius: 50%; width: 36px; height: 36px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; z-index: 501;
+}
+
 .mob-greeting { margin-bottom: 20px; }
 .mob-greeting-sub { font-size: 10px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; }
 .mob-greeting-name { font-size: 26px; font-weight: 400; color: var(--gold); letter-spacing: .04em; }
@@ -1517,6 +1562,13 @@ body.is-mobile .mob-fin-fab { display: flex; }
     </div>
   </div>
 </div>
+
+<!-- ── MOBILE VIDEO FULLSCREEN ── -->
+<div class="mob-video-fs" id="mob-video-fs">
+  <button class="mob-video-fs-close" onclick="closeMobVideo()">✕</button>
+  <video id="mob-video-fs-player" controls playsinline></video>
+</div>
+<input type="file" accept="video/*" id="mob-video-picker" style="display:none" onchange="mobVideoSelected(event)" />
 
 <!-- ── MOBILE FINANCE FAB + SHEET ── -->
 <button class="mob-fin-fab" id="mob-fin-fab" onclick="openMobFinSheet()">+</button>
@@ -3961,6 +4013,12 @@ if (IS_MOBILE) {
       <div class="mob-card-title"><span class="dot" style="background:var(--gold)"></span>Markets</div>
       <div id="mob-stocks"></div>
     </div>
+    <div class="mob-video-card" id="mob-video-card">
+      <div class="mob-video-placeholder">
+        <div class="mob-video-placeholder-icon">🎬</div>
+        <div class="mob-video-placeholder-lbl">Tap to add a video</div>
+      </div>
+    </div>
   </div>
 
   <div class="mob-more" id="mob-more" style="display:none;padding:20px 16px;overflow-y:auto;height:calc(100vh - 54px);padding-top:20px;padding-bottom:80px">
@@ -4066,6 +4124,102 @@ if (IS_MOBILE) {
 
   // init home
   renderMobHome();
+
+  // ── MOBILE VIDEO ─────────────────────────────────────────────────
+  const MOB_VIDEO_STORE = 'mob_video_store';
+  const MOB_VIDEO_KEY   = 'homeVideo';
+  let mobVideoObjectURL = null;
+
+  function openMobVideoDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('meridian_video', 1);
+      req.onupgradeneeded = e => e.target.result.createObjectStore(MOB_VIDEO_STORE);
+      req.onsuccess  = e => resolve(e.target.result);
+      req.onerror    = e => reject(e);
+    });
+  }
+
+  async function getMobVideo() {
+    try {
+      const db = await openMobVideoDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(MOB_VIDEO_STORE, 'readonly');
+        const req = tx.objectStore(MOB_VIDEO_STORE).get(MOB_VIDEO_KEY);
+        req.onsuccess = e => resolve(e.target.result || null);
+        req.onerror   = () => resolve(null);
+      });
+    } catch { return null; }
+  }
+
+  async function saveMobVideo(blob) {
+    try {
+      const db = await openMobVideoDB();
+      return new Promise((resolve, reject) => {
+        const tx  = db.transaction(MOB_VIDEO_STORE, 'readwrite');
+        const req = tx.objectStore(MOB_VIDEO_STORE).put(blob, MOB_VIDEO_KEY);
+        req.onsuccess = () => resolve(true);
+        req.onerror   = () => resolve(false);
+      });
+    } catch { return false; }
+  }
+
+  async function renderMobVideoCard() {
+    const card = document.getElementById('mob-video-card');
+    if (!card) return;
+    if (mobVideoObjectURL) { URL.revokeObjectURL(mobVideoObjectURL); mobVideoObjectURL = null; }
+
+    const blob = await getMobVideo();
+    if (!blob) {
+      card.innerHTML = `
+        <div class="mob-video-placeholder" onclick="document.getElementById('mob-video-picker').click()">
+          <div class="mob-video-placeholder-icon">🎬</div>
+          <div class="mob-video-placeholder-lbl">Tap to add a video</div>
+        </div>`;
+      return;
+    }
+
+    mobVideoObjectURL = URL.createObjectURL(blob);
+    card.innerHTML = `
+      <div class="mob-video-thumb-wrap" onclick="playMobVideo()">
+        <video src="${mobVideoObjectURL}" preload="metadata" muted playsinline></video>
+        <div class="mob-video-play-overlay">
+          <div class="mob-video-play-btn">▶</div>
+        </div>
+      </div>
+      <div class="mob-video-footer">
+        <span class="mob-video-title">My Video</span>
+        <span class="mob-video-change" onclick="document.getElementById('mob-video-picker').click()">Change</span>
+      </div>`;
+  }
+
+  function playMobVideo() {
+    const fs = document.getElementById('mob-video-fs');
+    const player = document.getElementById('mob-video-fs-player');
+    if (!mobVideoObjectURL || !fs || !player) return;
+    player.src = mobVideoObjectURL;
+    fs.classList.add('open');
+    player.play();
+  }
+
+  function closeMobVideo() {
+    const fs = document.getElementById('mob-video-fs');
+    const player = document.getElementById('mob-video-fs-player');
+    if (player) { player.pause(); player.src = ''; }
+    if (fs) fs.classList.remove('open');
+  }
+
+  async function mobVideoSelected(e) {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const card = document.getElementById('mob-video-card');
+    if (card) card.innerHTML = '<div class="mob-video-placeholder"><div class="mob-video-placeholder-lbl" style="color:var(--gold)">Saving…</div></div>';
+    await saveMobVideo(file);
+    renderMobVideoCard();
+  }
+
+  // render video card on load
+  renderMobVideoCard();
 }
 </script>
 </body>
