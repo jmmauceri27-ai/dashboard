@@ -4154,11 +4154,12 @@ if (IS_MOBILE) {
   async function saveMobVideo(blob) {
     try {
       const db = await openMobVideoDB();
-      return new Promise((resolve, reject) => {
-        const tx  = db.transaction(MOB_VIDEO_STORE, 'readwrite');
-        const req = tx.objectStore(MOB_VIDEO_STORE).put(blob, MOB_VIDEO_KEY);
-        req.onsuccess = () => resolve(true);
-        req.onerror   = () => resolve(false);
+      return new Promise((resolve) => {
+        const tx = db.transaction(MOB_VIDEO_STORE, 'readwrite');
+        tx.objectStore(MOB_VIDEO_STORE).put(blob, MOB_VIDEO_KEY);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror    = () => resolve(false);
+        tx.onabort    = () => resolve(false);
       });
     } catch { return false; }
   }
@@ -4214,7 +4215,10 @@ if (IS_MOBILE) {
     if (!file) return;
     const card = document.getElementById('mob-video-card');
     if (card) card.innerHTML = '<div class="mob-video-placeholder"><div class="mob-video-placeholder-lbl" style="color:var(--gold)">Saving…</div></div>';
-    await saveMobVideo(file);
+    const ok = await saveMobVideo(file);
+    if (!ok) {
+      alert('Could not save video. The file may be too large or storage is unavailable.');
+    }
     renderMobVideoCard();
   }
 
