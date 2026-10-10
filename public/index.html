@@ -526,6 +526,112 @@ body.is-mobile .calendar-view.active,
 body.is-mobile .journal-view.active,
 body.is-mobile .mental-view.active { display: flex; }
 
+/* ── MOBILE FINANCE ── */
+body.is-mobile .finance-view.active {
+  display: block !important;
+  height: calc(100vh - 54px);
+  overflow-y: auto;
+  padding: 0;
+  max-width: 100%;
+}
+body.is-mobile .fin-sidebar { display: none; }
+body.is-mobile .fin-main { border: none; border-radius: 0; }
+.mob-fin-month-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 10px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+}
+.mob-fin-month-btn {
+  background: none; border: none; color: var(--text-dim); font-size: 22px;
+  cursor: pointer; padding: 4px 10px; line-height: 1; transition: color .15s;
+}
+.mob-fin-month-btn:active { color: var(--gold); }
+.mob-fin-month-name { font-size: 16px; font-weight: 400; color: var(--text); letter-spacing: .04em; }
+.mob-fin-summary {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 16px;
+}
+.mob-fin-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px 14px;
+}
+.mob-fin-card-val { font-size: 22px; font-weight: 300; line-height: 1; margin-bottom: 4px; }
+.mob-fin-card-lbl { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; }
+.mob-fin-savings {
+  margin: 0 16px 16px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px;
+}
+.mob-fin-sav-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.mob-fin-sav-label { font-size: 12px; color: var(--text-muted); }
+.mob-fin-sav-pct { font-size: 16px; font-weight: 400; }
+.mob-fin-sav-bar { height: 6px; background: var(--border2); border-radius: 3px; overflow: hidden; }
+.mob-fin-sav-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+.mob-fin-sav-sub { font-size: 10px; color: var(--text-dim); margin-top: 6px; }
+.mob-fin-cats {
+  margin: 0 16px 16px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px;
+}
+.mob-fin-section-lbl { font-size: 9px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
+.mob-fin-cat-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.mob-fin-cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.mob-fin-cat-name { font-size: 12px; color: var(--text); flex: 1; }
+.mob-fin-cat-bar-wrap { width: 70px; height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+.mob-fin-cat-bar-fill { height: 100%; border-radius: 2px; }
+.mob-fin-cat-amt { font-size: 12px; font-weight: 400; color: var(--text); width: 60px; text-align: right; flex-shrink: 0; }
+.mob-fin-txns { margin: 0 16px 100px; }
+.mob-fin-txn-group-date { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-dim); padding: 10px 0 6px; }
+.mob-fin-txn-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 6px;
+}
+.mob-fin-txn-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.mob-fin-txn-info { flex: 1; min-width: 0; }
+.mob-fin-txn-name { font-size: 13px; font-weight: 300; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mob-fin-txn-cat { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.mob-fin-txn-amt { font-size: 14px; font-weight: 400; color: var(--text); flex-shrink: 0; }
+.mob-fin-txn-del { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 0 0 0 8px; flex-shrink: 0; transition: color .15s; }
+.mob-fin-txn-del:active { color: var(--red); }
+
+/* floating add button */
+.mob-fin-fab {
+  display: none; position: fixed; bottom: calc(80px + max(12px, env(safe-area-inset-bottom)));
+  right: 20px; z-index: 200;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--gold); color: var(--bg);
+  font-size: 26px; line-height: 1; font-weight: 300;
+  border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(201,169,110,0.4);
+  align-items: center; justify-content: center;
+  transition: transform .15s;
+}
+body.is-mobile .mob-fin-fab { display: flex; }
+.mob-fin-fab:active { transform: scale(.92); }
+
+/* add transaction sheet */
+.mob-fin-sheet-bg {
+  display: none; position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,.6);
+  align-items: flex-end; justify-content: center;
+}
+.mob-fin-sheet-bg.open { display: flex; }
+.mob-fin-sheet {
+  background: var(--surface2); border-radius: 20px 20px 0 0;
+  padding: 20px 20px max(24px, env(safe-area-inset-bottom));
+  width: 100%; max-height: 80vh; overflow-y: auto;
+}
+.mob-fin-sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border2); margin: 0 auto 18px; }
+.mob-fin-sheet-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 16px; }
+.mob-fin-sheet-field { margin-bottom: 12px; }
+.mob-fin-sheet-field label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 5px; }
+.mob-fin-sheet-field .fi { width: 100%; font-size: 15px; padding: 11px 13px; border-radius: 10px; }
+.mob-fin-sheet-submit {
+  width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 500;
+  letter-spacing: .04em; border: none; cursor: pointer; font-family: inherit;
+  background: var(--gold); color: var(--bg); margin-top: 4px; transition: opacity .15s;
+}
+.mob-fin-sheet-submit:active { opacity: .8; }
+
 .mob-greeting { margin-bottom: 20px; }
 .mob-greeting-sub { font-size: 10px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; }
 .mob-greeting-name { font-size: 26px; font-weight: 400; color: var(--gold); letter-spacing: .04em; }
@@ -1412,6 +1518,36 @@ body.is-mobile .mental-view.active { display: flex; }
   </div>
 </div>
 
+<!-- ── MOBILE FINANCE FAB + SHEET ── -->
+<button class="mob-fin-fab" id="mob-fin-fab" onclick="openMobFinSheet()">+</button>
+<div class="mob-fin-sheet-bg" id="mob-fin-sheet-bg" onclick="closeMobFinSheetOnBg(event)">
+  <div class="mob-fin-sheet" id="mob-fin-sheet">
+    <div class="mob-fin-sheet-handle"></div>
+    <div class="mob-fin-sheet-title">Add Transaction</div>
+    <div class="mob-fin-sheet-field">
+      <label>Expense</label>
+      <input class="fi" id="mfs-expense" placeholder="e.g. DoorDash" />
+    </div>
+    <div class="mob-fin-sheet-field">
+      <label>Amount</label>
+      <input class="fi" id="mfs-amount" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal" />
+    </div>
+    <div class="mob-fin-sheet-field">
+      <label>Category</label>
+      <select class="fi" id="mfs-category"></select>
+    </div>
+    <div class="mob-fin-sheet-field">
+      <label>Method</label>
+      <select class="fi" id="mfs-method"></select>
+    </div>
+    <div class="mob-fin-sheet-field">
+      <label>Date</label>
+      <input class="fi" id="mfs-date" type="date" />
+    </div>
+    <button class="mob-fin-sheet-submit" onclick="submitMobFinTxn()">Add Transaction</button>
+  </div>
+</div>
+
 <!-- ── JOURNAL VIEW ── -->
 <div class="journal-view" id="journal-view">
   <div class="journal-sidebar">
@@ -1997,6 +2133,12 @@ function renderFinMonthList() {
 
 function loadFinanceView(month) {
   finActiveMonth = month;
+
+  if (IS_MOBILE) {
+    loadMobFinanceView(month);
+    return;
+  }
+
   renderFinMonthList();
   document.getElementById('fin-main-title').textContent     = month;
   document.getElementById('fin-view-loading').style.display = 'none';
@@ -2068,7 +2210,6 @@ function loadFinanceView(month) {
         </div>`).join('')
     : '<div class="empty-state">No transactions this month yet.</div>';
 
-  // Quick-add form + transaction table
   const CATS = ['Dining Out','Groceries','Transportation','Fun Purchases','Entertainment',
     'Hobbies/Recreation','Personal','Coffee/Snacks','Gifts & Donations','Healthcare','Vacation','Subscription','Other'];
   const METHODS = ['Amex','Visa','Chase','Venmo','Zelle','Cash','Bank Transfer','Other'];
@@ -2105,6 +2246,151 @@ function loadFinanceView(month) {
            </tbody>
          </table>`
       : '<div class="empty-state">No transactions yet — add one above.</div>'}`;
+}
+
+function loadMobFinanceView(month) {
+  const finView = document.getElementById('finance-view');
+  const d = getMonthSummary(month);
+  const monthIdx = MONTH_TABS.indexOf(month);
+
+  const savRaw   = d.targetSav > 0 ? Math.round(d.actualSav / d.targetSav * 100) : 0;
+  const savBarW  = Math.min(100, savRaw);
+  const savColor = savRaw >= 100 ? 'var(--green)' : savRaw >= 75 ? 'var(--yellow)' : 'var(--red)';
+
+  // Category breakdown
+  const catMap = {};
+  d.transactions.forEach(t => { if (t.category && t.amount) catMap[t.category] = (catMap[t.category] || 0) + t.amount; });
+  const catSorted = Object.entries(catMap).map(([name, amount]) => ({ name, amount })).sort((a, b) => b.amount - a.amount);
+  const maxAmt = catSorted[0]?.amount || 1;
+
+  // Group transactions by date
+  const byDate = {};
+  d.transactions.slice().sort((a, b) => b.date.localeCompare(a.date)).forEach(t => {
+    if (!byDate[t.date]) byDate[t.date] = [];
+    byDate[t.date].push(t);
+  });
+
+  const fmtDate = ds => {
+    const dt = new Date(ds + 'T12:00:00');
+    return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  finView.innerHTML = `
+    <div class="mob-fin-month-nav">
+      <button class="mob-fin-month-btn" onclick="mobFinStep(-1)" ${monthIdx <= 0 ? 'disabled style="opacity:.3"' : ''}>‹</button>
+      <span class="mob-fin-month-name">${month}</span>
+      <button class="mob-fin-month-btn" onclick="mobFinStep(1)" ${monthIdx >= MONTH_TABS.length - 1 ? 'disabled style="opacity:.3"' : ''}>›</button>
+    </div>
+
+    <div class="mob-fin-summary">
+      <div class="mob-fin-card">
+        <div class="mob-fin-card-val" style="color:var(--green)">${fmtDollar(d.income)}</div>
+        <div class="mob-fin-card-lbl">Income</div>
+      </div>
+      <div class="mob-fin-card">
+        <div class="mob-fin-card-val" style="color:var(--red)">${fmtDollar(d.totalSpent)}</div>
+        <div class="mob-fin-card-lbl">Spent</div>
+      </div>
+      <div class="mob-fin-card">
+        <div class="mob-fin-card-val" style="color:var(--orange)">${fmtDollar(d.fixedExpenses)}</div>
+        <div class="mob-fin-card-lbl">Fixed</div>
+      </div>
+      <div class="mob-fin-card">
+        <div class="mob-fin-card-val" style="color:var(--cyan)">${fmtDollar(d.netWorth)}</div>
+        <div class="mob-fin-card-lbl">Net Worth</div>
+      </div>
+    </div>
+
+    <div class="mob-fin-savings">
+      <div class="mob-fin-sav-row">
+        <span class="mob-fin-sav-label">Savings Progress</span>
+        <span class="mob-fin-sav-pct" style="color:${savColor}">${savRaw}%</span>
+      </div>
+      <div class="mob-fin-sav-bar"><div class="mob-fin-sav-fill" style="width:${savBarW}%;background:${savColor}"></div></div>
+      <div class="mob-fin-sav-sub">${fmtDollar(d.actualSav)} saved · ${fmtDollar(d.targetSav)} target · ${fmtDollar(d.funLeft)} fun left</div>
+    </div>
+
+    ${catSorted.length ? `
+    <div class="mob-fin-cats">
+      <div class="mob-fin-section-lbl">Spending by Category</div>
+      ${catSorted.map(c => `
+        <div class="mob-fin-cat-row">
+          <div class="mob-fin-cat-dot" style="background:${CAT_COLORS[c.name] || 'var(--blue)'}"></div>
+          <span class="mob-fin-cat-name">${esc(c.name)}</span>
+          <div class="mob-fin-cat-bar-wrap"><div class="mob-fin-cat-bar-fill" style="width:${Math.round(c.amount/maxAmt*100)}%;background:${CAT_COLORS[c.name]||'var(--blue)'}"></div></div>
+          <span class="mob-fin-cat-amt">${fmtDollar(c.amount)}</span>
+        </div>`).join('')}
+    </div>` : ''}
+
+    <div class="mob-fin-txns">
+      <div class="mob-fin-section-lbl" style="padding-top:4px">${d.transactions.length} Transaction${d.transactions.length !== 1 ? 's' : ''}</div>
+      ${Object.keys(byDate).length
+        ? Object.entries(byDate).map(([date, txns]) => `
+            <div class="mob-fin-txn-group-date">${fmtDate(date)}</div>
+            ${txns.map(t => `
+              <div class="mob-fin-txn-item">
+                <div class="mob-fin-txn-dot" style="background:${CAT_COLORS[t.category]||'var(--border2)'}"></div>
+                <div class="mob-fin-txn-info">
+                  <div class="mob-fin-txn-name">${esc(t.expense)}</div>
+                  <div class="mob-fin-txn-cat">${esc(t.category)} · ${esc(t.method)}</div>
+                </div>
+                <span class="mob-fin-txn-amt">${fmtDollar(t.amount)}</span>
+                <button class="mob-fin-txn-del" onclick="deleteFinTransaction(${t.id})">×</button>
+              </div>`).join('')}
+          `).join('')
+        : '<div class="empty-state" style="padding:20px 0">No transactions this month.</div>'}
+    </div>`;
+}
+
+function mobFinStep(dir) {
+  const idx = MONTH_TABS.indexOf(finActiveMonth);
+  const next = MONTH_TABS[idx + dir];
+  if (next) loadFinanceView(next);
+}
+
+// ── Mobile Finance Sheet ──────────────────────────────────────────
+const FIN_CATS_LIST = ['Dining Out','Groceries','Transportation','Fun Purchases','Entertainment',
+  'Hobbies/Recreation','Personal','Coffee/Snacks','Gifts & Donations','Healthcare','Vacation','Subscription','Other'];
+const FIN_METHODS_LIST = ['Amex','Visa','Chase','Venmo','Zelle','Cash','Bank Transfer','Other'];
+
+function openMobFinSheet() {
+  const bg = document.getElementById('mob-fin-sheet-bg');
+  if (!bg) return;
+  const catSel = document.getElementById('mfs-category');
+  const methSel = document.getElementById('mfs-method');
+  if (catSel && !catSel.options.length) {
+    FIN_CATS_LIST.forEach(c => catSel.add(new Option(c, c)));
+    FIN_METHODS_LIST.forEach(m => methSel.add(new Option(m, m)));
+  }
+  document.getElementById('mfs-date').value = TODAY;
+  document.getElementById('mfs-expense').value = '';
+  document.getElementById('mfs-amount').value = '';
+  bg.classList.add('open');
+  setTimeout(() => document.getElementById('mfs-expense').focus(), 100);
+}
+
+function closeMobFinSheet() {
+  document.getElementById('mob-fin-sheet-bg')?.classList.remove('open');
+}
+
+function closeMobFinSheetOnBg(e) {
+  if (e.target === document.getElementById('mob-fin-sheet-bg')) closeMobFinSheet();
+}
+
+function submitMobFinTxn() {
+  const expense  = document.getElementById('mfs-expense')?.value.trim();
+  const amount   = parseFloat(document.getElementById('mfs-amount')?.value);
+  const category = document.getElementById('mfs-category')?.value || 'Other';
+  const method   = document.getElementById('mfs-method')?.value || '';
+  const date     = document.getElementById('mfs-date')?.value || TODAY;
+  if (!expense || isNaN(amount) || amount <= 0) return;
+  const month = finActiveMonth || getCurrentMonthSheet();
+  const maxId = finTransactions.length ? Math.max(...finTransactions.map(t => t.id || 0)) : 0;
+  finTransactions.push({ id: maxId + 1, date, expense, category, amount, method, month });
+  save('meridian_fin_transactions', finTransactions);
+  closeMobFinSheet();
+  loadFinanceView(month);
+  loadFinancePanel();
 }
 
 const FIN_CATS = ['Dining Out','Groceries','Transportation','Fun Purchases','Entertainment',
