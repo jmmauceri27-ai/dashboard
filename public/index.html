@@ -1568,7 +1568,7 @@ body.is-mobile .mob-fin-fab { display: flex; }
   <button class="mob-video-fs-close" onclick="closeMobVideo()">✕</button>
   <video id="mob-video-fs-player" controls playsinline></video>
 </div>
-<input type="file" accept="video/*" id="mob-video-picker" style="display:none" onchange="mobVideoSelected(event)" />
+
 
 <!-- ── MOBILE FINANCE FAB + SHEET ── -->
 <button class="mob-fin-fab" id="mob-fin-fab" onclick="openMobFinSheet()">+</button>
@@ -4172,9 +4172,10 @@ if (IS_MOBILE) {
     const blob = await getMobVideo();
     if (!blob) {
       card.innerHTML = `
-        <div class="mob-video-placeholder" onclick="document.getElementById('mob-video-picker').click()">
+        <div class="mob-video-placeholder" style="position:relative">
           <div class="mob-video-placeholder-icon">🎬</div>
           <div class="mob-video-placeholder-lbl">Tap to add a video</div>
+          <input type="file" accept="video/*" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer" onchange="mobVideoSelected(event)" />
         </div>`;
       return;
     }
@@ -4189,7 +4190,7 @@ if (IS_MOBILE) {
       </div>
       <div class="mob-video-footer">
         <span class="mob-video-title">My Video</span>
-        <span class="mob-video-change" onclick="document.getElementById('mob-video-picker').click()">Change</span>
+        <label class="mob-video-change" style="cursor:pointer">Change<input type="file" accept="video/*" style="display:none" onchange="mobVideoSelected(event)" /></label>
       </div>`;
   }
 
