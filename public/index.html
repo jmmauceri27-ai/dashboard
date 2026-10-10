@@ -902,6 +902,16 @@ body.is-mobile .mob-fin-fab { display: flex; }
 .lock-error { font-size: 11px; color: var(--red); margin-top: 10px; min-height: 16px; }
 .lock-change { font-size: 10px; color: var(--text-dim); margin-top: 18px; cursor: pointer; letter-spacing: 0.05em; }
 .lock-change:hover { color: var(--text-muted); }
+.lock-face-btn {
+  width: 100%; padding: 13px; border-radius: 3px; font-size: 11px;
+  font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; border: 1px solid var(--gold-border); font-family: inherit;
+  background: var(--gold-bg); color: var(--gold); transition: all 0.2s;
+  margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.lock-face-btn:hover { background: rgba(201,169,110,0.18); }
+.lock-pw-toggle { font-size: 10px; color: var(--text-dim); margin-top: 12px; cursor: pointer; letter-spacing: 0.05em; }
+.lock-pw-toggle:hover { color: var(--text-muted); }
 @keyframes shake {
   0%,100% { transform: translateX(0); }
   25%      { transform: translateX(-6px); }
@@ -1007,11 +1017,17 @@ body.is-mobile .mob-fin-fab { display: flex; }
   <div class="lock-box">
     <div class="lock-logo" id="lock-brand">Meridian</div>
     <div class="lock-sub">Personal OS</div>
-    <div class="lock-label" id="lock-label">Password</div>
-    <input class="lock-input" id="lock-input" type="password" placeholder="••••••••"
-      onkeydown="if(event.key==='Enter')lockSubmit()" autocomplete="current-password" />
-    <button class="lock-btn" onclick="lockSubmit()" id="lock-btn">Unlock</button>
+    <button class="lock-face-btn" id="lock-face-btn" onclick="lockFaceID()" style="display:none">
+      <span style="font-size:18px;line-height:1">􀎽</span> Use Face ID
+    </button>
+    <div id="lock-pw-wrap">
+      <div class="lock-label">Password</div>
+      <input class="lock-input" id="lock-input" type="password" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')lockSubmit()" autocomplete="current-password" />
+      <button class="lock-btn" onclick="lockSubmit()">Unlock</button>
+    </div>
     <div class="lock-error" id="lock-error"></div>
+    <div class="lock-pw-toggle" id="lock-pw-toggle" onclick="lockTogglePW()" style="display:none">Use password instead</div>
     <div class="lock-change" id="lock-change-link" onclick="lockShowChange()" style="display:none">Change password</div>
   </div>
 </div>
@@ -1711,40 +1727,115 @@ body.is-mobile .mob-fin-fab { display: flex; }
 
 <script>
 // ── LOCK SCREEN ────────────────────────────────────────────────────
-const LOCK_KEY     = 'meridian_pw_hash';
-const DEFAULT_HASH = '7b6754f95af6990cf0ebfd078de3cf4cb31ebece7a513439848848f5370691a3';
+const LOCK_KEY      = 'meridian_pw_hash';
+const LOCK_FACE_KEY = 'meridian_face_cred';
+const DEFAULT_HASH  = '7b6754f95af6990cf0ebfd078de3cf4cb31ebece7a513439848848f5370691a3';
 
 async function hashPassword(pw) {
-  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-let pageUnlocked = false;  // resets on every page load
-
-function getStoredHash() {
-  return localStorage.getItem(LOCK_KEY) || DEFAULT_HASH;
+function b64uEncode(bytes) {
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+function b64uDecode(s) {
+  s = s.replace(/-/g,'+').replace(/_/g,'/'); while (s.length%4) s+='=';
+  return Uint8Array.from(atob(s), c => c.charCodeAt(0));
 }
 
+let pageUnlocked = false;
+
+function getStoredHash() { return localStorage.getItem(LOCK_KEY) || DEFAULT_HASH; }
+
 async function lockInit() {
-  const brand = document.getElementById('lock-brand');
-  const name  = JSON.parse(localStorage.getItem('meridian_profile') || '{}').name;
-  if (name) brand.textContent = name;
+  const name = JSON.parse(localStorage.getItem('meridian_profile') || '{}').name;
+  if (name) document.getElementById('lock-brand').textContent = name;
   document.getElementById('lock-change-link').style.display = 'block';
-  document.getElementById('lock-input').focus();
+
+  const hasFace = !!localStorage.getItem(LOCK_FACE_KEY);
+  const faceBtn = document.getElementById('lock-face-btn');
+  const pwWrap  = document.getElementById('lock-pw-wrap');
+  const toggle  = document.getElementById('lock-pw-toggle');
+
+  if (hasFace && window.PublicKeyCredential) {
+    faceBtn.style.display = 'flex';
+    pwWrap.style.display  = 'none';
+    toggle.style.display  = 'block';
+    setTimeout(lockFaceID, 300);
+  } else {
+    document.getElementById('lock-input').focus();
+  }
+}
+
+function lockTogglePW() {
+  const pwWrap  = document.getElementById('lock-pw-wrap');
+  const toggle  = document.getElementById('lock-pw-toggle');
+  const faceBtn = document.getElementById('lock-face-btn');
+  const shown   = pwWrap.style.display !== 'none';
+  pwWrap.style.display  = shown ? 'none' : 'block';
+  faceBtn.style.display = shown ? 'flex'  : 'none';
+  toggle.textContent    = shown ? 'Use password instead' : 'Use Face ID instead';
+  if (!shown) document.getElementById('lock-input').focus();
+}
+
+async function lockFaceID() {
+  const credId = localStorage.getItem(LOCK_FACE_KEY);
+  if (!credId) return;
+  try {
+    const cred = await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rpId: 'localhost',
+        userVerification: 'required',
+        allowCredentials: [{ id: b64uDecode(credId), type: 'public-key' }],
+        timeout: 60000,
+      }
+    });
+    if (cred) unlock();
+  } catch {
+    // Face ID cancelled or failed — show password
+    document.getElementById('lock-pw-wrap').style.display = 'block';
+    document.getElementById('lock-pw-toggle').textContent = 'Use Face ID instead';
+    document.getElementById('lock-face-btn').style.display = 'none';
+    document.getElementById('lock-input').focus();
+  }
+}
+
+async function lockRegisterFaceID() {
+  if (!window.PublicKeyCredential) return false;
+  try {
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { id: 'localhost', name: 'Meridian' },
+        user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'user', displayName: 'Meridian' },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+        timeout: 60000,
+      }
+    });
+    if (cred) { localStorage.setItem(LOCK_FACE_KEY, b64uEncode(new Uint8Array(cred.rawId))); return true; }
+  } catch { return false; }
+  return false;
 }
 
 async function lockSubmit() {
-  const input  = document.getElementById('lock-input');
-  const pw     = input.value;
-  const errEl  = document.getElementById('lock-error');
-  const stored = localStorage.getItem(LOCK_KEY);
-
+  const input = document.getElementById('lock-input');
+  const pw    = input.value;
   if (!pw) { showLockError('Enter a password'); return; }
-
-  const hash = await hashPassword(pw);
-
+  const hash  = await hashPassword(pw);
   if (hash === getStoredHash()) {
     unlock();
+    // Offer Face ID setup after first password unlock on mobile
+    if (IS_MOBILE && !localStorage.getItem(LOCK_FACE_KEY) && window.PublicKeyCredential) {
+      setTimeout(async () => {
+        if (confirm('Enable Face ID to unlock without a password?')) {
+          const ok = await lockRegisterFaceID();
+          if (!ok) alert('Face ID setup failed. You can try again from Settings.');
+        }
+      }, 400);
+    }
   } else {
     showLockError('Incorrect password');
     input.classList.add('error');
@@ -1760,9 +1851,7 @@ function unlock() {
   document.getElementById('lock-error').textContent = '';
 }
 
-function showLockError(msg) {
-  document.getElementById('lock-error').textContent = msg;
-}
+function showLockError(msg) { document.getElementById('lock-error').textContent = msg; }
 
 async function lockShowChange() {
   const current = prompt('Enter your current password:');
@@ -4213,12 +4302,13 @@ if (IS_MOBILE) {
   async function mobVideoSelected(e) {
     const file = e.target.files[0];
     e.target.value = '';
-    if (!file) return;
+    if (!file) { alert('No file received from picker'); return; }
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
     const card = document.getElementById('mob-video-card');
-    if (card) card.innerHTML = '<div class="mob-video-placeholder"><div class="mob-video-placeholder-lbl" style="color:var(--gold)">Saving…</div></div>';
+    if (card) card.innerHTML = '<div class="mob-video-placeholder"><div class="mob-video-placeholder-lbl" style="color:var(--gold)">Saving ' + sizeMB + 'MB…</div></div>';
     const ok = await saveMobVideo(file);
     if (!ok) {
-      alert('Could not save video. The file may be too large or storage is unavailable.');
+      alert('Save failed for ' + file.name + ' (' + sizeMB + 'MB). Storage may be full or the file is too large.');
     }
     renderMobVideoCard();
   }
